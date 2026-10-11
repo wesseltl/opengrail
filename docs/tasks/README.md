@@ -43,3 +43,5 @@ An early contribution is useful when it satisfies a reviewed task, adds a meanin
 - [031 — Public program experiments](031-public-program-experiments.md): exact inert public manifests/outcomes, local generator reconstruction, paired review and comparative provenance; hosted rollout and independent qualification remain separate.
 
 - [032 — Programmable selection before TEST](032-program-search.md): actual per-candidate generators, complete reconstruction and locked sole TEST with durable local browser/CLI admission; persistent forward and independently witnessed custody remain separate.
+
+- [033 — Persistent programmable forward Demo](033-programmable-forward-demo.md): carry complete locked program searches through prospective planning into stateful local Demo execution, durable input admission, actual receiver/collector/monitor and full reconstruction. Local implementation under validation; complete SHORT Search selection remains outstanding under the current comparability policy. Public forward registration, authentic observations, qualification and approved rollout remain required.

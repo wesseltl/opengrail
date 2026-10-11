@@ -202,15 +202,31 @@ test('research assistance contract retains domain separation, human review and e
 });
 
 
-test('programmable search advertises real local generation and durable admission without forward or public authority',async()=>{
+test('programmable search advertises real local generation and durable admission without public authority',async()=>{
  const spec=await (await get()).json(),search=spec.programmableStrategies.search;
  assert.equal(search.page,'/search');assert.equal(search.guide,'/agent-guide/program-search');assert.equal(search.cli,'scripts/program-search.mjs');assert.equal(search.method,'LOCAL_PROGRAM_SEARCH');assert.equal(search.sourceVersion,2);
  assert.equal(search.limits.attemptBytes,22*1024*1024);assert.equal(search.limits.ledgerBytes,128*1024*1024);assert.equal(search.limits.candidates,4);
  for(const key of ['allCandidateOutcomesRetained','wholeGeneratorReconstruction','freshStatePerPhase','oneTestAdmission','admissionBeforeWorker'])assert.equal(search[key],true,key);
  for(const key of ['suppliedSignals','mixedRuleProgramCohort','automaticPublication','hostedCompute'])assert.equal(search[key],false,key);
- assert.equal(search.browserPersistence,'OWNER_SCOPED_INDEXEDDB');assert.equal(search.generator,'SAME_IMPLEMENTATION_RECONSTRUCTION');assert.equal(search.qualification,'NONE');assert.equal(search.unseen,'NOT_ESTABLISHED');assert.equal(spec.programmableStrategies.forward,'NOT_INTEGRATED');
+ assert.equal(search.browserPersistence,'OWNER_SCOPED_INDEXEDDB');assert.equal(search.generator,'SAME_IMPLEMENTATION_RECONSTRUCTION');assert.equal(search.qualification,'NONE');assert.equal(search.unseen,'NOT_ESTABLISHED');assert.equal(spec.programmableStrategies.forward,'LOCAL_PERSISTENT_DEMO');
  assert.equal(spec.strategySearch.browserPersistence,'PAGE_MEMORY_AND_EXPLICIT_EXPORT');assert.equal(spec.strategySearch.limits.ledgerBytes,64*1024*1024);
  assert.equal(spec.executionEnabled,false);assert(!spec.endpoints.some(endpoint=>endpoint.path.includes('program-search')));
  // Actual anonymous route must only describe local computation, never perform it.
  for(const name of ['evaluateProgramSearchAttempt','runProgramReplay','compareProgramOutcome'])assert(!bundle.outputFiles[0].text.includes('function '+name),name);
+});
+
+test('anonymous capability route describes persistent program Demo without loading the execution kernel or gaining public authority',async()=>{
+ const spec=await (await get()).json(),forward=spec.programForwardDemo;
+ assert.equal(forward.page,'/session');assert.equal(forward.plansPage,'/plans');assert.equal(forward.sourceVersion,2);
+ assert.equal(forward.method.version,'opengrail-program-session-v1');assert.equal(forward.handoff,'COMPLETE_LOCKED_PROGRAM_SEARCH_WITH_TERMINAL_TEST');
+ assert.equal(forward.signalAvailability,'RECORDED_POST_GUEST_COMPLETION');assert.equal(forward.internalProjection,'DISTINCT_PRIVATE_V1');
+ assert.deepEqual(forward.producerInputs,['CLOSED_BAR','QUOTE']);assert.deepEqual(forward.ownerControls,['PAUSE','RESUME','EMERGENCY']);
+ for(const field of ['originalSourceRetained','oneRetainedGuest','admissionBeforeGuest','outerAndInnerSequencesSeparate','completeAdverseEvidence'])assert.equal(forward[field],true,field);
+ for(const field of ['externalSignals','publicRegistration','hostedCompute','automaticProviderStart','automaticPublication','newPermissions','ordersEnabled','liveEnabled'])assert.equal(forward[field],false,field);
+ assert.equal(forward.qualification,'NONE');assert.equal(forward.independence,'NOT_ESTABLISHED');assert.equal(forward.browserPersistence,'OWNER_SCOPED_STRICT_INDEXEDDB');
+ assert(forward.limits.configBytes>=32768);assert(forward.limits.journalBytes>forward.limits.reservedBytes);assert(forward.limits.totalFuel>forward.limits.perInvocationFuel);
+ const inputs=Object.keys(bundle.metafile?.inputs??{});
+ for(const name of ['app/session-engine.ts','app/session-journal.ts','app/program-session-engine.ts','app/program-session-journal.ts'])assert(!inputs.some(path=>path.endsWith(name)),name);
+ for(const name of ['executeProgramSessionPending','runProgramReplay','invokeProgram'])assert(!bundle.outputFiles[0].text.includes('function '+name),name);
+ assert(!spec.endpoints.some(endpoint=>/program-session|program-forward|recorded-program/.test(endpoint.path)));
 });
