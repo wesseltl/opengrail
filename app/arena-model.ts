@@ -1,10 +1,13 @@
 import {z} from 'zod';
-import {experimentPublicItemSchema,experimentFlagSchema,experimentOutcomeFlags,validateExperimentItem,experimentDigest} from './experiment-model';
+import {experimentPublicItemSchema,experimentFlagSchema,experimentOutcomeFlags,validateExperimentItem,experimentDigest,experimentInputStrategy} from './experiment-model';
 import {strategyPublicItemSchema,boundedStrategyRecord,strategyDefinitionSchema} from './strategy-model';
 import {demoArtifactSchema,verifyDemoArtifact,demoEvaluatorMethod,type DemoArtifact} from './demo-model';
 import {comparisonReportSchema,verifyComparisonReport} from './comparison-model';
 import {experimentReviewBlockingFlags} from './experiment-review-model';
 import {evaluatorSourceFingerprints} from './evaluator-fingerprints';
+import {programRunOutcomeSchema,programRunMethod,programImplementationSchema} from './program-run-model';
+import {validateProgramRunOutcome} from './program-evidence';
+import {programComparisonReportSchema,bindProgramComparisonReport,compareProgramOutcomeValues,programOutcomeComparisonSummary} from './program-comparison-model';
 
 export const arenaLimits={members:4,attempts:4,admissionBytes:8388608,reportBytes:50331648,exportBytes:67108864,maximumDepth:24,maximumNodes:2000000} as const;
 const uuid=z.string().uuid().refine(v=>v===v.toLowerCase()),hash=z.string().regex(/^[a-f0-9]{64}$/),finite=z.number().finite();
@@ -14,11 +17,13 @@ export const arenaReviewContextSchema=z.object({original:reference,currentHead:z
 export const arenaMemberSchema=z.object({outcome:experimentPublicItemSchema,manifest:experimentPublicItemSchema,strategy:strategyPublicItemSchema,reviewContext:arenaReviewContextSchema.optional()}).strict();
 export type ArenaMember=z.infer<typeof arenaMemberSchema>;
 const definitionShape=strategyDefinitionSchema.innerType().shape;
-export const arenaProtocolSchema=z.object({datasetDigest:hash,signalsDigest:hash,market:definitionShape.market,risk:definitionShape.risk,costs:definitionShape.costs,initialCapital:finite.positive(),emergencyStopAt:clock.nullable(),methodDigest:hash,evaluatorVersion:z.literal('opengrail-demo-v1'),sourceDigest:hash,sourceVersion:z.string().min(1).max(80),baseline:z.literal('COST_AWARE_LONG_SAME_ALLOCATION_V1')}).strict();
+export const arenaBatchProtocolSchema=z.object({datasetDigest:hash,signalsDigest:hash,market:definitionShape.market,risk:definitionShape.risk,costs:definitionShape.costs,initialCapital:finite.positive(),emergencyStopAt:clock.nullable(),methodDigest:hash,evaluatorVersion:z.literal('opengrail-demo-v1'),sourceDigest:hash,sourceVersion:z.string().min(1).max(80),baseline:z.literal('COST_AWARE_LONG_SAME_ALLOCATION_V1')}).strict();
+export const arenaProgramProtocolSchema=z.object({method:z.literal('PROGRAM_DEMO'),datasetDigest:hash,market:definitionShape.market,risk:definitionShape.risk,costs:definitionShape.costs,initialCapital:finite.positive(),emergencyStopAt:clock.nullable(),methodDigest:hash,evaluatorVersion:z.literal('opengrail-program-replay-v1'),implementations:programImplementationSchema,sourceVersion:z.string().min(1).max(80),baseline:z.literal('COST_AWARE_LONG_SAME_ALLOCATION_V1')}).strict();
+export const arenaProtocolSchema=z.union([arenaBatchProtocolSchema,arenaProgramProtocolSchema]);
 export type ArenaProtocol=z.infer<typeof arenaProtocolSchema>;
 export const arenaDiagnosticsSchema=z.object({sampleCount:z.number().int().min(0).max(2000),expectedSamples:z.number().int().min(2).max(2000),fullHorizon:z.boolean(),meanReturnPct:finite.nullable(),dispersionPct:finite.min(0).nullable(),downsideDeviationPct:finite.min(0).nullable(),periodSharpe:finite.nullable(),reasons:z.array(reason).max(8)}).strict();
 export type ArenaDiagnostics=z.infer<typeof arenaDiagnosticsSchema>;
-export const arenaRowSchema=z.object({index:z.number().int().min(0).max(3),outcome:reference,manifest:reference,strategy:reference,name:z.string().max(120).nullable(),status:z.enum(['CHECKED','HELD','INTERRUPTED']),reason:reason.nullable(),claimedStatus:z.enum(['COMPLETED','NO_TRADES','HALTED','REJECTED','FAILED','INTERRUPTED','ARTIFACT_UNAVAILABLE','CONTINUOUS_DEMO']).nullable(),comparison:comparisonReportSchema.nullable(),reconstructed:demoArtifactSchema.nullable(),diagnostics:arenaDiagnosticsSchema.nullable(),cautions:z.array(experimentFlagSchema).max(28),rank:z.number().int().min(1).max(4).nullable()}).strict();
+export const arenaRowSchema=z.object({index:z.number().int().min(0).max(3),outcome:reference,manifest:reference,strategy:reference,name:z.string().max(120).nullable(),status:z.enum(['CHECKED','HELD','INTERRUPTED']),reason:reason.nullable(),claimedStatus:z.enum(['COMPLETED','NO_TRADES','HALTED','REJECTED','FAILED','CANCELLED','INTERRUPTED','ARTIFACT_UNAVAILABLE','CONTINUOUS_DEMO']).nullable(),comparison:comparisonReportSchema.nullable(),reconstructed:demoArtifactSchema.nullable(),programComparison:programComparisonReportSchema.nullable().optional(),programReconstructed:programRunOutcomeSchema.nullable().optional(),diagnostics:arenaDiagnosticsSchema.nullable(),cautions:z.array(experimentFlagSchema).max(28),rank:z.number().int().min(1).max(4).nullable()}).strict();
 export type ArenaRow=z.infer<typeof arenaRowSchema>;
 const labels={classification:z.literal('AUTHOR_REPORTED'),qualification:z.literal('NONE'),independence:z.literal('NOT_ESTABLISHED'),unseen:z.literal('NOT_ESTABLISHED'),ordersEnabled:z.literal(false),executionEnabled:z.literal(false)};
 const reportBody=z.object({version:z.literal(1),kind:z.literal('LOCAL_PUBLIC_OUTCOME_ARENA'),startedAt:clock,finishedAt:clock,members:z.array(arenaMemberSchema).min(2).max(arenaLimits.members),rows:z.array(arenaRowSchema).min(2).max(arenaLimits.members),commonProtocol:arenaProtocolSchema.nullable(),protocolDifferences:z.array(reason).max(64),ranking:z.object({eligible:z.boolean(),metric:z.literal('NONANNUALIZED_PERIOD_SHARPE'),reasons:z.array(reason).max(64)}).strict(),status:z.enum(['COMPLETE','HELD','INTERRUPTED']),selectionScope:z.literal('USER_SELECTED_PUBLIC_COHORT'),completeSearchHistory:z.literal(false),independentData:z.literal(false),custodyEstablished:z.literal(false),riskMethod:z.literal('INITIAL_CAPITAL_THEN_CLOSED_BAR_SIMPLE_RETURNS_SAMPLE_SD_ZERO_REFERENCE_NO_ANNUALIZATION'),...labels}).strict();
@@ -40,7 +45,7 @@ export async function validateArenaMembers(raw:unknown):Promise<ArenaMember[]>{
   if(strategy.record&&await experimentDigest(boundedStrategyRecord(strategy.record).payload)!==strategy.digest)throw new ArenaError('Arena strategy digest disagrees.');
   if(outcome.record&&manifest.record){
    if(outcome.record.type!=='OUTCOME'||manifest.record.type!=='MANIFEST'||outcome.record.version!==manifest.record.version)throw new ArenaError('Arena evidence methods disagree.');
-   const input=manifest.record.content.input,source='kind'in input?input.config.strategy:input.strategy;
+   const input=manifest.record.content.input,source=experimentInputStrategy(input);
    if(!strategy.record||!arenaSame(source.record,strategy.record)||source.digest!==strategy.digest)throw new ArenaError('Arena input is not the exact strategy.');
    if(!arenaSame(outcome.record.flags,experimentOutcomeFlags(outcome.author,manifest.author,outcome.record.content.claim)))throw new ArenaError('Arena outcome caution flags disagree.');
    if(outcome.record.content.result.kind==='ARTIFACT'&&!arenaSame(outcome.record.content.result.artifact.input,input))throw new ArenaError('Arena artifact does not match its manifest input.');
@@ -51,14 +56,20 @@ export async function validateArenaMembers(raw:unknown):Promise<ArenaMember[]>{
  return structuredClone(members);
 }
 export async function arenaMemberProtocol(member:ArenaMember):Promise<ArenaProtocol|null>{
- const r=member.manifest.record;if(!r||r.type!=='MANIFEST'||r.version!==1)return null;
+ const r=member.manifest.record;if(!r||r.type!=='MANIFEST'||r.version===2)return null;
+ if(r.version===3){const input=r.content.input,d=input.strategy.record.content.definition;return arenaProgramProtocolSchema.parse({method:'PROGRAM_DEMO',datasetDigest:await experimentDigest(JSON.stringify(input.dataset)),market:d.market,risk:d.risk,costs:d.costs,initialCapital:input.initialCapital,emergencyStopAt:input.emergencyStopAt,methodDigest:r.content.evaluator.methodDigest,evaluatorVersion:r.content.evaluator.version,implementations:r.content.evaluator.implementations,sourceVersion:r.content.evaluator.sourceVersion,baseline:'COST_AWARE_LONG_SAME_ALLOCATION_V1'});}
  const input=r.content.input,d=input.strategy.record.content.definition;
  return arenaProtocolSchema.parse({datasetDigest:await experimentDigest(JSON.stringify(input.dataset)),signalsDigest:await experimentDigest(JSON.stringify(input.signals)),market:d.market,risk:d.risk,costs:d.costs,initialCapital:input.initialCapital,emergencyStopAt:input.emergencyStopAt,methodDigest:r.content.evaluator.methodDigest,evaluatorVersion:r.content.evaluator.version,sourceDigest:r.content.evaluator.sourceDigest,sourceVersion:r.content.evaluator.sourceVersion,baseline:r.content.baseline});
 }
 export async function arenaProtocols(members:ArenaMember[]){const protocols=await Promise.all(members.map(arenaMemberProtocol)),commonProtocol=protocols[0],protocolDifferences:string[]=[];
- for(const [i,p]of protocols.entries()){if(!p){protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_OR_UNAVAILABLE_PROTOCOL');continue;}if(commonProtocol)for(const key of Object.keys(commonProtocol)as(keyof ArenaProtocol)[])if(!arenaSame(commonProtocol[key],p[key]))protocolDifferences.push('MEMBER_'+i+':'+key.replace(/[A-Z]/g,v=>'_'+v).toUpperCase());if(p.sourceDigest!==evaluatorSourceFingerprints.primary||p.methodDigest!==await experimentDigest(JSON.stringify(demoEvaluatorMethod)))protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_EVALUATOR');}
+ for(const [i,p]of protocols.entries()){
+  if(!p){protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_OR_UNAVAILABLE_PROTOCOL');continue;}
+  if(commonProtocol)for(const key of new Set([...Object.keys(commonProtocol),...Object.keys(p)])){const a=Object.getOwnPropertyDescriptor(commonProtocol,key)?.value,b=Object.getOwnPropertyDescriptor(p,key)?.value;if(!arenaSame(a,b))protocolDifferences.push('MEMBER_'+i+':'+key.replace(/[A-Z]/g,v=>'_'+v).toUpperCase());}
+  if('method'in p){if(!arenaSame(p.implementations,programRunMethod.implementations)||p.methodDigest!==await experimentDigest(JSON.stringify(programRunMethod)))protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_EVALUATOR');}
+  else if(p.sourceDigest!==evaluatorSourceFingerprints.primary||p.methodDigest!==await experimentDigest(JSON.stringify(demoEvaluatorMethod)))protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_EVALUATOR');
+ }
  return {commonProtocol,protocolDifferences};}
-export function initialArenaRows(members:ArenaMember[]):ArenaRow[]{return members.map((m,index)=>{const r=m.outcome.record;let claimedStatus:ArenaRow['claimedStatus']=null;if(r?.version===2)claimedStatus='CONTINUOUS_DEMO';else if(r?.type==='OUTCOME')claimedStatus=r.content.result.kind==='ARTIFACT'?r.content.result.artifact.status:r.content.result.kind;return arenaRowSchema.parse({index,outcome:ref(m.outcome),manifest:ref(m.manifest),strategy:ref(m.strategy),name:r?.content.name??null,status:'HELD',reason:'NOT_YET_RECONSTRUCTED',claimedStatus,comparison:null,reconstructed:null,diagnostics:null,cautions:[...new Set([...(m.manifest.record?.flags??[]),...(r?.flags??[])])],rank:null});});}
+export function initialArenaRows(members:ArenaMember[]):ArenaRow[]{return members.map((m,index)=>{const r=m.outcome.record;let claimedStatus:ArenaRow['claimedStatus']=null;if(r?.version===2)claimedStatus='CONTINUOUS_DEMO';else if(r?.type==='OUTCOME')claimedStatus=r.content.result.kind==='ARTIFACT'?r.content.result.artifact.status:r.content.result.kind;return arenaRowSchema.parse({index,outcome:ref(m.outcome),manifest:ref(m.manifest),strategy:ref(m.strategy),name:r?.content.name??null,status:'HELD',reason:'NOT_YET_RECONSTRUCTED',claimedStatus,comparison:null,reconstructed:null,...r?.version===3?{programComparison:null,programReconstructed:null}:{},diagnostics:null,cautions:[...new Set([...(m.manifest.record?.flags??[]),...(r?.flags??[])])],rank:null});});}
 /** Fresh evaluator equity only. Periods include initial-capital -> first close;
  * sample SD uses n-1; downside is sqrt(sum(min(r,0)^2)/n). No annualization. */
 export function arenaRiskDiagnostics(artifact:DemoArtifact):ArenaDiagnostics{
@@ -78,7 +89,7 @@ export function arenaRanking(members:ArenaMember[],rows:ArenaRow[],protocolDiffe
  if(protocolDifferences.length)reasons.push('INCOMPATIBLE_PROTOCOLS');
  for(const [i,row]of rows.entries()){
   const prefix='MEMBER_'+i+':',member=members[i];
-  if(row.status!=='CHECKED'||row.comparison?.status!=='MATCH')reasons.push(prefix+'RECONSTRUCTION_UNCONFIRMED');
+  if(row.status!=='CHECKED'||row.comparison?.status!=='MATCH'||member.outcome.record?.version===3&&(row.programComparison?.status!=='MATCH'||row.programReconstructed?.status!=='COMPLETED'))reasons.push(prefix+'RECONSTRUCTION_UNCONFIRMED');
   if(row.reconstructed?.status!=='COMPLETED'||!row.reconstructed.metrics?.comparable||!row.reconstructed.benchmark?.comparable||row.reconstructed.input?.strategy.record.content.definition.market.direction!=='LONG')reasons.push(prefix+'NONCOMPARABLE_RESULT');
   if(!row.diagnostics?.fullHorizon||row.diagnostics.periodSharpe===null)reasons.push(prefix+'RISK_DIAGNOSTIC_UNAVAILABLE');
   if(row.cautions.some(flag=>(experimentReviewBlockingFlags as readonly string[]).includes(flag)))reasons.push(prefix+'BLOCKING_SEARCH_OR_HOLDOUT_DISCLOSURE');
@@ -96,6 +107,22 @@ export async function verifyArenaReport(raw:unknown):Promise<ArenaReport>{
  if(report.rows.length!==members.length||!arenaSame(report.commonProtocol,expected.commonProtocol)||!arenaSame(report.protocolDifferences,expected.protocolDifferences))throw new ArenaError('Arena cohort or protocol changed.');
  for(const [i,row]of report.rows.entries()){
   for(const key of ['index','outcome','manifest','strategy','name','claimedStatus','cautions']as const)if(!arenaSame(row[key],initial[i][key]))throw new ArenaError('Arena row changed its selected member.');
+  const selected=members[i],outcome=selected.outcome.record,parent=selected.manifest.record;
+  if(outcome?.version===3){
+   if(outcome.type!=='OUTCOME'||!parent||parent.type!=='MANIFEST'||parent.version!==3)throw new ArenaError('Program arena evidence has no matching manifest.');
+   if(row.programComparison){if(outcome.content.result.kind!=='ARTIFACT')throw new ArenaError('Program comparison has no retained original outcome.');await bindProgramComparisonReport(row.programComparison,outcome.content.result.artifact);}
+   if(Boolean(row.programComparison?.reconstructed)!==Boolean(row.programReconstructed)||Boolean(row.programComparison?.reconstructedOutcomeDigest)!==Boolean(row.programReconstructed))throw new ArenaError('Whole program reconstruction must accompany its retained summary and digest.');
+   if(row.programReconstructed){
+    const fresh=await validateProgramRunOutcome(row.programReconstructed,parent.content.input);
+    if(outcome.content.result.kind!=='ARTIFACT'||fresh.attemptId!==outcome.content.result.artifact.attemptId||!row.programComparison||row.programComparison.reconstructedOutcomeDigest!==fresh.outcomeDigest||!arenaSame(row.comparison,fresh.comparison)||!arenaSame(row.reconstructed,fresh.artifact))throw new ArenaError('Arena generator reconstruction correlation changed.');
+    if(!arenaSame(row.programComparison.reconstructed,programOutcomeComparisonSummary(fresh))||['MATCH','MISMATCH'].includes(row.programComparison.status)&&!arenaSame(row.programComparison.comparison,await compareProgramOutcomeValues(outcome.content.result.artifact,fresh)))throw new ArenaError('Arena generator differences changed from their retained operands.');
+    if(row.reconstructed){await verifyDemoArtifact(row.reconstructed);if(!arenaSame(row.diagnostics,arenaRiskDiagnostics(row.reconstructed)))throw new ArenaError('Program arena risk diagnostics changed.');}
+    else if(row.diagnostics!==null)throw new ArenaError('Program diagnostics require a fresh trading artifact.');
+   }else if(row.comparison!==null||row.reconstructed!==null||row.diagnostics!==null)throw new ArenaError('Program trading evidence requires full regenerated provenance.');
+   if(row.status==='CHECKED'&&(!row.programReconstructed||!row.programComparison||!['MATCH','MISMATCH'].includes(row.programComparison.status)||row.reason!==null)||row.status==='INTERRUPTED'&&row.reason!=='USER_CANCELLED'||row.status==='HELD'&&row.reason===null)throw new ArenaError('Program arena row disposition is inconsistent.');
+   continue;
+  }
+  if(row.programComparison!==undefined||row.programReconstructed!==undefined)throw new ArenaError('Program evidence cannot be attached to a different method.');
   if(row.comparison){const comparison=await verifyComparisonReport(row.comparison),r=members[i].outcome.record;
    if(!r||r.type!=='OUTCOME'||r.version!==1||r.content.result.kind!=='ARTIFACT')throw new ArenaError('Arena comparison has no original batch artifact.');const a=r.content.result.artifact;
    if(comparison.identity.claimedArtifact!==a.resultDigest||comparison.identity.request!==a.digests.request||comparison.identity.strategy!==a.digests.strategy||comparison.identity.dataset!==a.digests.dataset||comparison.identity.signals!==a.digests.signals||!arenaSame(comparison.summaries.claimed,{status:a.status,reason:a.reason,metrics:a.metrics,benchmark:a.benchmark}))throw new ArenaError('Arena comparison correlation changed.');}

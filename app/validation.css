@@ -3,3 +3,5 @@
 @media(max-width:760px){.og-validation-header{padding:38px 0 28px;flex-direction:column;align-items:flex-start;gap:18px}.og-validation-header h1{font-size:39px}.og-validation-header p{font-size:13px}.og-validation-layout{grid-template-columns:1fr;gap:20px;padding-top:24px}.og-validation-panel{padding:18px}.og-validation-history-head{align-items:flex-start;flex-direction:column;gap:14px}.og-validation-attempt{padding:18px}.og-validation-attempt-head{flex-wrap:wrap}.og-validation-attempt time{white-space:normal}.og-validation-history{padding-bottom:40px}}
 @media(max-width:420px){.og-validation-source dl{grid-template-columns:1fr}.og-validation-actions .og-button{flex:1}.og-validation-attempt h3{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.og-validation *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.og-validation-program-evidence{max-width:100%;max-height:340px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:10px/1.8 ui-monospace,monospace;background:var(--og-paper);padding:12px;border-radius:6px}

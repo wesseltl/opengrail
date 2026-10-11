@@ -1,0 +1,59 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {resolve,dirname} from 'node:path';
+import {createRequire} from 'node:module';
+import ts from 'typescript';
+import {firstOnlyProgram,constantProgram,trapProgram,infiniteProgram,moduleHex,makeProgram,local,iconst} from './helpers/program-fixtures.mjs';
+
+const native=createRequire(import.meta.url),cache=new Map();
+function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const item={exports:{}};cache.set(file,item);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),id.endsWith('.ts')?id:id+'.ts')):native(id);new Function('module','exports','require',code)(item,item.exports,req);return item.exports;}
+const arena=load('app/arena-model.ts'),evaluate=load('app/arena-evaluator.ts'),run=load('app/program-run.ts'),program=load('app/program-source-model.ts'),model=load('app/program-run-model.ts'),strategy=load('app/strategy-model.ts'),experiment=load('app/experiment-model.ts');
+const copy=structuredClone,uid=()=>crypto.randomUUID();
+async function fixture(binary=firstOnlyProgram(),{mutate=()=>{},interrupt=null}={}){
+ const input=copy(await run.syntheticProgramRunInput());input.requestId=uid();input.strategy.record.id=uid();input.strategy.record.rootId=input.strategy.record.id;input.strategy.record.requestId=uid();input.strategy.record.content.name='Invented program arena source';input.strategy.record.content.program.bytesHex=moduleHex(binary);input.strategy.record.content.program.digest=await program.programBinaryDigest(input.strategy.record.content.program.bytesHex);
+ input.dataset.bars=input.dataset.bars.slice(0,6).map(bar=>({...bar,open:100,high:100,low:100,close:100,volume:100}));input.strategy.digest=await strategy.strategyDigest(strategy.boundedStrategyRecord(input.strategy.record).payload);
+ const sourceRecord=input.strategy.record,author=strategy.strategyAuthorReference(sourceRecord.author),source={id:sourceRecord.id,digest:input.strategy.digest,rootId:sourceRecord.rootId,revision:sourceRecord.revision,requestId:sourceRecord.requestId,createdAt:sourceRecord.createdAt,author,state:'VISIBLE',reason:null,record:sourceRecord,moderation:[]};
+ const defaults=experiment.experimentProgramRegisterDefaults(input,'Synthetic current source');defaults.disclosures.search={trialCount:1,selection:'FIRST_DECLARED',logCompleteness:'COMPLETE',log:'One declared synthetic trial; author assertion.'};defaults.disclosures.validation={trainEvaluationOverlap:'NONE',holdoutDeclared:true,holdoutPriorAccess:'UNSEEN',holdoutReuseCount:0,note:'Invented data; prior access is an author assertion.'};
+ const manifestRecord={version:3,id:uid(),requestId:uid(),createdAt:'2026-10-11T01:00:00.000Z',author:sourceRecord.author,type:'MANIFEST',content:defaults,flags:experiment.experimentManifestFlags(defaults.disclosures),policyAccepted:'public-experiment-v1',classification:'AUTHOR_REPORTED',executionEnabled:false};
+ const manifest={id:manifestRecord.id,digest:await strategy.strategyDigest(experiment.boundedExperimentRecord(manifestRecord).payload),type:'MANIFEST',requestId:manifestRecord.requestId,createdAt:manifestRecord.createdAt,author,strategy:{id:source.id,digest:source.digest},manifest:null,state:'VISIBLE',reason:null,suppression:null,reporting:'AUTHOR_REPORTED',outcomeCount:1,record:manifestRecord,moderation:[]};
+ let artifact=interrupt?await run.interruptProgramRun(input,uid(),interrupt):await run.runProgramReplay(input,uid());mutate(artifact);const {outcomeDigest,...body}=artifact;void outcomeDigest;artifact=await model.sealProgramRunOutcome(body);await run.validateProgramRunOutcome(artifact,input);
+ const claim={type:'ORIGINAL',relation:null,sharedDependencies:[],conflicts:''},record={version:3,id:uid(),requestId:uid(),createdAt:'2026-10-11T01:01:00.000Z',author:sourceRecord.author,type:'OUTCOME',content:{method:'PROGRAM_DEMO',name:'Invented program arena outcome',manifest:{id:manifest.id,digest:manifest.digest},result:{kind:'ARTIFACT',artifact},claim},flags:experiment.experimentOutcomeFlags(author,author,claim),policyAccepted:'public-experiment-v1',classification:'AUTHOR_REPORTED',executionEnabled:false};
+ const outcome={id:record.id,digest:await strategy.strategyDigest(experiment.boundedExperimentRecord(record).payload),type:'OUTCOME',requestId:record.requestId,createdAt:record.createdAt,author,strategy:manifest.strategy,manifest:record.content.manifest,state:'VISIBLE',reason:null,suppression:null,reporting:'AUTHOR_REPORTED',outcomeCount:0,record,moderation:[]};return {outcome,manifest,strategy:source,reviewContext:{original:{id:outcome.id,digest:outcome.digest},currentHead:null}};
+}
+const variant=()=>makeProgram({functions:[{type:0,body:[0x01,...local(0),0x45,0x04,0x7f,...iconst(1),0x05,...iconst(0),0x0b]}]});
+async function reseal(report){const {reportDigest,...body}=report;void reportDigest;return arena.sealArenaReport(body);}
+
+test('actual generator reconstruction retains complete provenance and fresh cost-aware loss for distinct programs',async()=>{
+ const members=[await fixture(),await fixture(variant())],before=JSON.stringify(members),report=await evaluate.evaluateArena(members);assert.equal(JSON.stringify(members),before);assert.equal(report.status,'COMPLETE');assert.equal(report.protocolDifferences.length,0);assert.equal(report.commonProtocol.method,'PROGRAM_DEMO');assert.equal(report.commonProtocol.signalsDigest,undefined);
+ for(const row of report.rows){assert.equal(row.programComparison.status,'MATCH');assert.equal(row.programComparison.generator,'SAME_IMPLEMENTATION_RECONSTRUCTION');assert.equal(row.programReconstructed.outcomeDigest,members[row.index].outcome.record.content.result.artifact.outcomeDigest);assert.equal(row.programReconstructed.input.strategy.record.version,2);assert.notEqual(row.reconstructed.input.strategy.record.id,members[row.index].strategy.id);assert.equal(row.comparison.status,'MATCH');assert(row.reconstructed.metrics.netPnl<0);assert(row.diagnostics.fullHorizon);}
+ assert.equal(report.ranking.eligible,true);assert.deepEqual(report.rows.map(row=>row.rank),[1,1]);assert.equal(report.qualification,'NONE');assert.equal(report.independence,'NOT_ESTABLISHED');assert.equal(report.custodyEstablished,false);assert.deepEqual(await arena.verifyArenaReport(report),report);
+});
+test('coherently self-hashed false fuel is retained as author evidence and exposed by actual local re-execution',async()=>{
+ const fake=await fixture(variant(),{mutate:r=>{r.trace[0].fuelUsed++;r.totalFuel++;}}),report=await evaluate.evaluateArena([await fixture(),fake]),row=report.rows[1];assert.equal(row.programComparison.status,'MISMATCH');assert.equal(row.comparison.status,'MATCH');assert.notEqual(row.programReconstructed.totalFuel,fake.outcome.record.content.result.artifact.totalFuel);assert.equal(report.ranking.eligible,false);assert(report.rows.every(r=>r.rank===null));assert.equal(report.members[1].outcome.record.content.result.artifact.totalFuel,fake.outcome.record.content.result.artifact.totalFuel);assert.deepEqual(await arena.verifyArenaReport(report),report);
+});
+test('different generated streams are legitimate competitors; zero-trade member is retained and cannot rank',async()=>{
+ const report=await evaluate.evaluateArena([await fixture(),await fixture(constantProgram(0))]);assert.equal(report.protocolDifferences.length,0);assert.equal(report.rows[1].programComparison.status,'MATCH');assert.equal(report.rows[1].programReconstructed.status,'NO_TRADES');assert.equal(report.rows[1].programReconstructed.signals.length,0);assert.equal(report.rows[1].diagnostics.periodSharpe,null);assert.equal(report.ranking.eligible,false);
+});
+test('program traps and fuel exhaustion can reproduce computationally without a trading-success or rank claim',async()=>{
+ const report=await evaluate.evaluateArena([await fixture(trapProgram()),await fixture(infiniteProgram())]);assert.equal(report.rows.length,2);assert.equal(report.status,'COMPLETE');assert(report.rows.every(row=>row.programComparison.status==='MATCH'&&row.programReconstructed.status==='FAILED'&&row.reconstructed===null&&row.diagnostics===null&&row.rank===null));assert.deepEqual(report.rows.map(row=>row.programReconstructed.reason),['PROGRAM_TRAP','FUEL_LIMIT']);assert.equal(report.ranking.eligible,false);
+});
+test('retained cancellation and recovery interruption are held whole outcomes rather than re-executed or omitted',async()=>{
+ const report=await evaluate.evaluateArena([await fixture(firstOnlyProgram(),{interrupt:'CANCELLED'}),await fixture(variant(),{interrupt:'INTERRUPTED'})]);assert.equal(report.status,'HELD');assert.deepEqual(report.rows.map(row=>row.claimedStatus),['CANCELLED','INTERRUPTED']);assert(report.rows.every(row=>row.programComparison.status==='INTERRUPTED'&&row.programReconstructed===null&&row.reason==='CLAIM_INTERRUPTED'));assert.equal(report.members.length,2);assert.equal(report.ranking.eligible,false);
+});
+test('changed dataset/risk/cost prevents cohort ranking while each program is still regenerated',async()=>{
+ const first=await fixture(),second=await fixture(variant());second.manifest.record.content.input.dataset.bars[0].volume++;second.manifest.digest=await strategy.strategyDigest(experiment.boundedExperimentRecord(second.manifest.record).payload);second.outcome.manifest.digest=second.manifest.digest;second.outcome.record.content.manifest.digest=second.manifest.digest;second.outcome.record.content.result.artifact=await run.runProgramReplay(second.manifest.record.content.input,second.outcome.record.content.result.artifact.attemptId);second.outcome.digest=await strategy.strategyDigest(experiment.boundedExperimentRecord(second.outcome.record).payload);second.reviewContext.original.digest=second.outcome.digest;
+ const report=await evaluate.evaluateArena([first,second]);assert(report.protocolDifferences.includes('MEMBER_1:DATASET_DIGEST'));assert(report.rows.every(row=>row.programComparison.status==='MATCH'));assert.equal(report.ranking.eligible,false);
+});
+test('full generated provenance and retained comparison operands cannot be removed or altered even after outer resealing',async()=>{
+ const original=await evaluate.evaluateArena([await fixture(),await fixture(variant())]);for(const mutate of [r=>r.rows[1].programReconstructed=null,r=>r.rows[1].programReconstructed.outcomeDigest='a'.repeat(64),r=>r.rows[1].programComparison.reconstructedOutcomeDigest='a'.repeat(64),r=>r.rows[1].diagnostics.meanReturnPct=999]){const altered=copy(original);mutate(altered);await assert.rejects(async()=>arena.verifyArenaReport(await reseal(altered)));}
+});
+test('user cancellation retains the complete frozen program cohort without launching generator work',async()=>{
+ const controller=new AbortController();controller.abort();const report=await evaluate.evaluateArena([await fixture(),await fixture(variant())],{signal:controller.signal});assert.equal(report.status,'INTERRUPTED');assert(report.rows.every(row=>row.status==='INTERRUPTED'&&row.programComparison===null&&row.programReconstructed===null));assert.equal(report.ranking.eligible,false);
+});
+
+
+test('a held self-hashed row cannot retain fresh summary and digest while dropping the complete generated outcome',async()=>{
+ const original=await evaluate.evaluateArena([await fixture(),await fixture(variant())]),altered=copy(original),row=altered.rows[1];row.status='HELD';row.reason='DECLARED_HOLD';row.programReconstructed=null;row.comparison=null;row.reconstructed=null;row.diagnostics=null;
+ await assert.rejects(async()=>arena.verifyArenaReport(await reseal(altered)),/Whole program reconstruction/);
+});

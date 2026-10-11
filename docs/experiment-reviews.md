@@ -12,12 +12,15 @@ The exported `LOCAL_EXPERIMENT_REVIEW_DRAFT` binds four references, both bounded
 
 Both implementations share method specifications, JavaScript arithmetic, schemas/hashing, data/operator and review of primary source. Different files, IDs and process checkboxes do not establish independent research. Qualification remains **NONE** and independence **NOT_ESTABLISHED**.
 
+For version-three `PROGRAM_DEMO` pairs, Validation reruns the restricted generator and trading methods for both complete retained outcomes. Each local attempt keeps its full fresh outcome; the exported review draft carries bounded `LOCAL_PROGRAM_COMPARISON` reports with exact inputs/source/method bindings and complete difference counts. Reports are same-implementation generator reconstructions. The public server checks their structure and correlation, without running the guest.
+
 ## Decisions
 
 - **REPRODUCED** requires two fixed-method matching reports, complete exact artifacts/inputs, an original target and supporting reproduction, distinct outcome sponsors, a reviewer separate from all target sponsors, every process attestation and no blocking manifest disclosures. Matching negative, insolvent or failed simulated calculations remain adverse evidence.
 - **DISPUTED** requires correlated computational mismatch evidence and fixed-code, exact-input and difference attestations.
 - **HELD / REJECTED** retain typed reasons and available correlated reports. Incomplete reconstruction cannot become a positive decision.
 - Continuous version-two evidence has no second evaluator here and requires an evidence-free **HELD / UNSUPPORTED_METHOD** disposition.
+- Positive program reproduction additionally requires distinct original/reproduction attempt IDs and identical full retained outcome semantics after excluding only the top-level attempt ID and outcome digest. Copied attempts, contradictory retained outputs and interrupted claims cannot become positive reproductions through supplied `MATCH` reports. Existing trusted-reviewer, sponsor, process and disclosure gates still apply. Matching failed computation does not establish a successful strategy.
 
 Post-selection, incomplete searches, train/evaluation overlap, unknown overlap and missing/seen/unknown/reused holdouts block positive decisions. Source execution and timing remain unverified. Attestation does not authenticate prices, unseen data or future returns.
 

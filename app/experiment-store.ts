@@ -2,9 +2,7 @@ import {networkAgentSchema} from './network-model';
 import {StrategyRepository} from './strategy-store';
 import {boundedStrategyRecord,type StrategyPublicItem} from './strategy-model';
 import {strategyEvidenceLimits,strategyEvidenceEntryForItem,validateStrategyEvidencePage} from './strategy-evidence-model';
-import {verifySessionEvidenceArtifact} from './session-evidence-model';
-import {verifyDemoArtifact} from './demo-model';
-import {ExperimentError,experimentLimits,experimentDigest,experimentPublicHumanId,experimentAuthorReference,boundedExperimentCommand,boundedExperimentRecord,experimentPublicEventSchema,experimentPrivateReportSchema,experimentListSchema,experimentGetSchema,experimentWriteSchema,experimentReportsSchema,experimentManifestFlags,experimentOutcomeFlags,experimentSummarySchema,experimentOutcomesSchema,experimentInputStrategy,verifyExperimentManifestInput,verifyExperimentArtifact,type ExperimentActor,type ExperimentAuthor,type ExperimentAuthorReference,type ExperimentCommand,type ExperimentRecord,type ExperimentPublicItem,type ExperimentPublicEvent} from './experiment-model';
+import {ExperimentError,experimentLimits,experimentDigest,experimentPublicHumanId,experimentAuthorReference,boundedExperimentCommand,boundedExperimentRecord,experimentPublicEventSchema,experimentPrivateReportSchema,experimentListSchema,experimentGetSchema,experimentWriteSchema,experimentReportsSchema,experimentManifestFlags,experimentOutcomeFlags,experimentSummarySchema,experimentOutcomesSchema,experimentInputStrategy,experimentMethodVersion,experimentRecordMethod,experimentRecordStatus,verifyExperimentRecordArtifact,verifyExperimentManifestInput,verifyExperimentArtifact,type ExperimentActor,type ExperimentAuthor,type ExperimentAuthorReference,type ExperimentCommand,type ExperimentRecord,type ExperimentPublicItem,type ExperimentPublicEvent} from './experiment-model';
 type PublicationRow={id:string;type:string;manifest_id:string|null;manifest_digest:string|null;strategy_id:string;strategy_digest:string;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type EventRow={record_id:string;sequence:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;state:string;reason:string;created_at:string};
 type ReportRow={author_key:string;request_id:string;sponsor_key:string;record_id:string;record_digest:string;command_digest:string;payload:string|null;digest:string;created_at:string};
@@ -73,7 +71,7 @@ export class ExperimentRepository{
     if(row.manifest_id!==null||row.manifest_digest!==null||row.strategy_id!==selected.record.id||row.strategy_digest!==selected.digest||await experimentDigest(JSON.stringify(selected.record))!==row.strategy_digest||JSON.stringify(record.flags)!==JSON.stringify(experimentManifestFlags(record.content.disclosures)))throw Error();
    }else{
     if(row.manifest_id!==record.content.manifest.id||row.manifest_digest!==record.content.manifest.digest)throw Error();
-    if(record.content.result.kind==='ARTIFACT'){if(record.version===2)await verifySessionEvidenceArtifact(record.content.result.artifact);else await verifyDemoArtifact(record.content.result.artifact);}
+    if(record.content.result.kind==='ARTIFACT')await verifyExperimentRecordArtifact(record);
    }
    return {row,record};
   }catch{throw inconsistent();}
@@ -98,12 +96,12 @@ export class ExperimentRepository{
   }
   return {rows,events,state:state as ExperimentPublicItem['state'],reason:events.at(-1)?.reason??null};
  }
- private async source(recordId:string,selection=false){
+ private async source(recordId:string,selection=false,expectedVersion:1|2=1){
   id(recordId);
   try{
    const row=await this.db.prepare('SELECT id,digest,CASE WHEN length(CAST(payload AS BLOB))<=28672 THEN payload ELSE NULL END AS payload FROM strategy_publications WHERE id=?').bind(recordId).first<{id:string;digest:string;payload:string|null}>();
    if(!row){if(selection)throw new ExperimentError('Published strategy source not found. Select a currently visible Strategy Hub record.',404);throw Error();}if(!row.payload)throw Error();const checked=boundedStrategyRecord(JSON.parse(row.payload));
-   if(checked.record.version!==1)throw new ExperimentError('Program sources require a genuine program evaluation registry method; ordinary batch/continuous methods do not execute programs.',400);
+   if(checked.record.version!==expectedVersion)throw new ExperimentError('The selected strategy source version does not match the declared experiment method. Program sources require PROGRAM_DEMO.',400);
    if(checked.payload!==row.payload||checked.record.id!==row.id||await experimentDigest(row.payload)!==row.digest)throw Error();
    const projected=(await new StrategyRepository(this.db).get(recordId)).item;
    if(projected.digest!==row.digest||projected.record&&JSON.stringify(projected.record)!==row.payload)throw Error();
@@ -111,7 +109,7 @@ export class ExperimentRepository{
   }catch(error){if(selection&&error instanceof ExperimentError&&(error.status===404||error.status===400))throw error;throw inconsistent();}
  }
  private async bindings(publication:Checked){
-  const source=await this.source(publication.row.strategy_id);if(source.digest!==publication.row.strategy_digest)throw inconsistent();
+  const source=await this.source(publication.row.strategy_id,false,publication.record.version===3?2:1);if(source.digest!==publication.row.strategy_digest)throw inconsistent();
   let parent:Checked|null=null;
   if(publication.record.type==='MANIFEST'){
    if(JSON.stringify(experimentInputStrategy(publication.record.content.input).record)!==source.payload)throw inconsistent();
@@ -137,7 +135,7 @@ export class ExperimentRepository{
   const outcomeCount=record.type==='MANIFEST'?(await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(record.id).first<{n:number}>())?.n??0:0;
   return {id:record.id,digest:publication.row.digest,type:record.type,requestId:record.requestId,createdAt:record.createdAt,author:experimentAuthorReference(record.author),strategy:{id:source.id,digest:source.digest},manifest:record.type==='OUTCOME'?record.content.manifest:null,state,reason,suppression,reporting:record.type==='OUTCOME'||outcomeCount>0?'AUTHOR_REPORTED':'UNREPORTED',outcomeCount,record:state==='VISIBLE'?record:null,moderation:events};
  }
- private summary(item:ExperimentPublicItem){const {record,moderation,...metadata}=item;return experimentSummarySchema.parse({...metadata,...record?.version===2?{method:'CONTINUOUS_DEMO'}:{},name:record?.content.name??null,status:record?.type==='OUTCOME'?(record.content.result.kind==='ARTIFACT'?(record.version===2?record.content.result.artifact.projection.status:record.content.result.artifact.status):record.content.result.kind):null,flags:record?.flags??[]});}
+ private summary(item:ExperimentPublicItem){const {record,moderation,...metadata}=item;void moderation;const method=record?experimentRecordMethod(record):undefined;return experimentSummarySchema.parse({...metadata,...method?{method}:{},name:record?.content.name??null,status:record?experimentRecordStatus(record):null,flags:record?.flags??[]});}
  private async checkReport(row:ReportRow){
   try{
    if(!row.payload||new TextEncoder().encode(row.payload).byteLength>4096||!hash.test(row.digest)||!hash.test(row.command_digest))throw Error();
@@ -310,19 +308,24 @@ export class ExperimentRepository{
   try{if(command.action==='register'||command.action==='outcome')await this.publish(context,command,commandDigest,at,target);else if(command.action==='report')await this.report(context,command,commandDigest,at,target!);else await this.moderate(context,command,commandDigest,at,target!);}catch(error){const replay=await this.replay(context,command,commandDigest,at);if(replay)return replay;throw error;}
   const receipt=await this.replay(context,command,commandDigest,at);if(receipt)return receipt;
   await this.requireCredential(context,at);if(command.action==='register'||command.action==='outcome'||command.action==='report')await this.quota(context,at,command.action==='register'?'MANIFEST':command.action==='outcome'?'OUTCOME':'REPORT');
+  if(command.action==='outcome'){
+   const retained=await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(command.manifest.id).first<{n:number}>();
+   if(!retained||!Number.isInteger(retained.n)||retained.n<0||retained.n>experimentLimits.outcomesPerManifest)throw inconsistent();
+   if(retained.n===experimentLimits.outcomesPerManifest)throw new ExperimentError('This manifest’s retained outcome capacity has been reached.',429);
+  }
   throw new ExperimentError('Experiment identity, source, target, moderation state or quota changed. Refresh before retrying; no submission was confirmed.');
  }
  private async publish(context:Context,command:Extract<ExperimentCommand,{action:'register'|'outcome'}>,commandDigest:string,at:string,parent?:Checked){
   const type=command.action==='register'?'MANIFEST':'OUTCOME';await this.quota(context,at,type);
   let source,related:Checked|undefined;
   if(command.action==='register'){
-   const selected=experimentInputStrategy(command.input);source=await this.source(selected.record.id,true);
+   const selected=experimentInputStrategy(command.input);source=await this.source(selected.record.id,true,experimentMethodVersion(command)===3?2:1);
    if(source.digest!==selected.digest||source.payload!==JSON.stringify(selected.record))throw new ExperimentError('The exact published strategy does not match this input.',400);
-   if('method'in command&&command.input.config.origin!=='PUBLIC_STRATEGY')throw new ExperimentError('Continuous public evidence requires an exact published Strategy Hub source.',400);
+   if('method'in command&&command.method==='CONTINUOUS_DEMO'&&command.input.config.origin!=='PUBLIC_STRATEGY')throw new ExperimentError('Continuous public evidence requires an exact published Strategy Hub source.',400);
    await verifyExperimentManifestInput(command.input,command.evaluator);
   }else{
    if(!parent||parent.record.type!=='MANIFEST')throw new ExperimentError('Exact manifest not found.',404);
-   if((parent.record.version===2)!==('method'in command))throw new ExperimentError('Outcome method must match the exact registered manifest.',400);
+   if(parent.record.version!==experimentMethodVersion(command))throw new ExperimentError('Outcome method must match the exact registered manifest.',400);
    const projected=await this.project(parent);if(projected.state!=='VISIBLE')throw new ExperimentError('The parent manifest is not visible.');source=(await this.bindings(parent)).source;
    if(command.result.kind==='ARTIFACT'){
     await verifyExperimentArtifact(command.result.artifact,parent.record.content.input);
@@ -331,7 +334,7 @@ export class ExperimentRepository{
    const count=await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(parent.record.id).first<{n:number}>();if(!count||count.n>=experimentLimits.outcomesPerManifest)throw new ExperimentError('This manifest’s retained outcome capacity has been reached.',429);
   }
   if(!source.visible)throw new ExperimentError('The underlying strategy is not visible.');
-  const raw={version:'method'in command?2:1,id:command.id,requestId:command.requestId,createdAt:at,author:context.author,type,content:content(command),flags:command.action==='register'?experimentManifestFlags(command.disclosures):experimentOutcomeFlags(context.reference,experimentAuthorReference(parent!.record.author),command.claim),policyAccepted:command.policyAccepted,classification:'AUTHOR_REPORTED',executionEnabled:false};
+  const raw={version:experimentMethodVersion(command),id:command.id,requestId:command.requestId,createdAt:at,author:context.author,type,content:content(command),flags:command.action==='register'?experimentManifestFlags(command.disclosures):experimentOutcomeFlags(context.reference,experimentAuthorReference(parent!.record.author),command.claim),policyAccepted:command.policyAccepted,classification:'AUTHOR_REPORTED',executionEnabled:false};
   const {record,payload}=boundedExperimentRecord(raw),digest=await experimentDigest(payload),values:Values=[record.id,type,parent?.record.id??'',parent?.row.digest??'',source.id,source.digest,context.key,context.sponsor,command.requestId,commandDigest,payload,digest,at];
   const clauses=[this.requestClause(context,command.requestId,values),this.credentialClause(context,at,values),this.sourceClause(source,values),...this.quotaClauses(context,at,type,values)];
   if(parent)clauses.push(this.targetClause(parent,values),this.visibleClause(parent.record.id,values),`(SELECT COUNT(*) FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?3)<${experimentLimits.outcomesPerManifest}`);

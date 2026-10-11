@@ -2,6 +2,8 @@ import {z} from 'zod';
 import {strategyAuthorSchema,strategyAuthorReferenceSchema,strategyAuthorReference,strategyDigest,strategyPublicHumanId,strategyPublicEventSchema,strategyPrivateReportSchema,strategyReportReceiptSchema,strategyMeSchema,type StrategyActor,type StrategyAuthor,type StrategyAuthorReference} from './strategy-model';
 import {demoRequestSchema,demoArtifactSchema,demoEvaluatorVersion,demoEvaluatorMethod,boundedDemoRequest,verifyDemoArtifact,type DemoRequest} from './demo-model';
 import {sessionEvidenceInputSchema,sessionEvidenceArtifactSchema,sessionEvidenceEvaluatorSchema,boundedSessionEvidenceInput,boundedSessionEvidenceArtifact,verifySessionEvidenceInput,verifySessionEvidenceArtifact,type SessionEvidenceInput,type SessionEvidenceEvaluator} from './session-evidence-model';
+import {programRunInputSchema,programRunOutcomeSchema,programImplementationSchema,programRunMethod,boundedProgramRunInput,guardProgramData,type ProgramRunInput,type ProgramRunOutcome} from './program-run-model';
+import {verifyProgramRunInput,validateProgramRunOutcome} from './program-evidence';
 export {strategyAuthorReference as experimentAuthorReference,strategyDigest as experimentDigest,strategyPublicHumanId as experimentPublicHumanId};
 export type ExperimentActor=StrategyActor;
 export type ExperimentAuthor=StrategyAuthor;
@@ -27,11 +29,19 @@ export const experimentContinuousRegisterSchema=z.object({action:z.literal('regi
 export const experimentContinuousResultSchema=z.discriminatedUnion('kind',[z.object({kind:z.literal('ARTIFACT'),artifact:sessionEvidenceArtifactSchema}).strict(),z.object({kind:z.literal('INTERRUPTED'),reason:text(2000)}).strict(),z.object({kind:z.literal('ARTIFACT_UNAVAILABLE'),reason:text(2000)}).strict()]);
 const continuousOutcomeFields={method:z.literal('CONTINUOUS_DEMO'),name:text(120),manifest:experimentReferenceSchema,result:experimentContinuousResultSchema,claim:experimentClaimSchema};
 export const experimentContinuousOutcomeSchema=z.object({action:z.literal('outcome'),requestId:uuid,id:uuid,...continuousOutcomeFields,policyAccepted:policy}).strict().refine(value=>value.id!==value.manifest.id&&value.id!==value.claim.relation?.id,'An outcome cannot reference itself.');
+export const experimentProgramEvaluatorSchema=z.object({version:z.literal(programRunMethod.version),sourceVersion:text(80),implementations:programImplementationSchema,methodDigest:hash}).strict();
+const programManifestFields={method:z.literal('PROGRAM_DEMO'),name:text(120),input:programRunInputSchema,evaluator:experimentProgramEvaluatorSchema,disclosures:experimentDisclosuresSchema};
+export const experimentProgramRegisterSchema=z.object({action:z.literal('register'),requestId:uuid,id:uuid,...programManifestFields,policyAccepted:policy}).strict();
+export const experimentProgramResultSchema=z.discriminatedUnion('kind',[z.object({kind:z.literal('ARTIFACT'),artifact:programRunOutcomeSchema}).strict(),z.object({kind:z.literal('INTERRUPTED'),reason:text(2000)}).strict(),z.object({kind:z.literal('ARTIFACT_UNAVAILABLE'),reason:text(2000)}).strict()]);
+const programOutcomeFields={method:z.literal('PROGRAM_DEMO'),name:text(120),manifest:experimentReferenceSchema,result:experimentProgramResultSchema,claim:experimentClaimSchema};
+export const experimentProgramOutcomeSchema=z.object({action:z.literal('outcome'),requestId:uuid,id:uuid,...programOutcomeFields,policyAccepted:policy}).strict().refine(value=>value.id!==value.manifest.id&&value.id!==value.claim.relation?.id,'An outcome cannot reference itself.');
+/** Explicit additive protocol discriminator. Presence of kind/method alone never means continuous. */
+export function experimentMethodVersion(value:unknown):1|2|3{const method=value&&typeof value==='object'&&'method'in value?value.method:undefined;if(method===undefined)return 1;if(method==='CONTINUOUS_DEMO')return 2;if(method==='PROGRAM_DEMO')return 3;throw new ExperimentError('Unsupported experiment method.',400);}
 const common={requestId:uuid,id:uuid,digest:hash,policyAccepted:policy};
 export const experimentWithdrawSchema=z.object({action:z.literal('withdraw'),...common,reason:z.enum(['AUTHOR_REQUEST','SPONSOR_REQUEST','PERSONAL_DATA','CREDENTIAL_EXPOSURE'])}).strict();
 export const experimentReportSchema=z.object({action:z.literal('report'),...common,reason:z.enum(['SPAM','ABUSE','PERSONAL_DATA','CREDENTIAL_EXPOSURE','MISLEADING','OTHER']),details:text(1500)}).strict();
 export const experimentModerateSchema=z.object({action:z.literal('moderate'),...common,state:z.enum(['VISIBLE','HIDDEN']),reason:z.enum(['SPAM','ABUSE','PERSONAL_DATA','CREDENTIAL_EXPOSURE','MISLEADING','POLICY','RESTORED'])}).strict().refine(value=>(value.state==='VISIBLE')===(value.reason==='RESTORED'),'Restoration requires RESTORED.');
-export const experimentCommandSchema=z.union([experimentRegisterSchema,experimentOutcomeSchema,experimentWithdrawSchema,experimentReportSchema,experimentModerateSchema,experimentContinuousRegisterSchema,experimentContinuousOutcomeSchema]);
+export const experimentCommandSchema=z.union([experimentRegisterSchema,experimentOutcomeSchema,experimentWithdrawSchema,experimentReportSchema,experimentModerateSchema,experimentContinuousRegisterSchema,experimentContinuousOutcomeSchema,experimentProgramRegisterSchema,experimentProgramOutcomeSchema]);
 export type ExperimentCommand=z.infer<typeof experimentCommandSchema>;
 export const experimentFlagSchema=z.enum(['SOURCE_EXECUTION_UNVERIFIED','TIMING_UNVERIFIED','MULTIPLE_TRIALS','POST_SELECTED','INCOMPLETE_SEARCH_LOG','TRAIN_EVAL_OVERLAP','OVERLAP_UNKNOWN','NO_HOLDOUT','HOLDOUT_SEEN','HOLDOUT_ACCESS_UNKNOWN','HOLDOUT_REUSED','SHARED_DEPENDENCIES','SAME_AUTHOR','SAME_SPONSOR']);
 export type ExperimentFlag=z.infer<typeof experimentFlagSchema>;
@@ -42,18 +52,25 @@ export const experimentManifestSchema=z.object({...base,type:z.literal('MANIFEST
 export const experimentOutcomeRecordSchema=z.object({...base,type:z.literal('OUTCOME'),content:z.object(outcomeFields).strict(),...suffix}).strict();
 export const experimentContinuousManifestSchema=z.object({...base,version:z.literal(2),type:z.literal('MANIFEST'),content:z.object(continuousManifestFields).strict(),...suffix}).strict();
 export const experimentContinuousOutcomeRecordSchema=z.object({...base,version:z.literal(2),type:z.literal('OUTCOME'),content:z.object(continuousOutcomeFields).strict(),...suffix}).strict();
+export const experimentProgramManifestSchema=z.object({...base,version:z.literal(3),type:z.literal('MANIFEST'),content:z.object(programManifestFields).strict(),...suffix}).strict();
+export const experimentProgramOutcomeRecordSchema=z.object({...base,version:z.literal(3),type:z.literal('OUTCOME'),content:z.object(programOutcomeFields).strict(),...suffix}).strict();
+export const experimentProgramRecordSchema=z.discriminatedUnion('type',[experimentProgramManifestSchema,experimentProgramOutcomeRecordSchema]);
 export const experimentBatchRecordSchema=z.discriminatedUnion('type',[experimentManifestSchema,experimentOutcomeRecordSchema]);
 export const experimentContinuousRecordSchema=z.discriminatedUnion('type',[experimentContinuousManifestSchema,experimentContinuousOutcomeRecordSchema]);
-export const experimentRecordSchema=z.union([experimentBatchRecordSchema,experimentContinuousRecordSchema]);
+export const experimentRecordSchema=z.union([experimentBatchRecordSchema,experimentContinuousRecordSchema,experimentProgramRecordSchema]);
 export type ExperimentRecord=z.infer<typeof experimentRecordSchema>;
 export type ExperimentManifest=z.infer<typeof experimentManifestSchema>;
 export type ExperimentOutcomeRecord=z.infer<typeof experimentOutcomeRecordSchema>;
 export type ExperimentContinuousManifest=z.infer<typeof experimentContinuousManifestSchema>;
 export type ExperimentContinuousOutcomeRecord=z.infer<typeof experimentContinuousOutcomeRecordSchema>;
+export type ExperimentProgramManifest=z.infer<typeof experimentProgramManifestSchema>;
+export type ExperimentProgramOutcomeRecord=z.infer<typeof experimentProgramOutcomeRecordSchema>;
+export type ExperimentProgramOutcome=ExperimentProgramOutcomeRecord;
 /** Frozen v1 batch callers must narrow before dereferencing dataset or invoking A/B. */
 export function experimentIsBatchManifest(record:ExperimentRecord):record is ExperimentManifest{return record.version===1&&record.type==='MANIFEST';}
 export function experimentIsContinuousManifest(record:ExperimentRecord):record is ExperimentContinuousManifest{return record.version===2&&record.type==='MANIFEST';}
-export function experimentInputStrategy(input:DemoRequest|SessionEvidenceInput){return 'kind'in input?input.config.strategy:input.strategy;}
+export function experimentIsProgramManifest(record:ExperimentRecord):record is ExperimentProgramManifest{return record.version===3&&record.type==='MANIFEST';}
+export function experimentInputStrategy(input:DemoRequest|SessionEvidenceInput|ProgramRunInput){if(!('kind'in input))return input.strategy;switch(input.kind){case 'CONTINUOUS_DEMO_INPUT':return input.config.strategy;case 'LOCAL_PROGRAM_RUN_INPUT':return input.strategy;default:throw new ExperimentError('Unsupported experiment input kind.',400);}}
 export const experimentPublicEventSchema=strategyPublicEventSchema;
 export type ExperimentPublicEvent=z.infer<typeof experimentPublicEventSchema>;
 const state=z.enum(['VISIBLE','HIDDEN','WITHDRAWN']);
@@ -69,7 +86,7 @@ export const experimentPublicItemSchema=z.object({...publicFields,record:experim
  if(reason!==item.reason||item.state!==(own==='WITHDRAWN'?'WITHDRAWN':own==='HIDDEN'||item.suppression?'HIDDEN':'VISIBLE'))bad('Experiment state does not match current suppression and events.');
 });
 export type ExperimentPublicItem=z.infer<typeof experimentPublicItemSchema>;
-export const experimentSummarySchema=z.object({...publicFields,method:z.literal('CONTINUOUS_DEMO').optional(),name:text(120).nullable(),status:z.enum(['COMPLETED','NO_TRADES','HALTED','REJECTED','FAILED','INTERRUPTED','ARTIFACT_UNAVAILABLE','ACTIVE','PAUSED','STOPPING','STOPPED']).nullable(),flags}).strict().refine(value=>outerValid(value)&&(value.state==='VISIBLE'?value.name!==null:value.name===null&&value.status===null&&value.flags.length===0&&value.method===undefined)&&(value.type!=='MANIFEST'||value.status===null),'Summary content must follow current visibility.');
+export const experimentSummarySchema=z.object({...publicFields,method:z.enum(['CONTINUOUS_DEMO','PROGRAM_DEMO']).optional(),name:text(120).nullable(),status:z.enum(['COMPLETED','NO_TRADES','HALTED','REJECTED','FAILED','CANCELLED','INTERRUPTED','ARTIFACT_UNAVAILABLE','ACTIVE','PAUSED','STOPPING','STOPPED']).nullable(),flags}).strict().refine(value=>outerValid(value)&&(value.state==='VISIBLE'?value.name!==null:value.name===null&&value.status===null&&value.flags.length===0&&value.method===undefined)&&(value.type!=='MANIFEST'||value.status===null)&&(value.status!=='CANCELLED'||value.method==='PROGRAM_DEMO'),'Summary content must follow current visibility.');
 export type ExperimentSummary=z.infer<typeof experimentSummarySchema>;
 export const experimentListSchema=z.object({version:z.literal(1),items:z.array(experimentSummarySchema).max(experimentLimits.page),nextCursor:uuid.nullable(),executionEnabled:z.literal(false)}).strict();
 export const experimentOutcomesSchema=experimentListSchema;
@@ -88,24 +105,48 @@ function continuousSecrets(value:unknown){if(typeof value==='string'){let string
 function evidenceError(error:unknown):never{throw new ExperimentError('Continuous evidence is invalid or exceeds its registry allowance.',error&&typeof error==='object'&&'status'in error&&error.status===413?413:400);}
 function continuousInput(raw:unknown){try{return boundedSessionEvidenceInput(raw);}catch(error){return evidenceError(error);}}
 function continuousArtifact(raw:unknown){try{return boundedSessionEvidenceArtifact(raw);}catch(error){return evidenceError(error);}}
-export function boundedExperimentCommand(raw:unknown){depth(raw);const command=experimentCommandSchema.parse(raw),payload=JSON.stringify(command);if(bytes(payload)>experimentLimits.requestBytes)throw new ExperimentError('Experiment command is too large.',413);if(command.action==='register'){const input='method'in command?continuousInput(command.input):boundedDemoRequest(command.input);if(bytes(input.payload)>experimentLimits.inputBytes)throw new ExperimentError('Registry input is too large.',413);secrets(command.input);}if(command.action==='outcome'&&command.result.kind==='ARTIFACT'){if('method'in command)continuousArtifact(command.result.artifact);if(bytes(JSON.stringify(command.result.artifact))>experimentLimits.artifactBytes)throw new ExperimentError('Registry artifact is too large.',413);secrets(command.result.artifact);}if('method'in command)continuousSecrets(command);return {command,payload};}
-export function boundedExperimentRecord(raw:unknown){depth(raw);const record=experimentRecordSchema.parse(raw),payload=JSON.stringify(record);if(bytes(payload)>(record.type==='MANIFEST'?experimentLimits.manifestBytes:experimentLimits.outcomeBytes))throw new ExperimentError('Experiment record is too large.',413);boundedExperimentCommand({action:record.type==='MANIFEST'?'register':'outcome',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});return {record,payload};}
+function programEvidenceError(error:unknown):never{if(error instanceof ExperimentError)throw error;throw new ExperimentError('Program evidence identities or structure are invalid.',error instanceof Error&&/byte limit/.test(error.message)?413:400);}
+function boundedPublicProgramData(raw:unknown,maximum:number){try{return guardProgramData(raw,maximum);}catch(error){return programEvidenceError(error);}}
+export function boundedExperimentCommand(raw:unknown){
+ depth(raw);if(raw&&typeof raw==='object'&&'method'in raw&&raw.method==='PROGRAM_DEMO')boundedPublicProgramData(raw,experimentLimits.requestBytes);const command=experimentCommandSchema.parse(raw),payload=JSON.stringify(command);if(bytes(payload)>experimentLimits.requestBytes)throw new ExperimentError('Experiment command is too large.',413);
+ if(command.action==='register'){
+  const method=experimentMethodVersion(command);if(method===3)boundedPublicProgramData(command.input,experimentLimits.inputBytes);const input=method===3?boundedProgramRunInput(command.input):method===2?continuousInput(command.input):boundedDemoRequest(command.input);
+  if(bytes(input.payload)>experimentLimits.inputBytes)throw new ExperimentError('Registry input is too large.',413);secrets(command.input);
+ }
+ if(command.action==='outcome'&&command.result.kind==='ARTIFACT'){
+  if(bytes(JSON.stringify(command.result.artifact))>experimentLimits.artifactBytes)throw new ExperimentError('Registry artifact is too large.',413);
+  if(experimentMethodVersion(command)===2)continuousArtifact(command.result.artifact);
+  else if(experimentMethodVersion(command)===3)boundedPublicProgramData(command.result.artifact,experimentLimits.artifactBytes);
+  secrets(command.result.artifact);
+ }
+ if('method'in command)continuousSecrets(command);return {command,payload};
+}
+export function boundedExperimentRecord(raw:unknown){depth(raw);if(raw&&typeof raw==='object'&&'version'in raw&&raw.version===3)boundedPublicProgramData(raw,'type'in raw&&raw.type==='MANIFEST'?experimentLimits.manifestBytes:experimentLimits.outcomeBytes);const record=experimentRecordSchema.parse(raw),payload=JSON.stringify(record);if(bytes(payload)>(record.type==='MANIFEST'?experimentLimits.manifestBytes:experimentLimits.outcomeBytes))throw new ExperimentError('Experiment record is too large.',413);boundedExperimentCommand({action:record.type==='MANIFEST'?'register':'outcome',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});return {record,payload};}
 export function experimentManifestFlags(disclosures:z.infer<typeof experimentDisclosuresSchema>):ExperimentFlag[]{const result:ExperimentFlag[]=['SOURCE_EXECUTION_UNVERIFIED','TIMING_UNVERIFIED'];const s=disclosures.search,v=disclosures.validation;if(s.trialCount>1)result.push('MULTIPLE_TRIALS');if(s.selection!=='FIRST_DECLARED')result.push('POST_SELECTED');if(s.logCompleteness!=='COMPLETE')result.push('INCOMPLETE_SEARCH_LOG');if(v.trainEvaluationOverlap==='PRESENT')result.push('TRAIN_EVAL_OVERLAP');if(v.trainEvaluationOverlap==='UNKNOWN')result.push('OVERLAP_UNKNOWN');if(!v.holdoutDeclared)result.push('NO_HOLDOUT');if(v.holdoutPriorAccess==='SEEN')result.push('HOLDOUT_SEEN');if(v.holdoutPriorAccess==='UNKNOWN')result.push('HOLDOUT_ACCESS_UNKNOWN');if(v.holdoutReuseCount>0)result.push('HOLDOUT_REUSED');if(disclosures.conflicts.sharedDependencies.length)result.push('SHARED_DEPENDENCIES');return result;}
 export function experimentOutcomeFlags(author:ExperimentAuthorReference,parent:ExperimentAuthorReference,claim:z.infer<typeof experimentClaimSchema>):ExperimentFlag[]{const result:ExperimentFlag[]=['SOURCE_EXECUTION_UNVERIFIED','TIMING_UNVERIFIED'];if(author.kind===parent.kind&&author.id===parent.id)result.push('SAME_AUTHOR');if(author.sponsorId===parent.sponsorId)result.push('SAME_SPONSOR');if(claim.sharedDependencies.length)result.push('SHARED_DEPENDENCIES');return result;}
-/** Public server identity checks only: no Session or Demo evaluator is executed. */
-export async function verifyExperimentManifestInput(input:DemoRequest|SessionEvidenceInput,evaluator:z.infer<typeof experimentEvaluatorSchema>|SessionEvidenceEvaluator){
- if('kind'in input){
+/** Public server identity checks only: no guest, Session or Demo evaluator is executed. */
+export async function verifyExperimentManifestInput(input:DemoRequest|SessionEvidenceInput|ProgramRunInput,evaluator:z.infer<typeof experimentEvaluatorSchema>|SessionEvidenceEvaluator|z.infer<typeof experimentProgramEvaluatorSchema>){
+ if('kind'in input&&input.kind==='LOCAL_PROGRAM_RUN_INPUT'){
+  try{await verifyProgramRunInput(input);}catch(error){programEvidenceError(error);}
+  if(evaluator.version!==programRunMethod.version||evaluator.methodDigest!==input.methodDigest||!('implementations'in evaluator)||JSON.stringify(evaluator.implementations)!==JSON.stringify(programRunMethod.implementations))throw new ExperimentError('The declared program evaluator does not match the exact bounded method.',400);
+ }else if('kind'in input){
   try{await verifySessionEvidenceInput(input);}catch(error){evidenceError(error);}
   if(input.config.origin!=='PUBLIC_STRATEGY')throw new ExperimentError('Continuous public evidence requires an exact published Strategy Hub source.',400);
   if(evaluator.version!==input.implementation.version||evaluator.methodDigest!==input.methodDigest||!('sourceDigests'in evaluator)||JSON.stringify(evaluator.sourceDigests)!==JSON.stringify({engine:input.implementation.engine,model:input.implementation.model,journal:input.implementation.journal}))throw new ExperimentError('The declared Session evaluator does not match the exact snapshot.',400);
  }else if(evaluator.version!==demoEvaluatorVersion||evaluator.methodDigest!==await strategyDigest(JSON.stringify(demoEvaluatorMethod)))throw new ExperimentError('The declared method digest does not match the trusted Demo method.',400);
  return input;
 }
-export async function verifyExperimentArtifact(artifact:z.infer<typeof demoArtifactSchema>|z.infer<typeof sessionEvidenceArtifactSchema>,input:DemoRequest|SessionEvidenceInput){
- let checked;try{checked='kind'in input?await verifySessionEvidenceArtifact(artifact):await verifyDemoArtifact(artifact);}catch(error){if('kind'in input)evidenceError(error);throw new ExperimentError('The Demo artifact identity is invalid.',400);}
+export async function verifyExperimentArtifact(artifact:z.infer<typeof demoArtifactSchema>|z.infer<typeof sessionEvidenceArtifactSchema>|ProgramRunOutcome,input:DemoRequest|SessionEvidenceInput|ProgramRunInput){
+ let checked;
+ try{checked='kind'in input?(input.kind==='LOCAL_PROGRAM_RUN_INPUT'?await validateProgramRunOutcome(artifact,input):await verifySessionEvidenceArtifact(artifact)):await verifyDemoArtifact(artifact);}
+ catch(error){if('kind'in input){if(input.kind==='LOCAL_PROGRAM_RUN_INPUT')programEvidenceError(error);evidenceError(error);}throw new ExperimentError('The Demo artifact identity is invalid.',400);}
  if(!checked.input||JSON.stringify(checked.input)!==JSON.stringify(input))throw new ExperimentError('Artifact input must exactly match the registered manifest.',400);
  return checked;
 }
+/** Retained artifact identity without reconstructing any declared method. */
+export async function verifyExperimentRecordArtifact(record:ExperimentRecord){if(record.type!=='OUTCOME'||record.content.result.kind!=='ARTIFACT')return null;return record.version===3?validateProgramRunOutcome(record.content.result.artifact):record.version===2?verifySessionEvidenceArtifact(record.content.result.artifact):verifyDemoArtifact(record.content.result.artifact);}
+export function experimentRecordMethod(record:ExperimentRecord){return record.version===3?'PROGRAM_DEMO' as const:record.version===2?'CONTINUOUS_DEMO' as const:undefined;}
+export function experimentRecordStatus(record:ExperimentRecord){if(record.type!=='OUTCOME')return null;if(record.content.result.kind!=='ARTIFACT')return record.content.result.kind;if(record.version===2)return record.content.result.artifact.projection.status;return record.content.result.artifact.status;}
 export async function validateExperimentItem(raw:unknown){
  const item=experimentPublicItemSchema.parse(raw);if(!item.record)return item;
  const {record,payload}=boundedExperimentRecord(item.record);if(await strategyDigest(payload)!==item.digest)throw new ExperimentError('Experiment digest does not match.',400);
@@ -115,8 +156,8 @@ export async function validateExperimentItem(raw:unknown){
  }else{
   if(JSON.stringify(item.manifest)!==JSON.stringify(record.content.manifest))throw new ExperimentError('Outcome parent does not match.',400);
   if(record.content.result.kind==='ARTIFACT'){
-   const artifact=record.version===2?await verifySessionEvidenceArtifact(record.content.result.artifact):await verifyDemoArtifact(record.content.result.artifact);
-   if(!artifact.input)throw new ExperimentError('Outcome artifact has no retained input.',400);const source=experimentInputStrategy(artifact.input);
+   const artifact=await verifyExperimentRecordArtifact(record);
+   if(!artifact?.input)throw new ExperimentError('Outcome artifact has no retained input.',400);const source=experimentInputStrategy(artifact.input);
    if(source.record.id!==item.strategy.id||source.digest!==item.strategy.digest)throw new ExperimentError('Outcome artifact has no matching retained input.',400);
   }
  }
@@ -126,3 +167,6 @@ export async function validateExperimentItem(raw:unknown){
 export function experimentRegisterDefaults(input:DemoRequest){return {name:'Declared Demo experiment',input,evaluator:{version:demoEvaluatorVersion,sourceVersion:'84a1a668ef160bc3c9c4e0596a514b5d15e6dd49',sourceDigest:'cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51',methodDigest:'a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572'},baseline:'COST_AWARE_LONG_SAME_ALLOCATION_V1' as const,disclosures:{search:{trialCount:1,selection:'FIRST_DECLARED' as const,logCompleteness:'UNAVAILABLE' as const,log:''},validation:{trainEvaluationOverlap:'UNKNOWN' as const,holdoutDeclared:false,holdoutPriorAccess:'UNKNOWN' as const,holdoutReuseCount:0,note:''},transformations:[] as string[],seeds:[] as number[],conflicts:{sharedDependencies:[] as string[],other:''},publication:{dataRights:true as const,publicData:true as const,publicArtifact:true as const}}};}
 /** Retrospective defaults are author declarations; publication still needs explicit new consent. */
 export function experimentContinuousRegisterDefaults(input:SessionEvidenceInput,sourceVersion:string){return {method:'CONTINUOUS_DEMO' as const,name:'Retrospective continuous Demo snapshot',input,evaluator:{version:input.implementation.version,sourceVersion,sourceDigests:{engine:input.implementation.engine,model:input.implementation.model,journal:input.implementation.journal},methodDigest:input.methodDigest},disclosures:{search:{trialCount:1,selection:'FIRST_DECLARED' as const,logCompleteness:'UNAVAILABLE' as const,log:''},validation:{trainEvaluationOverlap:'UNKNOWN' as const,holdoutDeclared:false,holdoutPriorAccess:'UNKNOWN' as const,holdoutReuseCount:0,note:'Retrospective supplied snapshot; receipt clocks and source history are unverified.'},transformations:[] as string[],seeds:[] as number[],conflicts:{sharedDependencies:['Same first-party Session method and pinned implementation'],other:''},publication:{dataRights:true as const,publicData:true as const,publicArtifact:true as const}}};}
+
+/** Retrospective exact source and method declaration. No proof of unseen data or generator execution. */
+export function experimentProgramRegisterDefaults(input:ProgramRunInput,sourceVersion:string){return {method:'PROGRAM_DEMO' as const,name:'Retrospective programmable Demo run',input,evaluator:{version:programRunMethod.version,sourceVersion,implementations:{...programRunMethod.implementations},methodDigest:input.methodDigest},disclosures:{search:{trialCount:1,selection:'FIRST_DECLARED' as const,logCompleteness:'UNAVAILABLE' as const,log:''},validation:{trainEvaluationOverlap:'UNKNOWN' as const,holdoutDeclared:false,holdoutPriorAccess:'UNKNOWN' as const,holdoutReuseCount:0,note:'Retrospective supplied program run; input custody, author prior access and generator execution are unverified.'},transformations:[] as string[],seeds:[] as number[],conflicts:{sharedDependencies:['Same bounded first-party program interpreter and pinned method'],other:''},publication:{dataRights:true as const,publicData:true as const,publicArtifact:true as const}}};}

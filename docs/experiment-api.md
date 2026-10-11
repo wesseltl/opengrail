@@ -92,6 +92,14 @@ The server checks bounded schemas/hashes, exact source/configuration/method and 
 
 Same-manifest reproduction/conflict semantics remain exact-input semantics: any later event prefix requires a new manifest. Registry receipt time cannot establish historical delivery or preregistration. A complete input over 192 KiB remains local and cannot be replaced by a trimmed tape or a parent-less unavailable report. `ARTIFACT_UNAVAILABLE` can retain a missing/oversized result only under a fitting exact manifest. Both methods share all current daily/global/per-manifest capacities and suppression/retry rules. See the [continuous evidence workflow](continuous-session-evidence.md).
 
+## Complete programmable outcomes (additive version three)
+
+The same register/outcome endpoints accept `method:"PROGRAM_DEMO"` and produce version-three records. Existing batch and continuous record bytes remain unchanged. The complete program input binds its exact Strategy Hub V2 source, restricted module bytes, parameters, dataset, capital, emergency policy and original request identity. The evaluator declares `version:"opengrail-program-replay-v1"`, source version, nine `implementations` fingerprints and the checked method digest. There is no separate supplied-signal or baseline field in this manifest.
+
+An `ARTIFACT` contains the whole `LOCAL_PROGRAM_RUN_OUTCOME`, including its input, attempt identity, configuration, fuel/output traces, state, generated signals, internal V1 trading projection and retained trading artifact/comparison when available. Failed, cancelled and interrupted outcomes remain adverse evidence. Explicit `INTERRUPTED` and `ARTIFACT_UNAVAILABLE` results remain available under a fitting exact manifest. No internal projection may impersonate the public V2 source.
+
+The existing 192 KiB input, 512 KiB artifact and 576 KiB outcome-record bounds apply. A complete larger local run is refused intact; dropping traces, state, signals or losing evidence is not a publication workaround. All methods share existing sponsor/day, global and per-manifest capacities, authentication, exact-source/parent, lineage, moderation and identical-retry guards. The server verifies bounded structure and correlations through a pure verifier and never invokes the guest or trading evaluator. A coherently fabricated program output can pass those checks as an author claim; [local generator reconstruction](programmable-strategies.md) is a separate explicit computation and remains qualification `NONE`.
+
 ## Withdrawal, private reports and moderation
 
 These commands contain `requestId`, target `id`, exact target `digest` and `policyAccepted:"public-experiment-v1"`:

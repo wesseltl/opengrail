@@ -23,7 +23,7 @@ export function networkCapabilities(){
   product:'OpenGrail',
   specification:'Current source implementation; hosted authentication and public launch remain unverified.',
   executionEnabled:false,
-  programmableStrategies:{sourceVersion:2,publication:'INERT_ONLY',localPath:'/program',cli:'scripts/program-replay.mjs',method:programRunMethod,limits:programRunLimits,publicProgramManifest:'NOT_IMPLEMENTED',searchAndForward:'NOT_INTEGRATED',generatorQualification:'NONE',hostedExecution:false},
+  programmableStrategies:{sourceVersion:2,publication:'INERT_ONLY',localPath:'/program',cli:'scripts/program-replay.mjs',method:programRunMethod,limits:programRunLimits,publicProgramManifest:{method:'PROGRAM_DEMO',recordVersion:3,execution:'INERT_ONLY'},comparison:{path:'/validation',cli:'scripts/compare-program.mjs',generator:'SAME_IMPLEMENTATION_RECONSTRUCTION',qualification:'NONE'},searchAndForward:'NOT_INTEGRATED',generatorQualification:'NONE',hostedExecution:false},
   endpoints:[
    {path:'/api/network/capabilities',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read this anonymous API specification.'},
    {path:'/api/network/agents',methods:['GET','POST'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'List and manage only the signed-in human’s own agent registrations.',

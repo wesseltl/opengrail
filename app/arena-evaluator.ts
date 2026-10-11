@@ -2,6 +2,7 @@ import {compareDemoArtifact} from './evaluator-comparison';
 import {replayDemo} from './demo-engine';
 import {verifyDemoArtifact} from './demo-model';
 import {evaluatorSourceFingerprints} from './evaluator-fingerprints';
+import {compareProgramOutcome} from './program-comparison';
 import {validateArenaMembers,arenaProtocols,initialArenaRows,arenaRiskDiagnostics,arenaRanking,sealArenaReport,verifyArenaReport,type ArenaMember,type ArenaRow,type ArenaReport} from './arena-model';
 
 /** Only fixed application evaluators run. Every selected competitor is retained,
@@ -15,8 +16,19 @@ export async function evaluateArena(rawMembers:ArenaMember[],options:{signal?:Ab
   const row=rows[i],o=member.outcome,m=member.manifest,s=member.strategy;
   if(cancelled()){row.status='INTERRUPTED';row.reason='USER_CANCELLED';progress();continue;}
   if(o.state!=='VISIBLE'||m.state!=='VISIBLE'||s.state!=='VISIBLE'||!o.record||!m.record||!s.record){row.reason='PUBLIC_CONTENT_UNAVAILABLE';progress();continue;}
-  if(o.record.version!==1||m.record.version!==1){row.reason='CONTINUOUS_METHOD_UNSUPPORTED';progress();continue;}
   if(o.record.type!=='OUTCOME'||m.record.type!=='MANIFEST'){row.reason='EVIDENCE_BINDING_UNAVAILABLE';progress();continue;}
+  if(o.record.version===3&&m.record.version===3){
+   if(o.record.content.result.kind!=='ARTIFACT'){row.reason=o.record.content.result.kind;progress();continue;}
+   try{
+    const fresh=await compareProgramOutcome(o.record.content.result.artifact,{signal:options.signal});row.programComparison=fresh.report;row.programReconstructed=fresh.reconstructed;
+    if(fresh.reconstructed){row.reconstructed=fresh.reconstructed.artifact;row.comparison=fresh.reconstructed.comparison;if(row.reconstructed)row.diagnostics=arenaRiskDiagnostics(row.reconstructed);}
+    if(cancelled()){row.status='INTERRUPTED';row.reason='USER_CANCELLED';}
+    else if(fresh.reconstructed&&['MATCH','MISMATCH'].includes(fresh.report.status)){row.status='CHECKED';row.reason=null;}
+    else{row.status='HELD';row.reason=fresh.report.status==='INTERRUPTED'?'CLAIM_INTERRUPTED':'PROGRAM_RECONSTRUCTION_UNAVAILABLE';}
+   }catch{row.status=cancelled()?'INTERRUPTED':'HELD';row.reason=cancelled()?'USER_CANCELLED':'PROGRAM_RECONSTRUCTION_FAILED';}
+   progress();continue;
+  }
+  if(o.record.version!==1||m.record.version!==1){row.reason='CONTINUOUS_METHOD_UNSUPPORTED';progress();continue;}
   if(o.record.content.result.kind!=='ARTIFACT'){row.reason=o.record.content.result.kind;progress();continue;}
   if(m.record.content.evaluator.sourceDigest!==evaluatorSourceFingerprints.primary){row.reason='UNSUPPORTED_EVALUATOR';progress();continue;}
   try{

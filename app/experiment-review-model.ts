@@ -1,8 +1,9 @@
 import {z} from 'zod';
 import {comparisonReportSchema,comparisonLimits,verifyComparisonReport,compareComparisonPair,type ComparisonReport} from './comparison-model';
 import {boundedStrategyRecord,strategyDigest,strategyPublicItemSchema,type StrategyPublicItem} from './strategy-model';
-import {experimentReferenceSchema,experimentPublicItemSchema,experimentPublicEventSchema,experimentPrivateReportSchema,experimentReportReceiptSchema,experimentPublicHumanId,validateExperimentItem,verifyExperimentArtifact,experimentManifestFlags,experimentOutcomeFlags,type ExperimentPublicItem,type ExperimentAuthorReference} from './experiment-model';
+import {experimentReferenceSchema,experimentPublicItemSchema,experimentPublicEventSchema,experimentPrivateReportSchema,experimentReportReceiptSchema,experimentPublicHumanId,validateExperimentItem,verifyExperimentArtifact,experimentManifestFlags,experimentOutcomeFlags,experimentInputStrategy,type ExperimentPublicItem,type ExperimentAuthorReference} from './experiment-model';
 import {ventureCredentialLike} from './venture-model';
+import {programComparisonReportSchema,programComparisonLimits,verifyProgramComparisonReport,bindProgramComparisonReport,programOutcomesSemanticallyEqual} from './program-comparison-model';
 
 export {experimentPublicHumanId as experimentReviewPublicHumanId,strategyDigest as experimentReviewDigest,experimentPublicEventSchema as experimentReviewPublicEventSchema,experimentPrivateReportSchema as experimentReviewPrivateReportSchema,experimentReportReceiptSchema as experimentReviewReportReceiptSchema};
 export const experimentReviewLimits={requestBytes:393216,recordBytes:327680,maximumDepth:16,page:20,reviewsPerOutcome:32,retained:250,perSponsorDay:10,eventsPerRecord:16,reportsPerSponsorDay:10,reportsStored:250,verificationMemoEntries:128} as const;
@@ -20,7 +21,7 @@ export type ExperimentReviewActor={kind:'HUMAN';userId:string;moderator:boolean;
 export const experimentReviewReasonSchema=z.enum(experimentReviewReasons);
 const reasons=z.array(experimentReviewReasonSchema).min(1).max(16).refine(value=>new Set(value).size===value.length,'Review reasons must be unique.');
 export const experimentReviewTargetSchema=z.object({original:experimentReferenceSchema,reproduction:experimentReferenceSchema,manifest:experimentReferenceSchema,strategy:experimentReferenceSchema}).strict().refine(value=>value.original.id!==value.reproduction.id,'Original and reproduction must be distinct outcomes.');
-export const experimentReviewEvidenceSchema=z.object({original:comparisonReportSchema,reproduction:comparisonReportSchema}).strict();
+export const experimentReviewEvidenceSchema=z.union([z.object({original:comparisonReportSchema,reproduction:comparisonReportSchema}).strict(),z.object({method:z.literal('PROGRAM_DEMO'),original:programComparisonReportSchema,reproduction:programComparisonReportSchema}).strict()]);
 export const experimentReviewAttestationsSchema=z.object({fixedCode:z.boolean(),exactInputs:z.boolean(),inspectedDifferences:z.boolean(),separateOriginalAndReproductionProcesses:z.boolean()}).strict();
 const sharedDependencies=z.tuple([z.literal('METHOD_SPECIFICATION'),z.literal('JAVASCRIPT_NUMBER_RUNTIME'),z.literal('INPUT_SCHEMAS_AND_HASHING'),z.literal('INPUT_DATA_AND_OPERATOR'),z.literal('REVIEW_OF_PRIMARY_SOURCE')]);
 const decision=z.enum(['REPRODUCED','DISPUTED','HELD','REJECTED']);
@@ -100,18 +101,19 @@ function plain(value:unknown,n=0){
   if(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value))throw new ExperimentReviewError('Review strings contain invalid controls.',400);
  }else if(value!==null&&typeof value!=='boolean'&&(typeof value!=='number'||!Number.isFinite(value)))throw new ExperimentReviewError('Review material must be plain JSON data.',400);
 }
-function reportBounds(evidence:z.infer<typeof experimentReviewEvidenceSchema>|null){if(evidence)for(const report of Object.values(evidence))if(bytes(JSON.stringify(report))>comparisonLimits.reportBytes)throw new ExperimentReviewError('Comparison evidence exceeds its bound.',413);}
+function reportBounds(evidence:z.infer<typeof experimentReviewEvidenceSchema>|null){if(evidence)for(const report of [evidence.original,evidence.reproduction])if(bytes(JSON.stringify(report))>('method'in evidence?programComparisonLimits.reportBytes:comparisonLimits.reportBytes))throw new ExperimentReviewError('Comparison evidence exceeds its bound.',413);}
+async function verifyReviewEvidence(evidence:z.infer<typeof experimentReviewEvidenceSchema>){for(const report of [evidence.original,evidence.reproduction])if('method'in evidence)await verifyProgramComparisonReport(report);else await verifyComparisonReport(report);}
 export function boundedExperimentReviewCommand(raw:unknown){plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review command exceeds its bound.',413);const command=experimentReviewCommandSchema.parse(raw),payload=JSON.stringify(command);if(bytes(payload)>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review command exceeds its bound.',413);if(command.action==='review')reportBounds(command.evidence);return {command,payload};}
 export function boundedExperimentReviewRecord(raw:unknown){plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.recordBytes)throw new ExperimentReviewError('Review record exceeds its bound.',413);const record=experimentReviewRecordSchema.parse(raw),payload=JSON.stringify(record);if(bytes(payload)>experimentReviewLimits.recordBytes)throw new ExperimentReviewError('Review record exceeds its bound.',413);boundedExperimentReviewCommand(experimentReviewCommandForRecord(record));return {record,payload};}
 export async function validateExperimentReviewItem(raw:unknown){
  plain(raw);const item=experimentReviewPublicItemSchema.parse(raw);
- if(item.record){const checked=boundedExperimentReviewRecord(item.record);if(await strategyDigest(checked.payload)!==item.digest)throw new ExperimentReviewError('Review record digest does not match.',400);if(checked.record.content.evidence)for(const report of Object.values(checked.record.content.evidence))await verifyComparisonReport(report);}
+ if(item.record){const checked=boundedExperimentReviewRecord(item.record);if(await strategyDigest(checked.payload)!==item.digest)throw new ExperimentReviewError('Review record digest does not match.',400);if(checked.record.content.evidence)await verifyReviewEvidence(checked.record.content.evidence);}
  return item;
 }
 const draftBody=z.object({version:z.literal(1),kind:z.literal('LOCAL_EXPERIMENT_REVIEW_DRAFT'),preparedAt:clock,target:experimentReviewTargetSchema,evidence:experimentReviewEvidenceSchema,classification:z.literal('AUTHOR_REPORTED'),qualification:z.literal('NONE'),independence:z.literal('NOT_ESTABLISHED'),ordersEnabled:z.literal(false)}).strict();
 export const experimentReviewDraftSchema=draftBody.extend({draftDigest:hash});
 export type LocalExperimentReviewDraft=z.infer<typeof experimentReviewDraftSchema>;
-export async function sealExperimentReviewDraft(raw:unknown):Promise<LocalExperimentReviewDraft>{plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review draft exceeds its bound.',413);const body=draftBody.parse(raw);reportBounds(body.evidence);for(const report of Object.values(body.evidence))await verifyComparisonReport(report);const result=experimentReviewDraftSchema.parse({...body,draftDigest:await strategyDigest(JSON.stringify(body))});if(bytes(JSON.stringify(result))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review draft exceeds its bound.',413);return result;}
+export async function sealExperimentReviewDraft(raw:unknown):Promise<LocalExperimentReviewDraft>{plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review draft exceeds its bound.',413);const body=draftBody.parse(raw);reportBounds(body.evidence);await verifyReviewEvidence(body.evidence);const result=experimentReviewDraftSchema.parse({...body,draftDigest:await strategyDigest(JSON.stringify(body))});if(bytes(JSON.stringify(result))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review draft exceeds its bound.',413);return result;}
 export async function verifyExperimentReviewDraft(raw:unknown):Promise<LocalExperimentReviewDraft>{plain(raw);const draft=experimentReviewDraftSchema.parse(raw),{draftDigest,...body}=draft;const checked=await sealExperimentReviewDraft(body);if(checked.draftDigest!==draftDigest)throw new ExperimentReviewError('Review draft identity does not match.',400);return checked;}
 export type ExperimentReviewReferences={original:ExperimentPublicItem;reproduction:ExperimentPublicItem;manifest:ExperimentPublicItem;strategy:StrategyPublicItem};
 /** Allocate once per repository operation. Never retain across requests, populate
@@ -202,21 +204,41 @@ export async function validateExperimentReviewBindings(raw:ExperimentReviewPubli
  requireBinding(same(parent.flags,experimentManifestFlags(parent.content.disclosures))&&same(first.flags,experimentOutcomeFlags(original.author,manifest.author,first.content.claim))&&same(second.flags,experimentOutcomeFlags(reproduction.author,manifest.author,second.content.claim)),'Review concern flags must retain their exact declarations.');
  requireBinding(second.content.claim.relation!==null&&second.content.claim.relation.id===original.id&&second.content.claim.relation.digest===original.digest,'The reproduction must reference the exact original outcome.');
  requireBinding(original.createdAt>=manifest.createdAt&&reproduction.createdAt>=original.createdAt&&manifest.createdAt>=projected.createdAt,'Review evidence clocks must retain source, manifest and outcome order.');
- const inputSource='kind'in parent.content.input?parent.content.input.config.strategy:parent.content.input.strategy;
+ const inputSource=experimentInputStrategy(parent.content.input);
  requireBinding(same(inputSource.record,source)&&inputSource.digest===projected.digest,'Review source bytes must match the retained manifest input.');
  for(const result of [first.content.result,second.content.result])if(result.kind==='ARTIFACT')await verified(verificationMemo,'artifact:'+JSON.stringify({artifact:result.artifact,input:parent.content.input}),()=>verifyExperimentArtifact(result.artifact,parent.content.input));
  if(at!==undefined){clock.parse(at);requireBinding([original.createdAt,reproduction.createdAt,manifest.createdAt,projected.createdAt].every(value=>value<=at),'Review time cannot precede its exact evidence.');}
  if(parent.version===2){requireBinding(command.decision==='HELD'&&command.evidence===null&&command.reasons.includes('UNSUPPORTED_METHOD'),'Continuous evidence requires an explicit unsupported-method hold.');return;}
- requireBinding(first.version===1&&second.version===1,'Batch evidence requires batch outcomes.');
- if(first.version!==1||second.version!==1)return;
- const results=[first.content.result,second.content.result];
- if(command.evidence){
-  requireBinding(results.every(result=>result.kind==='ARTIFACT'),'Comparison reports require two retained artifacts.');
-  if(first.content.result.kind!=='ARTIFACT'||second.content.result.kind!=='ARTIFACT')return;
-  const a=first.content.result.artifact,b=second.content.result.artifact;
-  requireBinding(same(a.input,b.input)&&a.digests.evaluator===b.digests.evaluator,'Both comparison reports require the exact same accepted input and method.');
-  await Promise.all([verified(verificationMemo,'comparison:'+JSON.stringify({report:command.evidence.original,artifact:a}),()=>bindReport(command.evidence!.original,a)),verified(verificationMemo,'comparison:'+JSON.stringify({report:command.evidence.reproduction,artifact:b}),()=>bindReport(command.evidence!.reproduction,b))]);
-  requireBinding(command.evidence.original.implementations.primary.sourceSha256===parent.content.evaluator.sourceDigest&&command.evidence.reproduction.implementations.primary.sourceSha256===parent.content.evaluator.sourceDigest,'Comparison implementation pins must match the retained manifest declaration.');
+ if(parent.version===3){
+  requireBinding(first.version===3&&second.version===3,'Program evidence requires program outcomes.');
+  if(first.version!==3||second.version!==3)return;
+  if(command.evidence){
+   const evidence=command.evidence;requireBinding('method'in evidence&&evidence.method==='PROGRAM_DEMO','Program review requires program generator comparison evidence.');
+   if(!('method'in evidence))return;
+   requireBinding(first.content.result.kind==='ARTIFACT'&&second.content.result.kind==='ARTIFACT','Program comparison reports require two complete retained outcomes.');
+   if(first.content.result.kind!=='ARTIFACT'||second.content.result.kind!=='ARTIFACT')return;
+   const a=first.content.result.artifact,b=second.content.result.artifact;
+   requireBinding(same(a.input,b.input)&&a.inputDigest===b.inputDigest&&a.digests.method===b.digests.method,'Both generator reports require the exact same accepted input and method.');
+   await Promise.all([verified(verificationMemo,'program-comparison:'+JSON.stringify({report:evidence.original,artifact:a}),()=>bindProgramComparisonReport(evidence.original,a)),verified(verificationMemo,'program-comparison:'+JSON.stringify({report:evidence.reproduction,artifact:b}),()=>bindProgramComparisonReport(evidence.reproduction,b))]);
+   requireBinding(same(evidence.original.implementations,parent.content.evaluator.implementations)&&same(evidence.reproduction.implementations,parent.content.evaluator.implementations),'Program reconstruction pins must match the exact manifest declaration.');
+   if(command.decision==='REPRODUCED'){
+    requireBinding(a.attemptId!==b.attemptId,'Positive program reproduction requires distinct retained attempt identities.');
+    requireBinding(programOutcomesSemanticallyEqual(a,b),'Positive program reproduction cannot contradict retained generator, state, fuel or trading semantics.');
+   }
+  }
+ }else{
+  requireBinding(first.version===1&&second.version===1,'Batch evidence requires batch outcomes.');
+  if(first.version!==1||second.version!==1)return;
+  const results=[first.content.result,second.content.result];
+  if(command.evidence){
+   const evidence=command.evidence;requireBinding(!('method'in evidence),'Batch review cannot substitute program generator evidence.');if('method'in evidence)return;
+   requireBinding(results.every(result=>result.kind==='ARTIFACT'),'Comparison reports require two retained artifacts.');
+   if(first.content.result.kind!=='ARTIFACT'||second.content.result.kind!=='ARTIFACT')return;
+   const a=first.content.result.artifact,b=second.content.result.artifact;
+   requireBinding(same(a.input,b.input)&&a.digests.evaluator===b.digests.evaluator,'Both comparison reports require the exact same accepted input and method.');
+   await Promise.all([verified(verificationMemo,'comparison:'+JSON.stringify({report:evidence.original,artifact:a}),()=>bindReport(evidence.original,a)),verified(verificationMemo,'comparison:'+JSON.stringify({report:evidence.reproduction,artifact:b}),()=>bindReport(evidence.reproduction,b))]);
+   requireBinding(evidence.original.implementations.primary.sourceSha256===parent.content.evaluator.sourceDigest&&evidence.reproduction.implementations.primary.sourceSha256===parent.content.evaluator.sourceDigest,'Comparison implementation pins must match the retained manifest declaration.');
+  }
  }
  if(command.decision==='REPRODUCED'){
   requireBinding(second.content.claim.type==='REPRODUCTION'&&second.content.claim.relation?.type==='SUPPORTS','Positive review requires a supported reproduction lineage.');

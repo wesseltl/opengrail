@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 const root=new URL('../',import.meta.url);
-export const programFingerprintFiles=Object.freeze({interpreter:'app/program-wasm.ts',runner:'app/program-run.ts',inputModel:'app/program-run-model.ts',sourceModel:'app/program-source-model.ts',strategyModel:'app/strategy-model.ts',demoModel:'app/demo-model.ts',serialization:'app/unique-json.ts',lockfile:'package-lock.json'});
+export const programFingerprintFiles=Object.freeze({interpreter:'app/program-wasm.ts',runner:'app/program-run.ts',inputModel:'app/program-run-model.ts',evidenceModel:'app/program-evidence.ts',sourceModel:'app/program-source-model.ts',strategyModel:'app/strategy-model.ts',demoModel:'app/demo-model.ts',serialization:'app/unique-json.ts',lockfile:'package-lock.json'});
 const hash=path=>createHash('sha256').update(readFileSync(new URL(path,root))).digest('hex');
 export function currentProgramFingerprints(){return Object.fromEntries(Object.entries(programFingerprintFiles).map(([key,path])=>[key,hash(path)]));}
 /** Fixed file data only; never evaluate the generated TypeScript or caller input. */

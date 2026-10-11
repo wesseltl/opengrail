@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve,dirname,relative,isAbsolute} from 'node:path';
 import {createHash} from 'node:crypto';
 import {build} from 'esbuild';
+import {assertProgramExecutionFingerprints} from './program-fingerprint-core.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const identity=stat=>[stat.dev,stat.ino,stat.mode,stat.size,stat.mtimeMs,stat.ctimeMs].join(':');
@@ -13,6 +14,7 @@ async function main(){
  const [command,input,output,...extra]=process.argv.slice(2);
  if(command!=='compare'||!input||!output||extra.length){process.stderr.write('Usage: node scripts/compare-arena.mjs compare MEMBERS.json NEW_REPORT.json\n');return 1;}
  const root=fileURLToPath(new URL('../',import.meta.url)),physicalRoot=realpathSync(root);
+ assertProgramExecutionFingerprints();
  const pins=[source(physicalRoot,'app/demo-engine.ts'),source(physicalRoot,'app/reference-engine.ts')];
  const buildOptions={stdin:{contents:"export {evaluateArena} from './app/arena-evaluator';export {verifyArenaReport,arenaLimits} from './app/arena-model';export {parseUniqueJson} from './app/unique-json';export {evaluatorSourceFingerprints} from './app/evaluator-fingerprints';",resolveDir:physicalRoot},absWorkingDir:physicalRoot,bundle:true,write:false,metafile:true,format:'esm',platform:'browser',target:'es2022'};
  const discovery=await build(buildOptions),paths=Object.keys(discovery.metafile.inputs).filter(path=>path!=='<stdin>').sort(),graph=paths.map(path=>source(physicalRoot,path));unchanged(pins);
@@ -22,7 +24,7 @@ async function main(){
  const fixed=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
  for(const [n,key]of ['primary','reference'].entries())if(pins[n].digest!==fixed.evaluatorSourceFingerprints[key])throw Error('Stale evaluator identity.');
  const {bytes,inputIdentity,inputDigest}=readInput(input,fixed.arenaLimits.admissionBytes),raw=fixed.parseUniqueJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),fixed.arenaLimits.admissionBytes,fixed.arenaLimits.maximumDepth);
- unchanged(graph);const report=await fixed.verifyArenaReport(await fixed.evaluateArena(raw));unchanged(graph);
+ unchanged(graph);const report=await fixed.verifyArenaReport(await fixed.evaluateArena(raw));unchanged(graph);assertProgramExecutionFingerprints();
  // File paths and source text never become report labels. Supplied review heads
  // and public records are assertions, not current authenticated HTTP responses.
  const wrapper={version:1,kind:'SUPPLIED_SNAPSHOT_ARENA_REPORT',visibility:'SUPPLIED_SNAPSHOTS_NOT_CURRENTLY_VERIFIED',reviewHeads:'SUPPLIED_NOT_AUTHENTICATED_OR_CURRENT',classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',ordersEnabled:false,liveEnabled:false,inputDigest,report};

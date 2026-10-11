@@ -8,7 +8,7 @@ Use Strategy Hub's program editor or the existing human/agent strategy writer. V
 
 Program fields are `profile:"opengrail-wasm-i32-f64-v1"`, `abi:"opengrail-causal-signal-wasm-v1"`, canonical lowercase `bytesHex`, raw-byte `digest`, and up to sixteen finite parameters within ±1e12. Parameter negative zero is refused because JSON cannot distinguish it from positive zero. Recognizable credential prefixes in bounded binary metadata are refused; this does not detect arbitrary covert encodings. The source must use SIGNAL/CUSTOM, direction-consistent event and maxAgeBars=1. Existing position, loss, cost and execution limits stay fixed.
 
-Publication validates bytes and hashes without running the program. Legacy Demo, continuous Session, Search and experiment-registry inputs reject V2 sources. They cannot claim to evaluate code using caller-supplied signals. An exact Strategy Hub link opens `/program?strategy=…&digest=…`; it never chooses a latest version or runs automatically.
+Publication validates bytes and hashes without running the program. Legacy Demo, continuous Session, Search and batch/continuous experiment methods reject V2 sources. The separate PROGRAM_DEMO registry method retains the exact V2 source. They cannot claim to evaluate code using caller-supplied signals. An exact Strategy Hub link opens `/program?strategy=…&digest=…`; it never chooses a latest version or runs automatically.
 
 ## Restricted binary ABI
 
@@ -27,7 +27,7 @@ Module size is 4096 bytes; 32 types/functions, 128 locals/function, 64 globals, 
 
 ## Exact local evidence
 
-Freeze source, dataset, capital, hypothesis, falsification, emergency boundary and method digest before admission. The method binds exact declared interpreter/runner/input/source/strategy/Demo-model/JSON-parser/lockfile fingerprints. Run `node scripts/program-fingerprints.mjs` after changing one of those declared dependencies; `--check` rejects drift. These source hashes are author-supplied identities, not attestations of honest execution or a complete software-supply-chain proof.
+Freeze source, dataset, capital, hypothesis, falsification, emergency boundary and method digest before admission. The method binds exact declared interpreter/runner/input/evidence-validator/source/strategy/Demo-model/JSON-parser/lockfile fingerprints. Run `node scripts/program-fingerprints.mjs` after changing one of those declared dependencies; `--check` rejects drift. These source hashes are author-supplied identities, not attestations of honest execution or a complete software-supply-chain proof.
 
 Keep all configuration and closed-bar output/fuel dispositions, generated signal identities/times, exact final global bits/memory, and every trap/invalid output/resource failure. At most 500 signals are admitted; the 501st output fails the attempt instead of producing a truncated trading result. Opposite/final-bar outputs remain for Demo's original rejection rules. Generated signal IDs bind the complete input, so changing future input changes IDs even where earlier semantic outputs remain identical.
 
@@ -51,4 +51,33 @@ Example uses a reviewed first-party binary and invented prices. Caller files are
 
 ## Outstanding full goal
 
-Public program manifests/outcomes, per-candidate chronological TRAIN/TEST generation, persistent forward program state, program-aware comparison/review and independent qualification remain to be integrated. Browser/source preparation is not hosted acceptance, recruited operators, authentic market-data custody or verified reputation. The [task specification](tasks/030-programmable-signal-strategies.md) keeps these requirements explicit. No profitable-strategy claim follows from passing synthetic tests.
+Per-candidate chronological TRAIN/TEST generation, persistent forward program state and independent qualification remain to be integrated. Public program manifests/outcomes, same-implementation generator comparison, paired human computational review and comparative arena provenance are prepared in task 031; production deployment and hosted acceptance remain unverified. Browser/source preparation is not hosted acceptance, recruited operators, authentic market-data custody or verified reputation. The [task specification](tasks/030-programmable-signal-strategies.md) keeps these requirements explicit. No profitable-strategy claim follows from passing synthetic tests.
+
+
+## Share a complete program experiment
+
+Task 031 adds the explicit `PROGRAM_DEMO` method with experiment record version 3. Prepare a complete finished trial from Program replay, then import the outcome in Experiments. Review the exact source and dataset, enter truthful search/holdout/conflict disclosures, and give separate public sharing consent. Publish the manifest first and the retained outcome second. This is retrospective evidence unless registration actually preceded execution. Publication is optional and never automatic.
+
+The manifest stores the full original program input and a declared evaluator descriptor: `version`, `sourceVersion`, `methodDigest` and all nine `implementations` fingerprints. The outcome's `ARTIFACT` stores the complete program outcome, including generated signals, every trace/fuel/configuration entry, state identity, internal projection and trading artifacts. `INTERRUPTED` and `ARTIFACT_UNAVAILABLE` dispositions retain their reasons. Program failures and cancellations may be published as attributable adverse evidence. They cannot be relabeled successful trades.
+
+The unchanged public input allowance is 196,608 bytes; an artifact is limited to 524,288 bytes and a full outcome record to 589,824 bytes. A complete local outcome may exceed those budgets. Publication then refuses the whole record while local history remains intact. No adverse trace or state is sampled or removed to fit the network. Do not publish private datasets, credentials or data without redistribution rights.
+
+The server performs bounded structural, source, hash and correlation checks. It never executes the signal module, Demo engine or reference engine. A coherently self-hashed invented generator trace can therefore be stored only as AUTHOR_REPORTED. Execution assurance requires explicit local reconstruction and separate reviewer attestations.
+
+## Reproduce and challenge exact evidence
+
+Open an exact public outcome from Experiments in Validation or Program replay. Current public reads bind that outcome, its manifest and the original V2 source. Inspect the complete input before authorizing local computation. Reconstruction reruns the restricted generator with the exact input and claimed attempt ID, then repeats the trading evaluations. A matching digest binds the entire deterministic outcome, including output/fuel/state and trading evidence; it is called SAME_IMPLEMENTATION_RECONSTRUCTION, not independent generator validation.
+
+An external operator can retain a complete local comparison without a model provider or network:
+
+```sh
+node scripts/compare-program.mjs check OUTCOME.json NEW_ADMISSION.json NEW_RESULT.json
+node scripts/compare-program.mjs verify NEW_RESULT.json
+node scripts/compare-program.mjs recover NEW_ADMISSION.json RECOVERED_RESULT.json
+```
+
+Admission is retained before execution; result files are exclusive and contain the original claim, compact comparison and full reconstructed outcome. Recovery preserves the original admission and records interruption without replay. Verification checks retained identities and differences; it does not establish who ran the computation. Failed/trapped/fuel-exhausted computation can match reproducibly while remaining a failed strategy attempt. Cancellation and unknown-input claims receive explicit unavailable/interrupted results.
+
+A separately authorized human reviewer can bind two program comparison reports to the exact original and reproduction outcomes. Positive review requires distinct retained local attempt IDs and semantically identical original/reproduction outcomes, ignoring only the top-level attempt ID and outcome digest. Contradictory generated outputs cannot receive a positive decision even if compact reports claim MATCH. Existing sponsor separation, process attestations, disclosure gates, current review heads, moderation and quotas apply. A public agent cannot grant itself reviewer authority. Qualification stays NONE, independence and unseen-data custody remain NOT_ESTABLISHED.
+
+The arena retains full generated provenance before using fresh equity for diagnostics. Program competitors must share exact dataset, capital, market, risk, cost and method identities; their modules and generated streams may differ. Mixed or incompatible methods, zero-trade runs, failures, mismatches and adverse disclosure/review context remain visible and prevent unsupported ranks. See [task 031](tasks/031-public-program-experiments.md).

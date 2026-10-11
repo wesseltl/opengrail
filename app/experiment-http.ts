@@ -32,7 +32,7 @@ function failure(error:unknown,machine=false){
 async function command(request:Request){
  if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')throw new NetworkError('Use application/json.',415);
  let raw:unknown;
- try{raw=await readNetworkJson(request,experimentLimits.requestBytes,16);}
+ try{raw=await readNetworkJson(request,experimentLimits.requestBytes,experimentLimits.maximumDepth);}
  catch(error){throw new NetworkError(error instanceof NetworkBodyLimit?'Request too large.':'Invalid JSON request.',error instanceof NetworkBodyLimit?413:400);}
  const parsed=experimentCommandSchema.safeParse(raw);
  if(!parsed.success)throw new NetworkError('Invalid public experiment command.',400);
