@@ -22,13 +22,15 @@ async function main(){
   const pending=journal,quoteAt=new Date(Date.parse(emergencyAt)+1).toISOString();
   journal=await m.appendSessionEvent(journal,{requestId:'00000000-0000-4000-8000-000000009002',type:'QUOTE',observedAt:quoteAt,price:open.state.openPositions[0].entryPrice*.8},quoteAt);
   assert.equal(journal.state.status,'STOPPED');assert.equal(journal.state.openPositions.length,0);assert.equal(journal.state.trades.length,1);assert.equal(journal.state.trades[0].reason,'EMERGENCY_STOP');assert(journal.state.trades[0].netPnl<0);assert(journal.state.account.totalFees>0);
-  const directory=new URL('examples/sessions/',root);mkdirSync(directory,{recursive:true});
+  // Current-source fixtures get a new fixed namespace. Archived source-bound
+  // checkpoints at examples/sessions/*.json are never replaced or relabeled.
+  const directory=new URL('examples/sessions/20261011/',root);mkdirSync(directory,{recursive:true});
   for(const [name,value]of [['signal-open.json',open],['emergency-awaiting-quote.json',pending],['emergency-adverse-exit.json',journal]]){
    const reconstructed=await m.reconstructSessionJournal(value);assert.deepEqual(reconstructed,value);
    const text=JSON.stringify(value,null,2)+'\n',target=new URL(name,directory);
    if(existsSync(target))assert.equal(readFileSync(target,'utf8'),text,'Existing evidence differs; preserve it for review.');else writeFileSync(target,text,{flag:'wx',mode:0o600});
   }
-  process.stdout.write('Three synthetic continuous-session checkpoints reconstructed and retained.\n');
+  process.stdout.write('Three current-source synthetic continuous-session checkpoints reconstructed and retained in examples/sessions/20261011/. Archived checkpoints remain unchanged.\n');
  }finally{rmSync(temporary,{recursive:true,force:true});}
 }
 main().catch(()=>{process.stderr.write('Session fixture generation failed. Existing evidence is retained.\n');process.exitCode=1;});

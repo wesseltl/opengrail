@@ -40,6 +40,7 @@ export async function verifyStrategyHandoff(rawReference:StrategyHandoffReferenc
  let item:StrategyPublicItem;try{item=strategyPublicItemSchema.parse(rawPublicItem);}catch{throw new StrategyHandoffError('The public strategy projection is invalid.');}
  if(item.id!==expected.id||item.digest!==expected.digest)throw new StrategyHandoffError('The public strategy does not match the pinned reference.',409);
  if(item.state!=='VISIBLE'||!item.record)throw new StrategyHandoffError('The exact public strategy is unavailable.',409);
+ if(item.record.version!==1)throw new StrategyHandoffError('Program sources require the separate exact program workflow. Ordinary Demo and Session do not execute programs.');
  let canonical:ReturnType<typeof boundedStrategyRecord>;try{canonical=boundedStrategyRecord(item.record);}catch{throw new StrategyHandoffError('The public strategy record is invalid.');}
  if(await strategyDigest(canonical.payload)!==expected.digest)throw new StrategyHandoffError('The public strategy digest does not match its record.');
  return item;

@@ -209,12 +209,28 @@ test('cancellation is retained without a MATCH and snapshot preparation never ch
   await assert.rejects(m.snapshotSessionEvidence(journal, {signal: controller.signal})); assert.equal(JSON.stringify(journal), before);
 });
 
-test('existing full-from-start signal/open, awaiting-emergency and adverse-exit fixtures reconstruct exactly', async () => {
+test('current-source full-from-start signal/open, awaiting-emergency and adverse-exit fixtures reconstruct exactly', async () => {
   for (const name of ['signal-open', 'emergency-awaiting-quote', 'emergency-adverse-exit']) {
-    const journal = JSON.parse(await readFile('examples/sessions/' + name + '.json', 'utf8'));
+    const journal = JSON.parse(await readFile('examples/sessions/20261011/' + name + '.json', 'utf8'));
     const bundle = await m.snapshotSessionEvidence(journal), artifact = artifactOf(bundle), report = await m.reviewSessionEvidence(artifact);
     assert.deepEqual(bundle.input.events, journal.events); assert.equal(report.status, 'MATCH');
     assert.deepEqual(artifact.projection, m.sessionEvidenceProjection(journal.state));
     assert(Buffer.byteLength(JSON.stringify(bundle.input)) < m.sessionEvidenceLimits.inputBytes);
+  }
+});
+
+test('hash-consistent archived checkpoints retain their source identity and refuse current reconstruction without mutation', async () => {
+  for (const name of ['signal-open', 'emergency-awaiting-quote', 'emergency-adverse-exit']) {
+    const path = 'examples/sessions/' + name + '.json', bytes = await readFile(path), journal = JSON.parse(bytes.toString('utf8'));
+    const original = JSON.stringify(journal), {journalDigest, ...body} = journal;
+    assert.equal(await m.strategyDigest(JSON.stringify(body)), journalDigest);
+    const current = JSON.parse(await readFile('examples/sessions/20261011/' + name + '.json', 'utf8'));
+    assert.notEqual(journal.implementation.model, current.implementation.model);
+    assert.notEqual(journal.journalDigest, current.journalDigest);
+    await assert.rejects(m.verifySessionJournal(journal), /source version is inconsistent/);
+    await assert.rejects(m.reconstructSessionJournal(journal), /source version is inconsistent/);
+    await assert.rejects(m.snapshotSessionEvidence(journal), /source version is inconsistent/);
+    assert.equal(JSON.stringify(journal), original);
+    assert.deepEqual(await readFile(path), bytes);
   }
 });

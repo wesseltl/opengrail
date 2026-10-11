@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {strategyRecordSchema,boundedStrategyRecord,strategyDigest,type StrategyRecord} from './strategy-model';
+import {strategyRecordV1Schema as strategyRecordSchema,boundedStrategyRecord,strategyDigest,type StrategyRecordV1 as StrategyRecord} from './strategy-model';
 
 export const demoEvaluatorVersion='opengrail-demo-v1' as const;
 // This binds the declared method, not source code or independent verification.

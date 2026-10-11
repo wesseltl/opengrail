@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {strategyRecordSchema,boundedStrategyRecord,strategyDigest} from './strategy-model';
+import {strategyRecordV1Schema as strategyRecordSchema,boundedStrategyRecord,strategyDigest} from './strategy-model';
 import {demoBarSchema,demoSignalSchema} from './demo-model';
 
 export const sessionVersion='opengrail-session-v1' as const;

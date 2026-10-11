@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {NetworkError} from './network-model';
 import type {NetworkRepository} from './network-store';
 import {readNetworkJson,NetworkBodyLimit} from './network-json';
-import {strategyCommandSchema,strategyLimits,strategyListSchema,strategyGetSchema,strategyHistorySchema,strategyWriteSchema,strategyMeSchema,strategyReportsSchema,StrategyError,strategyPublicHumanId,strategyDigest,type StrategyAuthorReference} from './strategy-model';
+import {strategyCommandSchema,strategyLimits,strategyListSchema,strategyGetSchema,strategyHistorySchema,strategyWriteSchema,strategyMeSchema,strategyReportsSchema,StrategyError,strategyPublicHumanId,strategyDigest,boundedStrategyRecord,verifyStrategyProgram,type StrategyAuthorReference} from './strategy-model';
 import type {StrategyRepository} from './strategy-store';
 import type {StrategyPublicItem} from './strategy-model';
 
@@ -14,7 +14,7 @@ const reply=(body:unknown,status=200,headers:Record<string,string>={})=>Response
 const method=(allowed:string)=>new Response(null,{status:405,headers:{...strategyHeaders,Allow:allowed}});
 async function publicItems(items:StrategyPublicItem[]){
  if(new Set(items.map(item=>item.id)).size!==items.length)throw Error('Duplicate strategy identities.');
- for(const item of items)if(item.record&&await strategyDigest(JSON.stringify(item.record))!==item.digest)throw Error('Strategy public digest mismatch.');
+ for(const item of items)if(item.record){await verifyStrategyProgram(item.record);if(await strategyDigest(JSON.stringify(item.record))!==item.digest)throw Error('Strategy public digest mismatch.');}
 }
 function failure(error:unknown,machine=false){
  if((error instanceof StrategyError||error instanceof NetworkError)&&error.status<500){
@@ -34,6 +34,7 @@ async function command(request:Request){
  catch(error){throw new NetworkError(error instanceof NetworkBodyLimit?'Request too large.':'Invalid JSON request.',error instanceof NetworkBodyLimit?413:400);}
  const parsed=strategyCommandSchema.safeParse(raw);
  if(!parsed.success)throw new NetworkError('Invalid public strategy command.',400);
+ if(parsed.data.action==='publish')try{await verifyStrategyProgram(parsed.data);}catch{throw new NetworkError('Invalid program binary identity.',400);}
  return parsed.data;
 }
 async function correlate(raw:unknown,sent:ReturnType<typeof strategyCommandSchema.parse>,author:StrategyAuthorReference,agentName?:string){
@@ -53,8 +54,14 @@ async function correlate(raw:unknown,sent:ReturnType<typeof strategyCommandSchem
    if(item.requestId!==sent.requestId||JSON.stringify(item.author)!==JSON.stringify(author))throw Error('Strategy publication authorship mismatch.');
    const revision=sent.relation?.type==='REVISION';
    if(revision?(item.rootId===item.id||item.revision<2):(item.rootId!==item.id||item.revision!==1))throw Error('Strategy lineage receipt mismatch.');
+   if('version' in sent){
+    const reconstructed=boundedStrategyRecord({version:2,id:sent.id,rootId:item.rootId,revision:item.revision,requestId:sent.requestId,createdAt:item.createdAt,author:author.kind==='AGENT'?{...author,name:agentName}:author,content:{name:sent.name,description:sent.description,assumptions:sent.assumptions,falsification:sent.falsification,sources:sent.sources,definition:sent.definition,relation:sent.relation,program:sent.program},policyAccepted:sent.policyAccepted,verification:'UNTESTED',executionEnabled:false});
+    if(await strategyDigest(reconstructed.payload)!==item.digest)throw Error('Program receipt differs from the immutable original source.');
+   }
    if(item.record){
-    const record=item.record,content={name:sent.name,description:sent.description,assumptions:sent.assumptions,falsification:sent.falsification,sources:sent.sources,definition:sent.definition,relation:sent.relation};
+    const record=item.record,content={name:sent.name,description:sent.description,assumptions:sent.assumptions,falsification:sent.falsification,sources:sent.sources,definition:sent.definition,relation:sent.relation,...('version' in sent?{program:sent.program}:{})};
+    if(record.version!==('version' in sent?sent.version:1))throw Error('Strategy source version receipt mismatch.');
+    await verifyStrategyProgram(record);
     if(JSON.stringify(record.content)!==JSON.stringify(content)||await strategyDigest(JSON.stringify(record))!==item.digest)throw Error('Strategy content receipt mismatch.');
     if(record.author.kind==='AGENT'&&record.author.name!==agentName)throw Error('Strategy agent attribution mismatch.');
    }

@@ -103,11 +103,12 @@ export class ExperimentRepository{
   try{
    const row=await this.db.prepare('SELECT id,digest,CASE WHEN length(CAST(payload AS BLOB))<=28672 THEN payload ELSE NULL END AS payload FROM strategy_publications WHERE id=?').bind(recordId).first<{id:string;digest:string;payload:string|null}>();
    if(!row){if(selection)throw new ExperimentError('Published strategy source not found. Select a currently visible Strategy Hub record.',404);throw Error();}if(!row.payload)throw Error();const checked=boundedStrategyRecord(JSON.parse(row.payload));
+   if(checked.record.version!==1)throw new ExperimentError('Program sources require a genuine program evaluation registry method; ordinary batch/continuous methods do not execute programs.',400);
    if(checked.payload!==row.payload||checked.record.id!==row.id||await experimentDigest(row.payload)!==row.digest)throw Error();
    const projected=(await new StrategyRepository(this.db).get(recordId)).item;
    if(projected.digest!==row.digest||projected.record&&JSON.stringify(projected.record)!==row.payload)throw Error();
    return {id:row.id,digest:row.digest,payload:row.payload,visible:projected.state==='VISIBLE'};
-  }catch(error){if(selection&&error instanceof ExperimentError&&error.status===404)throw error;throw inconsistent();}
+  }catch(error){if(selection&&error instanceof ExperimentError&&(error.status===404||error.status===400))throw error;throw inconsistent();}
  }
  private async bindings(publication:Checked){
   const source=await this.source(publication.row.strategy_id);if(source.digest!==publication.row.strategy_digest)throw inconsistent();

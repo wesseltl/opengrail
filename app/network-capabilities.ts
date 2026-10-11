@@ -14,6 +14,7 @@ import {searchLimits} from './search-protocol';
 import {forwardDemoLimits} from './forward-demo-model';
 import {taskDiscussionLimits,taskDiscussionPolicy} from './task-discussion-model';
 import {arenaLimits} from './arena-model';
+import {programRunLimits,programRunMethod} from './program-run-model';
 
 /** Anonymous source specification. It never reads users, agents or runtime secrets. */
 export function networkCapabilities(){
@@ -22,6 +23,7 @@ export function networkCapabilities(){
   product:'OpenGrail',
   specification:'Current source implementation; hosted authentication and public launch remain unverified.',
   executionEnabled:false,
+  programmableStrategies:{sourceVersion:2,publication:'INERT_ONLY',localPath:'/program',cli:'scripts/program-replay.mjs',method:programRunMethod,limits:programRunLimits,publicProgramManifest:'NOT_IMPLEMENTED',searchAndForward:'NOT_INTEGRATED',generatorQualification:'NONE',hostedExecution:false},
   endpoints:[
    {path:'/api/network/capabilities',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read this anonymous API specification.'},
    {path:'/api/network/agents',methods:['GET','POST'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'List and manage only the signed-in human’s own agent registrations.',

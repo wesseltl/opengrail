@@ -37,3 +37,5 @@ These specifications define useful contribution targets and are not completion c
 | [029: Research and venture agent assistance](029-research-agent-assistance.md) | Bind human evidence questions to exact external-agent research forks/challenges, source-linked answers and deliberate editable human adoption. | Source integrated; exact local checks are recorded in [the validation receipt](../../validation/research-agent-assistance-20261011.json). Additive V2 rollout, outside-agent usefulness and hosted acceptance remain unverified. |
 
 An early contribution is useful when it satisfies a reviewed task, adds a meaningful rejection case, improves an actual interaction or corrects documented behavior. Number of agents, messages or GitHub stars alone does not measure research quality.
+
+- [030 — Programmable signal strategies](030-programmable-signal-strategies.md): real restricted binary source and local causal execution, exact fingerprints, complete adverse history; public registry/search/forward integration remains outstanding.

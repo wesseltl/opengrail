@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
+import {createHash} from 'node:crypto';
+import {constantProgram,moduleHex} from './helpers/program-fixtures.mjs';
 
 // Actual component hook/event fixtures with invented public projections. These checks
 // do not establish browser layout, hosted authentication or independent execution.
@@ -22,6 +24,12 @@ const uid=()=>crypto.randomUUID(),ref=value=>({id:value.id,digest:value.digest})
 async function source(name='Synthetic exact source'){
   const id=uid(),record={version:1,id,rootId:id,revision:1,requestId:uid(),createdAt:at,author,content:{name,description:'Invented strategy for component fixtures.',assumptions:'Reject inconsistent results.',falsification:'Costs or negative outcomes may refute the hypothesis.',sources:[],definition:strategy.strategyTemplate('TREND'),relation:null},policyAccepted:'public-strategy-v1',verification:'UNTESTED',executionEnabled:false};
   const bounded=strategy.boundedStrategyRecord(record);return {id,digest:await strategy.strategyDigest(bounded.payload),rootId:id,revision:1,requestId:record.requestId,createdAt:at,author,state:'VISIBLE',reason:null,record,moderation:[]};
+}
+async function programSource(){
+  const item=await source('Actual inert binary strategy'),definition=strategy.strategyTemplate('SIGNAL'),bytesHex=moduleHex(constantProgram(1));
+  definition.entry={type:'SIGNAL',provider:'CUSTOM',event:'BULLISH',maxAgeBars:1};
+  const record=strategy.boundedStrategyRecord({...item.record,version:2,content:{...item.record.content,definition,program:{profile:'opengrail-wasm-i32-f64-v1',abi:'opengrail-causal-signal-wasm-v1',bytesHex,digest:createHash('sha256').update(Buffer.from(bytesHex,'hex')).digest('hex'),parameters:[]}}}).record;
+  return {...item,record,digest:await strategy.strategyDigest(JSON.stringify(record))};
 }
 function suppressed(sourceItem,state='HIDDEN'){
   const reason=state==='WITHDRAWN'?'AUTHOR_REQUEST':'POLICY';return {...sourceItem,state,reason,record:null,moderation:[...sourceItem.moderation,{sequence:sourceItem.moderation.length+1,requestId:uid(),createdAt:at,actor:author,state,reason}]};
@@ -44,6 +52,22 @@ test('exact anonymous workspace reads one pinned projection, keeps canonical lin
   assert.equal(field(tree,'Exact strategy permalink').props.href,model.strategyEvidenceHref(s));assert.equal(field(tree,'Inspect evidence '+row.summary.id).props.href,'/experiments?id='+row.summary.id+'&digest='+row.summary.digest);assert.equal(field(tree,'Reviews evidence '+row.summary.id).props.href,field(tree,'Inspect evidence '+row.summary.id).props.href);
   assert.equal(field(tree,'Demo exact strategy').props.href,'/demo?strategy='+s.id+'&digest='+s.digest);assert.equal(field(tree,'Session exact strategy').props.href,'/session?strategy='+s.id+'&digest='+s.digest);
   assert(walk(tree,n=>n.type==='a'&&n.props.href==='/signin-with-chatgpt?return_to='+encodeURIComponent(model.strategyEvidenceHref(s))).every(n=>n.props.target==='_top'));assert.equal(walk(tree,n=>['form','input','textarea'].includes(n.type)).length,0);
+});
+
+test('exact V2 source inspection retains every binary field and links only the causal program workflow',async()=>{
+  const s=await programSource();let hidden=false;const requests=server(()=>page(hidden?suppressed(s):s)),h=harness({signedIn:false,selection:ref(s)});await h.until('Exact program source');
+  const tree=h.render(),retained=field(tree,'Exact retained program'),link=field(tree,'Program exact strategy');
+  assert.deepEqual(JSON.parse(text(retained)),s.record.content.program);assert.equal(link.props.href,'/program?strategy='+s.id+'&digest='+s.digest);assert(!field(tree,'Demo exact strategy')&&!field(tree,'Session exact strategy'));
+  for(const phrase of ['Publication is inert','local program replay requires a separate admission','Public program manifests and outcomes','independent qualification remain outstanding'])assert(text(tree).includes(phrase),phrase);
+  assert.equal(requests.length,1);assert(requests.every(request=>!request.init.method&&!request.init.body));
+  hidden=true;h.click('Refresh strategy evidence');await h.until('Strategy content unavailable');assert(!field(h.render(),'Exact retained program')&&!field(h.render(),'Program exact strategy'));let prevented=false;link.props.onClick({preventDefault(){prevented=true;}});assert(prevented);
+});
+
+test('a coherent outer strategy hash cannot hide a wrong raw program digest in the evidence reader',async()=>{
+  for(const legacy of [false,true]){
+    const s=await programSource();s.record.content.program.digest='0'.repeat(64);s.digest=await strategy.strategyDigest(JSON.stringify(s.record));const requests=server(path=>path.startsWith('/api/strategies?id=')?{version:1,item:s,executionEnabled:false}:page(s)),h=harness({signedIn:false,selection:{id:s.id,digest:legacy?null:s.digest}});
+    await h.until('No alternative version or result was substituted.');assert(!text(h.render()).includes(s.record.content.name));assert(!field(h.render(),'Exact retained program')&&!field(h.render(),'Program exact strategy'));assert.equal(requests.length,1);
+  }
 });
 
 test('legacy ID-only link resolves exactly once then pins returned digest beyond the catalog',async()=>{

@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {programSourceSchema,verifyProgramSource} from './program-source-model';
 import {researchSourceSchema,researchAuthorSchema,researchAuthorReferenceSchema,researchAuthorReference,researchDigest,researchPublicHumanId,type ResearchActor,type ResearchAuthor,type ResearchAuthorReference} from './research-model';
 export {researchSourceSchema as strategySourceSchema,researchAuthorSchema as strategyAuthorSchema,researchAuthorReferenceSchema as strategyAuthorReferenceSchema,researchAuthorReference as strategyAuthorReference,researchDigest as strategyDigest,researchPublicHumanId as strategyPublicHumanId};
 export type StrategyActor=ResearchActor;
@@ -37,19 +38,33 @@ export function strategyTemplate(type:StrategyEntryType):StrategyDefinition{
 }
 export const strategyRelationSchema=z.object({type:z.enum(['REVISION','FORK']),id:uuid,digest:hash}).strict();
 const contentFields={name:text(120),description:text(3000),assumptions:text(1500),falsification:text(2000),sources:z.array(strategySourceSchema).max(8),definition:strategyDefinitionSchema,relation:strategyRelationSchema.nullable()};
-export const strategyPublishSchema=z.object({action:z.literal('publish'),requestId:uuid,id:uuid,...contentFields,policyAccepted:policy}).strict().refine(command=>command.relation?.id!==command.id,'A strategy cannot reference itself.');
+export const strategyPublishV1Schema=z.object({action:z.literal('publish'),requestId:uuid,id:uuid,...contentFields,policyAccepted:policy}).strict().refine(command=>command.relation?.id!==command.id,'A strategy cannot reference itself.');
+export const strategyPublishV2Schema=z.object({action:z.literal('publish'),version:z.literal(2),requestId:uuid,id:uuid,...contentFields,program:programSourceSchema,policyAccepted:policy}).strict().superRefine((command,ctx)=>{
+ if(command.relation?.id===command.id)ctx.addIssue({code:z.ZodIssueCode.custom,path:['relation'],message:'A strategy cannot reference itself.'});
+ if(command.definition.entry.type!=='SIGNAL'||command.definition.entry.provider!=='CUSTOM'||command.definition.entry.maxAgeBars!==1)ctx.addIssue({code:z.ZodIssueCode.custom,path:['definition','entry'],message:'Program sources require causal CUSTOM signals with maxAgeBars 1.'});
+});
+export const strategyPublishSchema=z.union([strategyPublishV1Schema,strategyPublishV2Schema]);
 const common={requestId:uuid,id:uuid,digest:hash,policyAccepted:policy};
 export const strategyWithdrawSchema=z.object({action:z.literal('withdraw'),...common,reason:z.enum(['AUTHOR_REQUEST','SPONSOR_REQUEST','PERSONAL_DATA','CREDENTIAL_EXPOSURE'])}).strict();
 export const strategyReportSchema=z.object({action:z.literal('report'),...common,reason:z.enum(['SPAM','ABUSE','PERSONAL_DATA','CREDENTIAL_EXPOSURE','MISLEADING','OTHER']),details:text(1500)}).strict();
 export const strategyModerateSchema=z.object({action:z.literal('moderate'),...common,state:z.enum(['VISIBLE','HIDDEN']),reason:z.enum(['SPAM','ABUSE','PERSONAL_DATA','CREDENTIAL_EXPOSURE','MISLEADING','POLICY','RESTORED'])}).strict().refine(command=>(command.state==='VISIBLE')===(command.reason==='RESTORED'),'Restoration uses RESTORED; hiding uses a policy reason.');
 export const strategyCommandSchema=z.union([strategyPublishSchema,strategyWithdrawSchema,strategyReportSchema,strategyModerateSchema]);
 export type StrategyCommand=z.infer<typeof strategyCommandSchema>;
-export const strategyRecordSchema=z.object({version:z.literal(1),id:uuid,rootId:uuid,revision:z.number().int().min(1).max(strategyLimits.revisions),requestId:uuid,createdAt:clock,author:strategyAuthorSchema,content:z.object(contentFields).strict(),policyAccepted:policy,verification:z.literal('UNTESTED'),executionEnabled:z.literal(false)}).strict().superRefine((record,ctx)=>{
+export const strategyRecordV1Schema=z.object({version:z.literal(1),id:uuid,rootId:uuid,revision:z.number().int().min(1).max(strategyLimits.revisions),requestId:uuid,createdAt:clock,author:strategyAuthorSchema,content:z.object(contentFields).strict(),policyAccepted:policy,verification:z.literal('UNTESTED'),executionEnabled:z.literal(false)}).strict().superRefine((record,ctx)=>{
  if(record.author.kind==='HUMAN'&&record.author.id!==record.author.sponsorId)ctx.addIssue({code:z.ZodIssueCode.custom,path:['author'],message:'A human is their own sponsor.'});
  if((record.revision===1)!==(record.rootId===record.id))ctx.addIssue({code:z.ZodIssueCode.custom,path:['rootId'],message:'Only the first revision creates its own root.'});
  if((record.revision>1)!==(record.content.relation?.type==='REVISION'))ctx.addIssue({code:z.ZodIssueCode.custom,path:['revision'],message:'Revisions must reference a prior revision.'});
- const command=strategyPublishSchema.safeParse({action:'publish',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});if(!command.success)command.error.issues.forEach(issue=>ctx.addIssue({...issue,path:['content',...issue.path]}));
+ const command=strategyPublishV1Schema.safeParse({action:'publish',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});if(!command.success)command.error.issues.forEach(issue=>ctx.addIssue({...issue,path:['content',...issue.path]}));
 });
+export const strategyRecordV2Schema=z.object({version:z.literal(2),id:uuid,rootId:uuid,revision:z.number().int().min(1).max(strategyLimits.revisions),requestId:uuid,createdAt:clock,author:strategyAuthorSchema,content:z.object({...contentFields,program:programSourceSchema}).strict(),policyAccepted:policy,verification:z.literal('UNTESTED'),executionEnabled:z.literal(false)}).strict().superRefine((record,ctx)=>{
+ if(record.author.kind==='HUMAN'&&record.author.id!==record.author.sponsorId)ctx.addIssue({code:z.ZodIssueCode.custom,path:['author'],message:'A human is their own sponsor.'});
+ if((record.revision===1)!==(record.rootId===record.id))ctx.addIssue({code:z.ZodIssueCode.custom,path:['rootId'],message:'Only the first revision creates its own root.'});
+ if((record.revision>1)!==(record.content.relation?.type==='REVISION'))ctx.addIssue({code:z.ZodIssueCode.custom,path:['revision'],message:'Revisions must reference a prior revision.'});
+ const command=strategyPublishV2Schema.safeParse({action:'publish',version:2,requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});if(!command.success)command.error.issues.forEach(issue=>ctx.addIssue({...issue,path:['content',...issue.path]}));
+});
+export const strategyRecordSchema=z.union([strategyRecordV1Schema,strategyRecordV2Schema]);
+export type StrategyRecordV1=z.infer<typeof strategyRecordV1Schema>;
+export type StrategyRecordV2=z.infer<typeof strategyRecordV2Schema>;
 export type StrategyRecord=z.infer<typeof strategyRecordSchema>;
 const state=z.enum(['VISIBLE','HIDDEN','WITHDRAWN']);
 const safeReason=z.enum(['AUTHOR_REQUEST','SPONSOR_REQUEST','PERSONAL_DATA','CREDENTIAL_EXPOSURE','SPAM','ABUSE','MISLEADING','POLICY','RESTORED']);
@@ -75,3 +90,7 @@ export const strategyMeSchema=z.object({version:z.literal(1),authorId:humanId,sp
 export class StrategyError extends Error{constructor(message:string,public status=409,public retryAfterSeconds?:number){super(message);}}
 export function boundedStrategyCommand(raw:unknown){const command=strategyCommandSchema.parse(raw),payload=JSON.stringify(command);if(new TextEncoder().encode(payload).byteLength>strategyLimits.requestBytes)throw new StrategyError('Strategy command is too large.',413);return {command,payload};}
 export function boundedStrategyRecord(raw:unknown){const record=strategyRecordSchema.parse(raw),payload=JSON.stringify(record);if(new TextEncoder().encode(payload).byteLength>strategyLimits.payloadBytes)throw new StrategyError('Strategy content is too large.',413);return {record,payload};}
+
+/** Validate binary identity only; public source storage never invokes guest code. */
+export async function verifyStrategyProgram(value:StrategyRecord|Extract<StrategyCommand,{action:'publish'}>){if('version' in value&&value.version===2)await verifyProgramSource('content' in value?value.content.program:value.program);}
+export function strategyPublishCommandForRecord(record:StrategyRecord){return {action:'publish' as const,...(record.version===2?{version:2 as const}:{}),requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted};}

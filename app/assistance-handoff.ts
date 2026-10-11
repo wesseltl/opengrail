@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {assistancePublicItemSchema,boundedAssistanceRecord,boundedAssistanceCommand,assistanceWriteSchema,type AssistancePublicItem,type AssistanceCommand} from './assistance-model';
-import {strategyPublicItemSchema,boundedStrategyRecord,boundedStrategyCommand,strategyDigest,strategyMeSchema,strategyWriteSchema,type StrategyPublicItem,type StrategyCommand} from './strategy-model';
+import {strategyPublicItemSchema,boundedStrategyRecord,boundedStrategyCommand,strategyDigest,verifyStrategyProgram,strategyMeSchema,strategyWriteSchema,type StrategyPublicItem,type StrategyCommand} from './strategy-model';
 
 export const assistanceHandoffLimits={queryBytes:512,sourceBytes:65536,bundleBytes:262144,maximumChanges:128} as const;
 const id=z.string().length(36).regex(/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/),digest=z.string().length(64).regex(/^[a-f0-9]{64}$/);
@@ -40,7 +40,7 @@ export function assistanceHref(kind:'BASE'|'REQUEST',raw:AssistanceReference){if
 export async function verifyAssistanceStrategy(raw:unknown,expected?:AssistanceReference,visible=false):Promise<StrategyPublicItem>{
  plain(raw,assistanceHandoffLimits.sourceBytes);noCredentials(raw);const item=strategyPublicItemSchema.parse(raw);reference({id:item.id,digest:item.digest});id.parse(item.rootId);id.parse(item.requestId);if(item.author.kind==='AGENT')id.parse(item.author.id);
  if(expected&&!same(reference(expected),{id:item.id,digest:item.digest}))throw new AssistanceHandoffError('The exact strategy changed.');
- if(item.record){if(await strategyDigest(boundedStrategyRecord(item.record).payload)!==item.digest)throw new AssistanceHandoffError('The strategy digest does not match its content.');if(item.record.content.relation)reference({id:item.record.content.relation.id,digest:item.record.content.relation.digest});}
+ if(item.record){await verifyStrategyProgram(item.record);if(await strategyDigest(boundedStrategyRecord(item.record).payload)!==item.digest)throw new AssistanceHandoffError('The strategy digest does not match its content.');if(item.record.content.relation)reference({id:item.record.content.relation.id,digest:item.record.content.relation.digest});}
  if(visible&&(item.state!=='VISIBLE'||!item.record))throw new AssistanceHandoffError('The exact strategy is unavailable.');
  return item;
 }
@@ -71,7 +71,7 @@ export async function prepareAssistanceRequest(raw:unknown):Promise<AssistancePe
 export async function prepareAssistanceAdoption(raw:unknown):Promise<AssistancePending>{
  plain(raw,assistanceHandoffLimits.bundleBytes+8192);noCredentials(raw);const value=z.object({base:strategyPublicItemSchema,request:assistancePublicItemSchema,response:assistancePublicItemSchema,proposal:strategyPublicItemSchema,principal:strategyMeSchema,requestId:id,id,name:z.string().trim().min(1).max(120),confirmAdoption:z.literal(true)}).strict().parse(raw),bundle=await validateAssistanceHandoff({base:value.base,request:value.request,response:value.response,proposal:value.proposal}),author=principal(value.principal);
  if(!bundle.proposal.record)throw new AssistanceHandoffError('The proposed strategy is unavailable.');
- const content=bundle.proposal.record.content,{command,payload}=boundedStrategyCommand({action:'publish',requestId:value.requestId,id:value.id,name:value.name,description:content.description,assumptions:content.assumptions,falsification:content.falsification,sources:content.sources,definition:content.definition,relation:{type:'FORK',id:bundle.proposal.id,digest:bundle.proposal.digest},policyAccepted:'public-strategy-v1'});
+ const content=bundle.proposal.record.content,{command,payload}=boundedStrategyCommand({action:'publish',...(bundle.proposal.record.version===2?{version:2,program:bundle.proposal.record.content.program}:{}),requestId:value.requestId,id:value.id,name:value.name,description:content.description,assumptions:content.assumptions,falsification:content.falsification,sources:content.sources,definition:content.definition,relation:{type:'FORK',id:bundle.proposal.id,digest:bundle.proposal.digest},policyAccepted:'public-strategy-v1'});
  if(command.action!=='publish'||command.id===bundle.base.id||command.id===bundle.request.id||command.id===bundle.response.id||command.id===bundle.proposal.id)throw new AssistanceHandoffError('Adoption requires a distinct human fork.');
  const pending=freeze({kind:'ADOPTION' as const,command,body:payload,principal:author,...bundle});issued.add(pending);return pending;
 }
@@ -95,7 +95,7 @@ export async function validateAssistancePendingReceipt(raw:unknown,pending:Assis
  }
  const value=strategyWriteSchema.parse(raw),command=pending.command,item=value.item;
  if(value.action!=='publish'||!pending.proposal||!pending.response||!pending.request||item&&(item.createdAt<pending.proposal.createdAt||item.createdAt<pending.response.createdAt||item.createdAt<pending.request.createdAt||item.createdAt<pending.base.createdAt)||value.requestId!==command.requestId||value.report!==null||!item||item.id!==command.id||item.rootId!==command.id||item.revision!==1||item.requestId!==command.requestId||!same(item.author,{kind:'HUMAN',id:author.authorId,sponsorId:author.sponsorId}))throw new AssistanceHandoffError('The adoption receipt does not match its human fork.');
- const reconstructed={version:1,id:command.id,rootId:command.id,revision:1,requestId:command.requestId,createdAt:item.createdAt,author:{kind:'HUMAN',id:author.authorId,sponsorId:author.sponsorId},content:{name:command.name,description:command.description,assumptions:command.assumptions,falsification:command.falsification,sources:command.sources,definition:command.definition,relation:command.relation},policyAccepted:command.policyAccepted,verification:'UNTESTED',executionEnabled:false},canonical=boundedStrategyRecord(reconstructed);
+ const reconstructed={version:'version' in command?command.version:1,id:command.id,rootId:command.id,revision:1,requestId:command.requestId,createdAt:item.createdAt,author:{kind:'HUMAN',id:author.authorId,sponsorId:author.sponsorId},content:{name:command.name,description:command.description,assumptions:command.assumptions,falsification:command.falsification,sources:command.sources,definition:command.definition,relation:command.relation,...('version' in command?{program:command.program}:{})},policyAccepted:command.policyAccepted,verification:'UNTESTED',executionEnabled:false},canonical=boundedStrategyRecord(reconstructed);
  if(await strategyDigest(canonical.payload)!==item.digest||item.record&&!same(item.record,canonical.record))throw new AssistanceHandoffError('The adoption receipt changed the reviewed proposal.');await verifyAssistanceStrategy(item);return value;
 }
 

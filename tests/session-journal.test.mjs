@@ -85,7 +85,7 @@ test('declared runtime fingerprints match the actual fixed local engine/model/jo
 test('retained signal, pending emergency and adverse exit examples freshly reconstruct their full shared history',async()=>{
  const journals=[];
  for(const name of ['signal-open.json','emergency-awaiting-quote.json','emergency-adverse-exit.json']){
-  const raw=JSON.parse(readFileSync('examples/sessions/'+name,'utf8'));journals.push(await m.reconstructSessionJournal(raw));
+  const raw=JSON.parse(readFileSync('examples/sessions/20261011/'+name,'utf8'));journals.push(await m.reconstructSessionJournal(raw));
  }
  const [open,pending,exit]=journals;
  assert.equal(open.state.openPositions.length,1);assert.equal(open.state.trades.length,0);assert.equal(open.config.clockMode,'SYNTHETIC_PLAYBACK');assert.equal(open.config.provenance,'SYNTHETIC');assert(open.state.consumed.length>0);

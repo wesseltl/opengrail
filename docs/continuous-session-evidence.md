@@ -15,6 +15,10 @@ node scripts/session-evidence.mjs verify NEW_REVIEW.json
 
 The command accepts bounded regular JSON files, imports only fixed local first-party modules, checks the pinned Session implementation and refuses overwriting any existing output. Preparation reconstructs the original journal. Verification checks a supplied artifact against that same kernel. A local preparation refusal records a small rejection receipt when its new output can be written; the original journal remains intact. The tool makes no public submission and accepts no credential or remote endpoint.
 
+For a current-source invented example, run `node scripts/example-sessions.mjs`, then prepare `examples/sessions/20261011/signal-open.json`. The dated directory also retains the pending emergency and adverse-exit checkpoints. These remain `SYNTHETIC_PLAYBACK`, with no authentic market feed, independent qualification or profitability evidence.
+
+The older `examples/sessions/*.json` files remain archived with their original source fingerprints and exact bytes. Current-source guards reject their earlier implementation identity; that refusal does not authorize rewriting the journal, repairing its fingerprints or relabeling it as a current result. Preserve historical checkpoints with their matching source. Generating the new dated examples creates new synthetic evidence rather than reproducing an archived journal under a different implementation.
+
 ## Review and publish explicitly
 
 The version-two `CONTINUOUS_DEMO` manifest freezes the configuration, start, fixed implementation and method identity, retrospective hypothesis/falsification, every normalized event, original receipt time and intermediate commitment. It retains the original journal digest and terminal state/receipt identities. The tape starts at creation and ends at the declared checkpoint; rejected normalized events and clock regressions stay in their original order.

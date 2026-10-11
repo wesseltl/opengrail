@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {boundedStrategyCommand, boundedStrategyRecord, strategyDigest, strategyLimits, strategyPublicItemSchema, strategyPublishSchema, strategyWriteSchema, type StrategyPublicItem} from './strategy-model';
+import {boundedStrategyCommand, boundedStrategyRecord, strategyDigest, strategyLimits, strategyPublicItemSchema, strategyPublishV1Schema as strategyPublishSchema, strategyWriteSchema, type StrategyPublicItem} from './strategy-model';
 import {boundedExperimentCommand, boundedExperimentRecord, experimentLimits, experimentManifestFlags, experimentOutcomeFlags, experimentRegisterSchema, experimentOutcomeSchema, experimentWriteSchema, experimentPublicItemSchema, type ExperimentPublicItem} from './experiment-model';
 import {demoEvaluatorMethod, demoEvaluatorVersion, demoLimits, demoTimeframes} from './demo-model';
 import {evaluatorSourceFingerprints} from './evaluator-fingerprints';
@@ -90,7 +90,7 @@ function assertPending(value: AgentStrategyQuickstartPending) {
     fresh([canonical.requestId, canonical.id], [who.agent.id, who.agent.credentialId]); return;
   }
   const source = strategyPublicItemSchema.parse(value.source);
-  if (source.state !== 'VISIBLE' || !source.record || source.author.kind !== 'AGENT' || source.author.id !== who.agent.id || source.record.author.kind !== 'AGENT' || source.record.author.name !== who.agent.name || value.sponsorId !== source.author.sponsorId) throw Error('The frozen source or principal binding changed.');
+  if (source.state !== 'VISIBLE' || !source.record || source.record.version!==1 || source.author.kind !== 'AGENT' || source.author.id !== who.agent.id || source.record.author.kind !== 'AGENT' || source.record.author.name !== who.agent.name || value.sponsorId !== source.author.sponsorId) throw Error('The frozen source or principal binding changed.');
   if (value.stage === 'MANIFEST') {
     const canonical = experimentRegisterSchema.parse(boundedExperimentCommand(command).command);
     if (value.parent !== null || !same(canonical, command) || !same(canonical.input.strategy, {record: source.record, digest: source.digest})) throw Error('The manifest stage or exact source binding changed.');
@@ -112,7 +112,7 @@ export function prepareAgentStrategyQuickstartStrategy(raw: unknown, identityRaw
 export function validateAgentStrategyQuickstartIdentity(raw: unknown, held: AgentStrategyQuickstartPending) { assertPending(held); const who = identity(raw); if (!same(who, held.identity)) throw Error('The original agent and credential principal changed.'); return who; }
 async function visibleSource(raw: unknown, expected?: StrategyPublicItem) {
   plain(raw, agentStrategyQuickstartLimits.receiptBytes); strictReferences(raw); const source = strategyPublicItemSchema.parse(raw);
-  if (source.state !== 'VISIBLE' || !source.record) throw Error('Current source is hidden or withdrawn; dependent preparation is blocked.');
+  if (source.state !== 'VISIBLE' || !source.record || source.record.version!==1) throw Error('Current source is hidden or withdrawn; dependent preparation is blocked.');
   const canonical = boundedStrategyRecord(source.record); if (await strategyDigest(canonical.payload) !== source.digest || expected && (source.id !== expected.id || source.digest !== expected.digest || !same(source.record, expected.record))) throw Error('The exact canonical source changed.');
   return source;
 }

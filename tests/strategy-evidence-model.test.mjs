@@ -16,7 +16,7 @@ before(async()=>{
  pureInputs=Object.keys(pure.metafile.inputs);
  const bundle=await build({stdin:{contents:"import * as model from './app/strategy-evidence-model';import * as experiment from './app/experiment-model';import * as strategy from './app/strategy-model';import * as journal from './app/session-journal';import {snapshotSessionEvidence as session} from './app/session-evidence';export {model,experiment,strategy,journal,session};",resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'node',target:'es2022'});
  ({model,experiment,strategy,journal,session}=await import('data:text/javascript;base64,'+Buffer.from(bundle.outputFiles[0].text).toString('base64')));
- fixtureHashes=new Map(['experiments','sessions'].flatMap(directory=>readdirSync('examples/'+directory).filter(name=>name.endsWith('.json')).map(name=>{const path='examples/'+directory+'/'+name;return [path,createHash('sha256').update(readFileSync(path)).digest('hex')];})));
+ fixtureHashes=new Map(['experiments','sessions','sessions/20261011'].flatMap(directory=>readdirSync('examples/'+directory).filter(name=>name.endsWith('.json')).map(name=>{const path='examples/'+directory+'/'+name;return [path,createHash('sha256').update(readFileSync(path)).digest('hex')];})));
 });
 function publicStrategy(record,digest){return {id:record.id,digest,rootId:record.rootId,revision:record.revision,requestId:record.requestId,createdAt:record.createdAt,author:strategy.strategyAuthorReference(record.author),state:'VISIBLE',reason:null,record,moderation:[]};}
 function source(name='signal-input.json'){const input=file('experiments/'+name);return publicStrategy(input.strategy.record,input.strategy.digest);}
@@ -30,7 +30,7 @@ function suppressItem(item,suppression='SOURCE_UNAVAILABLE'){
 }
 function hideSource(selected){return {...clone(selected),state:'HIDDEN',record:null,reason:'POLICY',moderation:[{sequence:1,requestId:uid(),createdAt:'2026-10-11T02:00:00.000Z',actor:selected.author,state:'HIDDEN',reason:'POLICY'}]};}
 async function continuous(name='signal-open.json'){
- const original=file('sessions/'+name),config=clone(original.config);config.origin='PUBLIC_STRATEGY';
+ const original=file('sessions/20261011/'+name),config=clone(original.config);config.origin='PUBLIC_STRATEGY';
  let tape=await journal.createSessionJournal(config,original.startedAt);
  for(const entry of original.events)tape=await journal.appendSessionEvent(tape,entry.event,entry.receivedAt);
  const bundle=await session(tape);assert.equal(bundle.result.kind,'ARTIFACT');

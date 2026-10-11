@@ -1,5 +1,5 @@
 import {networkAgentSchema} from './network-model';
-import {StrategyError,strategyLimits,strategyDigest,strategyPublicHumanId,strategyAuthorReference,boundedStrategyCommand,boundedStrategyRecord,strategyAuthorReferenceSchema,strategyPublicEventSchema,strategyPrivateReportSchema,strategyListSchema,strategyGetSchema,strategyHistorySchema,strategyWriteSchema,strategyReportsSchema,type StrategyActor,type StrategyAuthor,type StrategyAuthorReference,type StrategyCommand,type StrategyRecord,type StrategyPublicItem,type StrategyPublicEvent} from './strategy-model';
+import {StrategyError,strategyLimits,strategyDigest,strategyPublicHumanId,strategyAuthorReference,boundedStrategyCommand,boundedStrategyRecord,verifyStrategyProgram,strategyPublishCommandForRecord,strategyAuthorReferenceSchema,strategyPublicEventSchema,strategyPrivateReportSchema,strategyListSchema,strategyGetSchema,strategyHistorySchema,strategyWriteSchema,strategyReportsSchema,type StrategyActor,type StrategyAuthor,type StrategyAuthorReference,type StrategyCommand,type StrategyRecord,type StrategyPublicItem,type StrategyPublicEvent} from './strategy-model';
 type PublicationRow={id:string;root_id:string;revision:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type EventRow={record_id:string;sequence:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;state:string;reason:string;created_at:string};
 type ReportRow={author_key:string;request_id:string;sponsor_key:string;record_id:string;record_digest:string;command_digest:string;payload:string|null;digest:string;created_at:string};
@@ -17,7 +17,7 @@ function clock(at:string){if(typeof at!=='string'||!Number.isFinite(Date.parse(a
 function id(value:string){if(typeof value!=='string'||!uuid.test(value))throw new StrategyError('Invalid strategy identity.',400);}
 const authorKey=(author:StrategyAuthorReference)=>author.kind+':'+author.id;
 const add=(values:Values,value:string|number)=>{values.push(value);return '?'+values.length;};
-const content=(command:Extract<StrategyCommand,{action:'publish'}>)=>({name:command.name,description:command.description,assumptions:command.assumptions,falsification:command.falsification,sources:command.sources,definition:command.definition,relation:command.relation});
+const content=(command:Extract<StrategyCommand,{action:'publish'}>)=>({name:command.name,description:command.description,assumptions:command.assumptions,falsification:command.falsification,sources:command.sources,definition:command.definition,relation:command.relation,...('version' in command?{program:command.program}:{})});
 function retryAfter(at:string){const date=new Date(at);return Math.max(1,Math.ceil((Date.UTC(date.getUTCFullYear(),date.getUTCMonth(),date.getUTCDate()+1)-Date.parse(at))/1000));}
 
 /** All submission authority is server-derived. No sources are fetched or code executed. */
@@ -59,9 +59,9 @@ export class StrategyRepository{
  private async checkPublication(row:PublicationRow):Promise<Checked>{
   try{
    if(!row.payload||!hash.test(row.digest)||!hash.test(row.command_digest))throw Error();
-   const checked=boundedStrategyRecord(JSON.parse(row.payload)),record=checked.record;
+   const checked=boundedStrategyRecord(JSON.parse(row.payload)),record=checked.record;await verifyStrategyProgram(record);
    if(checked.payload!==row.payload||await strategyDigest(row.payload)!==row.digest||record.id!==row.id||record.rootId!==row.root_id||record.revision!==row.revision||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(strategyAuthorReference(record.author))!==row.author_key||record.author.sponsorId!==row.sponsor_key)throw Error();
-   const command=boundedStrategyCommand({action:'publish',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});
+   const command=boundedStrategyCommand(strategyPublishCommandForRecord(record));
    if(await strategyDigest(command.payload)!==row.command_digest)throw Error();
    return {row,record};
   }catch{throw inconsistent();}
@@ -136,7 +136,7 @@ export class StrategyRepository{
   id(rootId);const rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM strategy_publications WHERE root_id=? ORDER BY revision LIMIT ${strategyLimits.revisions+1}`).bind(rootId).all<PublicationRow>()).results;
   if(!rows.length)throw new StrategyError('Strategy history not found.',404);if(rows.length>strategyLimits.revisions)throw inconsistent();
   const checked=await Promise.all(rows.map(row=>this.checkPublication(row)));const first=checked[0];
-  for(let n=0;n<checked.length;n++){const item=checked[n];if(item.record.revision!==n+1||item.record.rootId!==rootId||item.row.author_key!==first.row.author_key||n>0&&(item.record.content.relation?.id!==checked[n-1].record.id||item.record.content.relation?.digest!==checked[n-1].row.digest||Date.parse(item.record.createdAt)<Date.parse(checked[n-1].record.createdAt)))throw inconsistent();}
+  for(let n=0;n<checked.length;n++){const item=checked[n];if(item.record.revision!==n+1||item.record.rootId!==rootId||item.row.author_key!==first.row.author_key||item.record.version!==first.record.version||n>0&&(item.record.content.relation?.id!==checked[n-1].record.id||item.record.content.relation?.digest!==checked[n-1].row.digest||Date.parse(item.record.createdAt)<Date.parse(checked[n-1].record.createdAt)))throw inconsistent();}
   return strategyHistorySchema.parse({version:1,items:await Promise.all(checked.reverse().map(item=>this.project(item))),executionEnabled:false});
  }
  async reports(actor:StrategyActor,at:string,cursor?:string|null){
@@ -170,6 +170,7 @@ export class StrategyRepository{
   const context=await this.context(actor,at);await this.requireCredential(context,at);
   let parsed:ReturnType<typeof boundedStrategyCommand>;try{parsed=boundedStrategyCommand(raw);}catch(error){if(error instanceof StrategyError)throw error;throw new StrategyError('Invalid strategy command.',400);}
   const {command,payload:commandPayload}=parsed;
+  if(command.action==='publish')try{await verifyStrategyProgram(command);}catch{throw new StrategyError('Invalid program binary identity.',400);}
   if(command.action==='moderate'&&(context.actor.kind!=='HUMAN'||!context.actor.moderator))throw new StrategyError('Explicit moderator authorization is required.',403);
   const commandDigest=await strategyDigest(commandPayload),saved=await this.replay(context,command,commandDigest,at);if(saved)return saved;
   let target:Checked|undefined;
@@ -194,12 +195,13 @@ export class StrategyRepository{
   if(parent){
    const projected=await this.project(parent);if(projected.state!=='VISIBLE')throw new StrategyError('Referenced strategy is not visible.');
    if(command.relation!.type==='REVISION'){
+    if(parent.record.version!==('version' in command?command.version:1))throw new StrategyError('A revision must preserve its source version. Use an explicit fork to change it.');
     if(parent.row.author_key!==context.key)throw new StrategyError('Only the original author can revise this strategy.',403);
     rootId=parent.record.rootId;revision=parent.record.revision+1;if(revision>strategyLimits.revisions)throw new StrategyError('Strategy revision limit reached.');
     const current=await this.db.prepare('SELECT MAX(revision) AS head FROM strategy_publications WHERE root_id=?').bind(rootId).first<{head:number}>();if(current?.head!==parent.record.revision)throw new StrategyError('Strategy has a newer revision. Refresh its history.');
    }
   }
-  const {record,payload}=boundedStrategyRecord({version:1,id:command.id,rootId,revision,requestId:command.requestId,createdAt:at,author:context.author,content:content(command),policyAccepted:command.policyAccepted,verification:'UNTESTED',executionEnabled:false}),digest=await strategyDigest(payload);
+  const {record,payload}=boundedStrategyRecord({version:'version' in command?command.version:1,id:command.id,rootId,revision,requestId:command.requestId,createdAt:at,author:context.author,content:content(command),policyAccepted:command.policyAccepted,verification:'UNTESTED',executionEnabled:false}),digest=await strategyDigest(payload);
   const values:Values=[record.id,rootId,revision,context.key,context.sponsor,command.requestId,commandDigest,payload,digest,at];
   const clauses=[this.requestClause(context,command.requestId,values),this.credentialClause(context,at,values),...this.quotaClauses(context,at,'strategy_publications',strategyLimits.publishPerSponsorDay,strategyLimits.stored,values)];
   if(parent){clauses.push(this.targetClause(parent,values),this.visibleClause(parent.record.id,values));if(command.relation!.type==='REVISION')clauses.push(`(SELECT MAX(revision) FROM strategy_publications WHERE root_id=?2)=${add(values,parent.record.revision)}`);}

@@ -3,7 +3,7 @@
 import {useEffect, useRef, useState} from 'react';
 import {ArrowRight, ArrowUpRight, Download, FlaskConical, Play, RefreshCw, X} from 'lucide-react';
 import {parseUniqueJson} from './unique-json';
-import {boundedStrategyRecord, strategyDigest, strategyListSchema, strategyGetSchema} from './strategy-model';
+import {boundedStrategyRecord, strategyRecordV1Schema, type StrategyRecordV1, strategyDigest, strategyListSchema, strategyGetSchema} from './strategy-model';
 import {parseStrategyHandoff, verifyStrategyHandoff} from './strategy-handoff';
 import {boundedDemoRequest, demoLimits, verifyDemoArtifact, type DemoArtifact, type DemoRequest} from './demo-model';
 import {replayDemo, syntheticDemoInput} from './demo-engine';
@@ -11,7 +11,7 @@ import './network.css';
 import './demo.css';
 
 type Item = ReturnType<typeof strategyListSchema.parse>['items'][number];
-type Strategy = NonNullable<Item['record']>;
+type Strategy = StrategyRecordV1;
 type Selection = {record: Strategy; digest: string; origin: 'PUBLIC_SNAPSHOT' | 'SYNTHETIC_OFFLINE'};
 type Trial = {localId: string; attemptedAt: string; label: string; strategyDigest: string; source: {id: string; digest: string} | null; sourceConfirmed: boolean; priorStatus: Trial['status'] | null; origin: Selection['origin']; status: 'RUNNING' | 'INTERRUPTED' | 'INPUT_REJECTED' | 'OUTPUT_UNCONFIRMED' | 'CLEARED' | DemoArtifact['status']; error: string | null; input: DemoRequest | null; artifact: DemoArtifact | null};
 const maximumTrials = 32;
@@ -118,12 +118,12 @@ export default function Demo({signedIn = false}: {signedIn?: boolean} = {}) {
       for (const item of result.items) if (item.state !== 'VISIBLE' && current.current.trials.some(trial => trial.source?.id === item.id)) clearSource(item.id);
       if (!valid()) { setCatalogBusy(false); return; }
       current.current.items = result.items; setItems(result.items); setCursor(result.nextCursor); setPageCursor(next);
-      if (reference) { const item = result.items[0]; const selected: Selection = {record: item.record!, digest: item.digest, origin: 'PUBLIC_SNAPSHOT'}; current.current.selection = selected; setSelection(selected); setMessage('Linked exact strategy selected. No inputs, replay or permission were enabled.'); }
+      if (reference) { const item = result.items[0]; const selected: Selection = {record: strategyRecordV1Schema.parse(item.record), digest: item.digest, origin: 'PUBLIC_SNAPSHOT'}; current.current.selection = selected; setSelection(selected); setMessage('Linked exact strategy selected. No inputs, replay or permission were enabled.'); }
     } catch { if (valid()) setCatalogError(handoffSearch ? 'Exact strategy link rejected or unavailable. No latest version or synthetic fallback was selected. Refresh the catalog to choose another definition.' : 'Public catalog unavailable. Refresh to retry, or use the clearly marked offline synthetic fixture.'); }
     finally { state.reads.delete(controller); if (state.alive && id === state.catalogId) setCatalogBusy(false); }
   }
   function choose(item: Item) {
-    if (!available() || !item.record || item.state !== 'VISIBLE' || !current.current.items.some(row => same(row, item))) return;
+    if (!available() || !item.record || item.record.version !== 1 || item.state !== 'VISIBLE' || !current.current.items.some(row => same(row, item))) return;
     invalidate('Changing the strategy interrupted this attempt before confirmation.');
     const next: Selection = {record: structuredClone(item.record), digest: item.digest, origin: 'PUBLIC_SNAPSHOT'};
     current.current.selection = next; current.current.json = ''; current.current.rights = false;
@@ -224,7 +224,7 @@ export default function Demo({signedIn = false}: {signedIn?: boolean} = {}) {
     <main id="demo-main"><section className="og-demo-header"><div><span className="og-eyebrow">LOCAL DEMO REPLAY</span><h1>Test the exact rules.</h1><p>Replay a strategy against supplied closed bars. Inspect costs, losses and decisions before treating a definition as evidence.</p></div><span className="og-demo-local">Browser only · orders disabled</span></section>
       <div className="og-demo-layout"><section className="og-demo-panel" aria-label="Demo strategy selection"><div className="og-demo-panel-head"><h2>1. Choose a definition</h2><button className="og-button og-secondary og-icon-button" type="button" aria-label="Refresh demo catalog" disabled={catalogBusy} onClick={() => void loadCatalog()}><RefreshCw size={15}/></button></div>
         {catalogBusy && <p role="status">Loading public definitions…</p>}{catalogError && <p className="og-demo-message" role="alert">{catalogError}</p>}
-        <div className="og-demo-choice-list">{items.filter(item => item.record && item.state === 'VISIBLE').map(item => <button className="og-demo-choice" type="button" aria-label={`Select strategy ${item.id}`} aria-pressed={selection?.origin === 'PUBLIC_SNAPSHOT' && selection.record.id === item.id} key={item.id} onClick={() => choose(item)}><div><strong>{item.record!.content.name}</strong><small>{item.record!.content.definition.entry.type} · {item.record!.content.definition.market.symbol} · {item.record!.content.definition.market.timeframe} · {item.record!.content.definition.market.direction}<br/>{item.author.kind === 'HUMAN' ? 'Human' : 'Agent'} {shortId(item.author.id)} · human sponsor {shortId(item.author.sponsorId)} · v{item.revision}</small></div><span>UNTESTED</span></button>)}</div>
+        <p>Programmable sources use <a href="/program">Program replay</a>.</p><div className="og-demo-choice-list">{items.filter(item => item.record?.version === 1 && item.state === 'VISIBLE').map(item => <button className="og-demo-choice" type="button" aria-label={`Select strategy ${item.id}`} aria-pressed={selection?.origin === 'PUBLIC_SNAPSHOT' && selection.record.id === item.id} key={item.id} onClick={() => choose(item)}><div><strong>{item.record!.content.name}</strong><small>{item.record!.content.definition.entry.type} · {item.record!.content.definition.market.symbol} · {item.record!.content.definition.market.timeframe} · {item.record!.content.definition.market.direction}<br/>{item.author.kind === 'HUMAN' ? 'Human' : 'Agent'} {shortId(item.author.id)} · human sponsor {shortId(item.author.sponsorId)} · v{item.revision}</small></div><span>UNTESTED</span></button>)}</div>
         {!catalogBusy && !catalogError && !items.some(item => item.record) && <p>No visible public definitions on this page. The offline example can still demonstrate the evaluator.</p>}
         <div className="og-demo-catalog-actions">{pageCursor && <button className="og-button og-secondary" type="button" disabled={catalogBusy} onClick={() => void loadCatalog()}>Latest definitions</button>}{cursor && <button className="og-button og-secondary" type="button" disabled={catalogBusy} onClick={() => void loadCatalog(cursor)}>Next definitions<ArrowRight size={14}/></button>}</div>
         <div className="og-demo-offline"><button className="og-button og-secondary" type="button" disabled={!!busy} onClick={() => void example(true)}><FlaskConical size={14}/>Use synthetic offline example</button><p>Generated prices and signals. No published author, market feed or registered experiment is implied.</p></div>

@@ -1,0 +1,5863 @@
+{
+  "version": 1,
+  "kind": "LOCAL_DEMO_SESSION",
+  "classification": "AUTHOR_REPORTED",
+  "qualification": "NONE",
+  "ordersEnabled": false,
+  "implementation": {
+    "version": "opengrail-session-v1",
+    "engine": "7f4c1263910a4ca25036c610b755af548e2e2a002a2a9021be8c528ff6455215",
+    "model": "7d6dc8a8b7cc05a39b759c82c970a72443cd1af7dc897076234a839b75a265d3",
+    "journal": "f2ebbeb3121e61d140bb68a4a41957509208b2dd8d38009a226a227f043c81fe"
+  },
+  "config": {
+    "version": 1,
+    "sessionId": "00000000-0000-4000-8000-000000000500",
+    "methodVersion": "opengrail-session-v1",
+    "clockMode": "SYNTHETIC_PLAYBACK",
+    "origin": "SYNTHETIC_FIXTURE",
+    "strategy": {
+      "record": {
+        "version": 1,
+        "id": "00000000-0000-4000-8000-000000000001",
+        "rootId": "00000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "requestId": "00000000-0000-4000-8000-000000000002",
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "author": {
+          "kind": "HUMAN",
+          "id": "human_0000000000000000000000000000000000000000000000000000000000000000",
+          "sponsorId": "human_0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "content": {
+          "name": "Invented continuous signal fixture",
+          "description": "Deterministic synthetic input, not a registered participant or tested market strategy.",
+          "assumptions": "Friction, fills and data are authored simulation assumptions.",
+          "falsification": "Reject economic claims that cannot be independently reproduced with permitted unseen data.",
+          "sources": [],
+          "definition": {
+            "schemaVersion": 1,
+            "market": {
+              "symbol": "BTC/USDT",
+              "timeframe": "1h",
+              "direction": "LONG"
+            },
+            "entry": {
+              "type": "SIGNAL",
+              "provider": "CUSTOM",
+              "event": "BULLISH",
+              "maxAgeBars": 3
+            },
+            "risk": {
+              "positionPct": 1,
+              "maxOpenPositions": 1,
+              "stopLossPct": 2,
+              "takeProfitPct": 4,
+              "maxDailyLossPct": 1
+            },
+            "costs": {
+              "feeBps": 10,
+              "slippageBps": 10
+            },
+            "execution": {
+              "mode": "DEMO",
+              "leverage": 1,
+              "ordersEnabled": false
+            }
+          },
+          "relation": null
+        },
+        "policyAccepted": "public-strategy-v1",
+        "verification": "UNTESTED",
+        "executionEnabled": false
+      },
+      "digest": "4f79b7f6203adac98ca94929e85ca1d7872f6775f367c40dab5dc1427e219588"
+    },
+    "initialCapital": 1000,
+    "provenance": "SYNTHETIC",
+    "rights": {
+      "permission": "CREATED_SYNTHETIC",
+      "acknowledged": true,
+      "note": "Invented deterministic triangular-wave OHLC fixture created locally; no external source or real market prices."
+    },
+    "sourceLabel": "Invented triangular-wave event stream",
+    "ordersEnabled": false,
+    "liveEnabled": false
+  },
+  "startedAt": "2025-01-01T00:00:00.000Z",
+  "events": [
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001000",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T01:00:00.000Z",
+          "open": 100,
+          "high": 100.29999999999998,
+          "low": 87.736,
+          "close": 88,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T01:00:00.000Z",
+      "stateDigest": "c07037a9856e0e0dc100333bbbd42b8e8307df4b10eb1a3c59fbc58f6022bac0"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001001",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T01:00:00.002Z",
+        "price": 88
+      },
+      "receivedAt": "2025-01-01T01:00:00.002Z",
+      "stateDigest": "f5737dd55e6fa287250fe91703e833e44ee73918760de3e3aa26bddecb0021cc"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001002",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T02:00:00.000Z",
+          "open": 88,
+          "high": 89.267,
+          "low": 87.736,
+          "close": 89,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T02:00:00.000Z",
+      "stateDigest": "9ba788aa50ca588cfcaf78e15e075cd885401d77ede44723442442c79ab6b4ca"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001003",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T02:00:00.002Z",
+        "price": 89
+      },
+      "receivedAt": "2025-01-01T02:00:00.002Z",
+      "stateDigest": "813f7ec35e71a118c797784a989ba89d8b91e5e626cf2983c57baaa244e3d73c"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001004",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T03:00:00.000Z",
+          "open": 89,
+          "high": 90.27,
+          "low": 88.733,
+          "close": 90,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T03:00:00.000Z",
+      "stateDigest": "299e0627c92275cd3a975fbf8ce5bfc67cc80667125f9f490f66cf744a569017"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001005",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T03:00:00.002Z",
+        "price": 90
+      },
+      "receivedAt": "2025-01-01T03:00:00.002Z",
+      "stateDigest": "205e1fd4181a196e97806fd53600654c6bd664350fda280deefe02876ca5f1de"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001006",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T04:00:00.000Z",
+          "open": 90,
+          "high": 91.273,
+          "low": 89.73,
+          "close": 91,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T04:00:00.000Z",
+      "stateDigest": "fdc4c80f1fa0212278bec7a9de164c239fac774e92d9e92ce2d31118aac0a095"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001007",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T04:00:00.002Z",
+        "price": 91
+      },
+      "receivedAt": "2025-01-01T04:00:00.002Z",
+      "stateDigest": "74963b350ad2b8ae2412869c120bfbeef04c55e3f2902138006ac794265b9403"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001008",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T05:00:00.000Z",
+          "open": 91,
+          "high": 92.276,
+          "low": 90.727,
+          "close": 92,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T05:00:00.000Z",
+      "stateDigest": "0c8010c99123f7c6651e4c0c5ad549f059ea92699abba1367be436d3aad8754d"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001009",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T05:00:00.002Z",
+        "price": 92
+      },
+      "receivedAt": "2025-01-01T05:00:00.002Z",
+      "stateDigest": "07fa16c480b3b1b1dfe6b3215951f5831d91fa2d15e070d34f0b229dc28cb76c"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001010",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T06:00:00.000Z",
+          "open": 92,
+          "high": 93.279,
+          "low": 91.724,
+          "close": 93,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T06:00:00.000Z",
+      "stateDigest": "dbd0ae739ddb8eb11682c62cc064583f8871c197d499ad61ccf301a189d57278"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001011",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T06:00:00.002Z",
+        "price": 93
+      },
+      "receivedAt": "2025-01-01T06:00:00.002Z",
+      "stateDigest": "924445aa47b3b784ce66e897e259287068b98e34de9e165bfade449f76a8fd27"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001012",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T07:00:00.000Z",
+          "open": 93,
+          "high": 94.282,
+          "low": 92.721,
+          "close": 94,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T07:00:00.000Z",
+      "stateDigest": "80b1cfbba77d3886cd7986443d163511f6e5c91b4c8a69a0d8d3b5077ed99911"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001013",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T07:00:00.002Z",
+        "price": 94
+      },
+      "receivedAt": "2025-01-01T07:00:00.002Z",
+      "stateDigest": "08314f5101aab2dd4be5e6e28986ceca417cd076805f556f9aa8f731a0a815a1"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001014",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T08:00:00.000Z",
+          "open": 94,
+          "high": 95.285,
+          "low": 93.718,
+          "close": 95,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T08:00:00.000Z",
+      "stateDigest": "9fb0dbb8925835514ed63d30ba2826b799cee709b8f4a092a57558d4c147c1ba"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001015",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T08:00:00.002Z",
+        "price": 95
+      },
+      "receivedAt": "2025-01-01T08:00:00.002Z",
+      "stateDigest": "aaa1d6e565b10f62a36e895491fbb26f8e5a7847f0b6572ed954cf6aa9caed30"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001016",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T09:00:00.000Z",
+          "open": 95,
+          "high": 96.28799999999998,
+          "low": 94.715,
+          "close": 96,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T09:00:00.000Z",
+      "stateDigest": "ce84246a6dcec0dcae53cb88a5eccac3e08b2cca2c1ab59c1758e7a038fc6a95"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001017",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T09:00:00.002Z",
+        "price": 96
+      },
+      "receivedAt": "2025-01-01T09:00:00.002Z",
+      "stateDigest": "db890e6151d483b8b311c92ec38936535007789865bb6377954339c50477bca7"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001018",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T10:00:00.000Z",
+          "open": 96,
+          "high": 97.29099999999998,
+          "low": 95.712,
+          "close": 97,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T10:00:00.000Z",
+      "stateDigest": "f01a7e95993e10a3fb1aae8bdc54f3e3e77ff7e3197b992b3989085a8632f9a8"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001019",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T10:00:00.002Z",
+        "price": 97
+      },
+      "receivedAt": "2025-01-01T10:00:00.002Z",
+      "stateDigest": "1146bdad7221a7f62d274e40d3917c5f27cf2128a55f2ec631a82a23fbf33ffe"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001020",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T11:00:00.000Z",
+          "open": 97,
+          "high": 98.29399999999998,
+          "low": 96.709,
+          "close": 98,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T11:00:00.000Z",
+      "stateDigest": "750d427165aeeb918425d6d7fb8ab17f57ad7ee91a6f227a39e48ea3adbe29d5"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001021",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T11:00:00.002Z",
+        "price": 98
+      },
+      "receivedAt": "2025-01-01T11:00:00.002Z",
+      "stateDigest": "62a104231913124f9f4c0a8f4c6248b531681760026d4f7ec54888c64eb29750"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001022",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T12:00:00.000Z",
+          "open": 98,
+          "high": 99.29699999999998,
+          "low": 97.706,
+          "close": 99,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T12:00:00.000Z",
+      "stateDigest": "f795eac03ad4a2b3c80ba953f6abac588c6575e3f1973d99e87fe270d966e44f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001023",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T12:00:00.002Z",
+        "price": 99
+      },
+      "receivedAt": "2025-01-01T12:00:00.002Z",
+      "stateDigest": "2ad6d83e6f653604e3ac08d379786672aadfaa587f7fb3d55cefa11411451d47"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001024",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T13:00:00.000Z",
+          "open": 99,
+          "high": 100.29999999999998,
+          "low": 98.703,
+          "close": 100,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T13:00:00.000Z",
+      "stateDigest": "b0cd2fcce01887cf35166b7bd86787fa3adfdc7148389ef5886ad2a50de00ebf"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001025",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T13:00:00.002Z",
+        "price": 100
+      },
+      "receivedAt": "2025-01-01T13:00:00.002Z",
+      "stateDigest": "a629fa26b32f60a6ad86c745b08710d21802f25973c0c2df1e473180367a6014"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001026",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T14:00:00.000Z",
+          "open": 100,
+          "high": 101.30299999999998,
+          "low": 99.7,
+          "close": 101,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T14:00:00.000Z",
+      "stateDigest": "b59940687ae613839220c1261eff1243c5d6cf7440e0ae3efd727341292a215e"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001027",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T14:00:00.002Z",
+        "price": 101
+      },
+      "receivedAt": "2025-01-01T14:00:00.002Z",
+      "stateDigest": "9d780ba6234354b554c6cfc6cc2a628df9aa210e1e31c29940582342dced2d47"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001028",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T15:00:00.000Z",
+          "open": 101,
+          "high": 102.30599999999998,
+          "low": 100.697,
+          "close": 102,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T15:00:00.000Z",
+      "stateDigest": "092f718c19d257556e91f4138113e1d3c0bb9c49bf60d7932534075c8f98c32a"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001029",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T15:00:00.002Z",
+        "price": 102
+      },
+      "receivedAt": "2025-01-01T15:00:00.002Z",
+      "stateDigest": "05ab48a8c771ff4641a448391bb31d0b76412a8ff911dd200dbede12266bab54"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001030",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T16:00:00.000Z",
+          "open": 102,
+          "high": 103.30899999999998,
+          "low": 101.694,
+          "close": 103,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T16:00:00.000Z",
+      "stateDigest": "30986bfdf4d9d88cc645a21389500435e9924857d93df04250be642a24db29a1"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001031",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T16:00:00.002Z",
+        "price": 103
+      },
+      "receivedAt": "2025-01-01T16:00:00.002Z",
+      "stateDigest": "d59ae9444ed193c1c115d52019d3b48e951152f87d0084b61c0e74e195c991d7"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001032",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T17:00:00.000Z",
+          "open": 103,
+          "high": 104.31199999999998,
+          "low": 102.691,
+          "close": 104,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T17:00:00.000Z",
+      "stateDigest": "95a460ba73018d9e176a485c6bee0df24ebda860f02b3a1cc698e3bbd0b1a966"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001033",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T17:00:00.002Z",
+        "price": 104
+      },
+      "receivedAt": "2025-01-01T17:00:00.002Z",
+      "stateDigest": "b6cd70da347698ebed9c95d9c042e9d9df920368559b835d431ef8124e2fdd87"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001034",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T18:00:00.000Z",
+          "open": 104,
+          "high": 105.31499999999998,
+          "low": 103.688,
+          "close": 105,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T18:00:00.000Z",
+      "stateDigest": "d5b2b535ee1716cf41b66721abfb2ff169d8ecbf6815467859e0e7c25c55a1e0"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001035",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T18:00:00.002Z",
+        "price": 105
+      },
+      "receivedAt": "2025-01-01T18:00:00.002Z",
+      "stateDigest": "a34904129b4c3b17f3fb3b1a9aa1be1e7d5a5a3ebcfa3d3cec897d850b190481"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001036",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T19:00:00.000Z",
+          "open": 105,
+          "high": 106.31799999999998,
+          "low": 104.685,
+          "close": 106,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T19:00:00.000Z",
+      "stateDigest": "a456d55ea1c60e3a9b773a3da99610982cf72c8fc714da2a771bf42a5dc35452"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001037",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T19:00:00.002Z",
+        "price": 106
+      },
+      "receivedAt": "2025-01-01T19:00:00.002Z",
+      "stateDigest": "b696ca71f447fbdffcc99aeee3149bf7c458a7792f2aab919317c0494b95f308"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001038",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T20:00:00.000Z",
+          "open": 106,
+          "high": 107.32099999999998,
+          "low": 105.682,
+          "close": 107,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T20:00:00.000Z",
+      "stateDigest": "6f29b2be8e42414121ec06b57d748b1e7602e4148f274c0809c75c87aa7c5b4f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001039",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T20:00:00.002Z",
+        "price": 107
+      },
+      "receivedAt": "2025-01-01T20:00:00.002Z",
+      "stateDigest": "ac5c193f66afc52929eedca6928123b19f02b09f431f612dbac8b7487f15c570"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001040",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T21:00:00.000Z",
+          "open": 107,
+          "high": 108.32399999999998,
+          "low": 106.679,
+          "close": 108,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T21:00:00.000Z",
+      "stateDigest": "2f91add1b8e5fb6af403992a2bb4d16106324a6472fdaf25c45541313568194f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001041",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T21:00:00.002Z",
+        "price": 108
+      },
+      "receivedAt": "2025-01-01T21:00:00.002Z",
+      "stateDigest": "190374765523f3c32caaa0a26db8c592de346b2fd7c43217353aaeb01cd87736"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001042",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T22:00:00.000Z",
+          "open": 108,
+          "high": 109.327,
+          "low": 107.676,
+          "close": 109.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T22:00:00.000Z",
+      "stateDigest": "1decf139f6035664117bbf8277a32e6b8f78c846210ee6029d769ddf94f63d17"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001043",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T22:00:00.002Z",
+        "price": 109.00000000000001
+      },
+      "receivedAt": "2025-01-01T22:00:00.002Z",
+      "stateDigest": "af71f8543664a149872509724542027b5e3bd54ae47afca4e0b40dc4f5da6b38"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001044",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-01T23:00:00.000Z",
+          "open": 109.00000000000001,
+          "high": 110.33,
+          "low": 108.67300000000002,
+          "close": 110.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-01T23:00:00.000Z",
+      "stateDigest": "472f1e363baeca21c4971d1fcaa70f8e8488416e0dda64e94b889dc3912adae7"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001045",
+        "type": "QUOTE",
+        "observedAt": "2025-01-01T23:00:00.002Z",
+        "price": 110.00000000000001
+      },
+      "receivedAt": "2025-01-01T23:00:00.002Z",
+      "stateDigest": "30b5f3564e7bab585623db576eab2326af0beff6bae7f070867822d7a72b1a37"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001046",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T00:00:00.000Z",
+          "open": 110.00000000000001,
+          "high": 111.333,
+          "low": 109.67000000000002,
+          "close": 111.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T00:00:00.000Z",
+      "stateDigest": "169ca197966ae4f2a298454dd22888e51dbe8ce5880e2298cce395930a9f171d"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001047",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T00:00:00.002Z",
+        "price": 111.00000000000001
+      },
+      "receivedAt": "2025-01-02T00:00:00.002Z",
+      "stateDigest": "677a5c11df031a415c40dc77af588e00a9dd91326d878cfc355e0d9425994b3f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001048",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T01:00:00.000Z",
+          "open": 111.00000000000001,
+          "high": 112.336,
+          "low": 110.66700000000002,
+          "close": 112.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T01:00:00.000Z",
+      "stateDigest": "f72ee974ae0a2124100056352f6ad98b2ef71cd16cd31dc88160afffc62277a6"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001049",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T01:00:00.002Z",
+        "price": 112.00000000000001
+      },
+      "receivedAt": "2025-01-02T01:00:00.002Z",
+      "stateDigest": "0a39149ea006b8d6a5c8f7aed5c96668a4d9ea0a03555ad5b738c095ccd2c3ef"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001050",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T02:00:00.000Z",
+          "open": 112.00000000000001,
+          "high": 112.336,
+          "low": 110.66700000000002,
+          "close": 111.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T02:00:00.000Z",
+      "stateDigest": "5edcdb2d32b48ba35a8277f285c3c95d49a9f88540702bc4eb38fb055c817498"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001051",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T02:00:00.002Z",
+        "price": 111.00000000000001
+      },
+      "receivedAt": "2025-01-02T02:00:00.002Z",
+      "stateDigest": "4202609b17aad5d9b3c810aeda94908166dc4be943b90d54f7edad65a2c56903"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001052",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T03:00:00.000Z",
+          "open": 111.00000000000001,
+          "high": 111.333,
+          "low": 109.67000000000002,
+          "close": 110.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T03:00:00.000Z",
+      "stateDigest": "b611e1dccac7330e518aafbbc51b5d9482444157026eb65c089a3f88f6bb9ddb"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001053",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T03:00:00.002Z",
+        "price": 110.00000000000001
+      },
+      "receivedAt": "2025-01-02T03:00:00.002Z",
+      "stateDigest": "163ae3f277e01b19e2349970f257380c89532bea38e3446d7569dbfca5a3d27d"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001054",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T04:00:00.000Z",
+          "open": 110.00000000000001,
+          "high": 110.33,
+          "low": 108.67300000000002,
+          "close": 109.00000000000001,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T04:00:00.000Z",
+      "stateDigest": "1c9c123329daee96d66f476ce7e4f1f068ee06b9682feb6391b64fe889802497"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001055",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T04:00:00.002Z",
+        "price": 109.00000000000001
+      },
+      "receivedAt": "2025-01-02T04:00:00.002Z",
+      "stateDigest": "af3ddb9d9aa6b9fb388e525ce58150b416ddd7f3218dab455e962e0e3705a35f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001056",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T05:00:00.000Z",
+          "open": 109.00000000000001,
+          "high": 109.327,
+          "low": 107.676,
+          "close": 108,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T05:00:00.000Z",
+      "stateDigest": "b217887dc8acc56e57652d97250c242c6055842535973b11c9f0beccf0856ff6"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001057",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T05:00:00.002Z",
+        "price": 108
+      },
+      "receivedAt": "2025-01-02T05:00:00.002Z",
+      "stateDigest": "9d84c524897165017d4cd75a4b57292c00bda7a9c7d76b0db17821870e0086bb"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001058",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T06:00:00.000Z",
+          "open": 108,
+          "high": 108.32399999999998,
+          "low": 106.679,
+          "close": 107,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T06:00:00.000Z",
+      "stateDigest": "f34e62d3fc310e93ad24730ee9f13906fcbd18beda5c9bd51258c0d8d42b95ab"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001059",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T06:00:00.002Z",
+        "price": 107
+      },
+      "receivedAt": "2025-01-02T06:00:00.002Z",
+      "stateDigest": "6b39e7691ac2859d4b9c9ec4840688110d2c64138ba2da0500fa864749853a04"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001060",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T07:00:00.000Z",
+          "open": 107,
+          "high": 107.32099999999998,
+          "low": 105.682,
+          "close": 106,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T07:00:00.000Z",
+      "stateDigest": "d7d6ead3eb715436e6bd231cd80986fe2c5f2b12d8e13d26c661fc6228deea66"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001061",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T07:00:00.002Z",
+        "price": 106
+      },
+      "receivedAt": "2025-01-02T07:00:00.002Z",
+      "stateDigest": "047349c464ab8865f69c33e6b16761989816346b69f7fd79a07b1de8f39aed6a"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001062",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T08:00:00.000Z",
+          "open": 106,
+          "high": 106.31799999999998,
+          "low": 104.685,
+          "close": 105,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T08:00:00.000Z",
+      "stateDigest": "07fbd89f126fc501afdcaa6f78c95252bc377e2c393f19dd3a149c48aef720f4"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001063",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T08:00:00.002Z",
+        "price": 105
+      },
+      "receivedAt": "2025-01-02T08:00:00.002Z",
+      "stateDigest": "60ae235e561665686f3f9a3a29553b84fe3b340689d422bdd6d913d349d3b787"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001064",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T09:00:00.000Z",
+          "open": 105,
+          "high": 105.31499999999998,
+          "low": 103.688,
+          "close": 104,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T09:00:00.000Z",
+      "stateDigest": "3230a1ed417e7d1b249a43b071e0c614ef986c673df0d30307fa25f1f846e64c"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001065",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T09:00:00.002Z",
+        "price": 104
+      },
+      "receivedAt": "2025-01-02T09:00:00.002Z",
+      "stateDigest": "abc5a721ed4e40cbb1c570d5854d6a2109d08145b6701c9f263cf626cf4b21db"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001066",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T10:00:00.000Z",
+          "open": 104,
+          "high": 104.31199999999998,
+          "low": 102.691,
+          "close": 103,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T10:00:00.000Z",
+      "stateDigest": "6b0e0a225a7913e9b82f6d4a3ef0245be7a47b11258564c6cb0be7d0a0dedb59"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001067",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T10:00:00.002Z",
+        "price": 103
+      },
+      "receivedAt": "2025-01-02T10:00:00.002Z",
+      "stateDigest": "074c952b2a28b626388448279a912f7eb6281933a8b043b4b7f20cbb53cd3023"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001068",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T11:00:00.000Z",
+          "open": 103,
+          "high": 103.30899999999998,
+          "low": 101.694,
+          "close": 102,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T11:00:00.000Z",
+      "stateDigest": "6d969342b68dcc7fd87fc5656cf1d20be05cf7dc300f25c455b3607ac37711f7"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001069",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T11:00:00.002Z",
+        "price": 102
+      },
+      "receivedAt": "2025-01-02T11:00:00.002Z",
+      "stateDigest": "f869d4b5795e06ba90a4534fa4aa9aaee596eff5e719eeed8051e7356dbe021f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001070",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T12:00:00.000Z",
+          "open": 102,
+          "high": 102.30599999999998,
+          "low": 100.697,
+          "close": 101,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T12:00:00.000Z",
+      "stateDigest": "0dc54e6f1c8b1915438dbced31af134c28611d1d7e3990ab6bca0c488a484a55"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001071",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T12:00:00.002Z",
+        "price": 101
+      },
+      "receivedAt": "2025-01-02T12:00:00.002Z",
+      "stateDigest": "e97e315b6f44045dfff3beb9709764c4e040dcea4dd73623a23aee24089befd0"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001072",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T13:00:00.000Z",
+          "open": 101,
+          "high": 101.30299999999998,
+          "low": 99.7,
+          "close": 100,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T13:00:00.000Z",
+      "stateDigest": "14b11051e222273ad5d043af59082d4f37ca6a92f88198acb7388ca6be2f8e13"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001073",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T13:00:00.002Z",
+        "price": 100
+      },
+      "receivedAt": "2025-01-02T13:00:00.002Z",
+      "stateDigest": "f6325dd4cb416c5655b29ed680120ee571dc0b14783ff2fc78b5c60f27b8ea1c"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001074",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T14:00:00.000Z",
+          "open": 100,
+          "high": 100.29999999999998,
+          "low": 98.703,
+          "close": 99,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T14:00:00.000Z",
+      "stateDigest": "f87fe1293d24d915ebbe23561913ce1c2fbf7f8242657de99e2ff6936a856899"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001075",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T14:00:00.002Z",
+        "price": 99
+      },
+      "receivedAt": "2025-01-02T14:00:00.002Z",
+      "stateDigest": "5c695f0db33a1e457da568cebca53fa3b731cb638185d6b6de0a00d63e7e1f61"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001076",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T15:00:00.000Z",
+          "open": 99,
+          "high": 99.29699999999998,
+          "low": 97.706,
+          "close": 98,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T15:00:00.000Z",
+      "stateDigest": "1bba1f5100675e734e1ed09882cdec9fef8cd9c2c9be61ac96565d573cc39a0d"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001077",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T15:00:00.002Z",
+        "price": 98
+      },
+      "receivedAt": "2025-01-02T15:00:00.002Z",
+      "stateDigest": "50f4991296f5cd4a0d950cbb9378c3c9fdcc96333b58a0171a3d173d21050d4a"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001078",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T16:00:00.000Z",
+          "open": 98,
+          "high": 98.29399999999998,
+          "low": 96.709,
+          "close": 97,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T16:00:00.000Z",
+      "stateDigest": "88e59ec09de1cdac4d67674fe4d653a59201e81cdf8326f6772570b79f02929a"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001079",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T16:00:00.002Z",
+        "price": 97
+      },
+      "receivedAt": "2025-01-02T16:00:00.002Z",
+      "stateDigest": "8d4e73b0a1e6744bb254458e60e9d39d04df5e9aaa323bea8677b9c6be99463b"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001080",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T17:00:00.000Z",
+          "open": 97,
+          "high": 97.29099999999998,
+          "low": 95.712,
+          "close": 96,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T17:00:00.000Z",
+      "stateDigest": "56afeb5f4015cf34178a87b3ca277014e7fed24e1beeaf8da58e6c673f253712"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001081",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T17:00:00.002Z",
+        "price": 96
+      },
+      "receivedAt": "2025-01-02T17:00:00.002Z",
+      "stateDigest": "5d1465348b7b776958a48bc6d4be433630378aa2aed15b419a4ee81dc16d7afb"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001082",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T18:00:00.000Z",
+          "open": 96,
+          "high": 96.28799999999998,
+          "low": 94.715,
+          "close": 95,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T18:00:00.000Z",
+      "stateDigest": "1dc949300b0cac3e539f129441c52e31fb8afc7ef20e68f0fccb10dc6f49d7db"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001083",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T18:00:00.002Z",
+        "price": 95
+      },
+      "receivedAt": "2025-01-02T18:00:00.002Z",
+      "stateDigest": "fb1c8ccf42895d15a79313c9ec6c03cce1eba382262531347f3b47bccb6e4bf3"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001084",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T19:00:00.000Z",
+          "open": 95,
+          "high": 95.285,
+          "low": 93.718,
+          "close": 94,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T19:00:00.000Z",
+      "stateDigest": "04208cce024c4d00fd645fa2611aa380d0b4e09f7128557bef525a81c9b48c90"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001085",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T19:00:00.002Z",
+        "price": 94
+      },
+      "receivedAt": "2025-01-02T19:00:00.002Z",
+      "stateDigest": "61da8eb1bd03dd56cb894c56a85b992908f94e114b77dc465f019269b44eacff"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001086",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T20:00:00.000Z",
+          "open": 94,
+          "high": 94.282,
+          "low": 92.721,
+          "close": 93,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T20:00:00.000Z",
+      "stateDigest": "aa616facd1b7b58fb977aec80d83347c42183e8f84b7cd7c26f370dc8b2c787e"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001087",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T20:00:00.002Z",
+        "price": 93
+      },
+      "receivedAt": "2025-01-02T20:00:00.002Z",
+      "stateDigest": "4a00868c559ab4911bbe195088678f9015750d119f39c104f9639802d95b6143"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001088",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T21:00:00.000Z",
+          "open": 93,
+          "high": 93.279,
+          "low": 91.724,
+          "close": 92,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T21:00:00.000Z",
+      "stateDigest": "2017e07ba3e2bacdb8f6ccd677980162b6b07726a223821005a5d42bef533477"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001089",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T21:00:00.002Z",
+        "price": 92
+      },
+      "receivedAt": "2025-01-02T21:00:00.002Z",
+      "stateDigest": "8e407c5b3340d23c632ca55662193b020d0788ccf380a71afc2e2340c75bb7c9"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001090",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T22:00:00.000Z",
+          "open": 92,
+          "high": 92.276,
+          "low": 90.727,
+          "close": 91,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T22:00:00.000Z",
+      "stateDigest": "15e03a68300b694ae0a374bb6e4928e0f35f3a565a1409c0c02e67d084bd3f53"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001091",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T22:00:00.002Z",
+        "price": 91
+      },
+      "receivedAt": "2025-01-02T22:00:00.002Z",
+      "stateDigest": "e8b07d3a8c0c2255aa92a4a0053c798c3ad7ac4fbf66720f4ebc62ba17747b58"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001092",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-02T23:00:00.000Z",
+          "open": 91,
+          "high": 91.273,
+          "low": 89.73,
+          "close": 90,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-02T23:00:00.000Z",
+      "stateDigest": "9602c5316482d3eb1e061d3cfa9ea0a1ef1d6f80068a7b1510e2595948c113e9"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001093",
+        "type": "QUOTE",
+        "observedAt": "2025-01-02T23:00:00.002Z",
+        "price": 90
+      },
+      "receivedAt": "2025-01-02T23:00:00.002Z",
+      "stateDigest": "a4f31fab6c183c279f473b5075bf5da64ac523e8da25178c216607f5f81fd492"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001094",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T00:00:00.000Z",
+          "open": 90,
+          "high": 90.27,
+          "low": 88.733,
+          "close": 89,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T00:00:00.000Z",
+      "stateDigest": "e0e6d07eaf21dee6fc7bfbec137ed704d952e27624f906bb79d9f63b3d28b4e7"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001095",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T00:00:00.002Z",
+        "price": 89
+      },
+      "receivedAt": "2025-01-03T00:00:00.002Z",
+      "stateDigest": "3fbb3fb70355a6278e741aee3e73232b73024fa4e01985554b31d8f081dce0cd"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001096",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T01:00:00.000Z",
+          "open": 89,
+          "high": 89.267,
+          "low": 87.736,
+          "close": 88,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T01:00:00.000Z",
+      "stateDigest": "58ba06c204401e72abacbc64be26973250960f7190fdaf723653f064b5c8a875"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001097",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T01:00:00.002Z",
+        "price": 88
+      },
+      "receivedAt": "2025-01-03T01:00:00.002Z",
+      "stateDigest": "556f123380e3982e127e0ebbeed50563920d0cdf0865d4b925dc2ce9f23cfdb4"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001098",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T02:00:00.000Z",
+          "open": 88,
+          "high": 89.267,
+          "low": 87.736,
+          "close": 89,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T02:00:00.000Z",
+      "stateDigest": "084815ce9ec22058968945ab017a1de5cc6182a1e661e7de0ac8dcc7f52118fc"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001099",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T02:00:00.002Z",
+        "price": 89
+      },
+      "receivedAt": "2025-01-03T02:00:00.002Z",
+      "stateDigest": "77939b511a1dce5a46a1eb9f7f79a12fbd365b3008b20659cbb5bb5efb3cc666"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001100",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T03:00:00.000Z",
+          "open": 89,
+          "high": 90.27,
+          "low": 88.733,
+          "close": 90,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T03:00:00.000Z",
+      "stateDigest": "e497e94600888c87ecfe400953e9146fa4c4efef1cf7131bf15b7dbc34bf0b2d"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001101",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T03:00:00.002Z",
+        "price": 90
+      },
+      "receivedAt": "2025-01-03T03:00:00.002Z",
+      "stateDigest": "43a25b0b5b48061a239685bfd3b2984614e3d3b4655a7d8556292b0cd38a0129"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001102",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T04:00:00.000Z",
+          "open": 90,
+          "high": 91.273,
+          "low": 89.73,
+          "close": 91,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T04:00:00.000Z",
+      "stateDigest": "2a683e41b18b8471fb11c806e5c1c7d64799eefd8146b040201d893f2d079917"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001103",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T04:00:00.002Z",
+        "price": 91
+      },
+      "receivedAt": "2025-01-03T04:00:00.002Z",
+      "stateDigest": "fe02a6a1486e0a03b511a8e187c6c9fb4dacad72bb9738ff13c053b32c302973"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001104",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T05:00:00.000Z",
+          "open": 91,
+          "high": 92.276,
+          "low": 90.727,
+          "close": 92,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T05:00:00.000Z",
+      "stateDigest": "80122fe0f2f5e613a93660d286ebe5e848b40765c412b3a6bcf8658551733a99"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001105",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T05:00:00.002Z",
+        "price": 92
+      },
+      "receivedAt": "2025-01-03T05:00:00.002Z",
+      "stateDigest": "5fcfb93610dde86e03edc3133dd70962e90a89f52809ce87b9897b13b26d796c"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001106",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T06:00:00.000Z",
+          "open": 92,
+          "high": 93.279,
+          "low": 91.724,
+          "close": 93,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T06:00:00.000Z",
+      "stateDigest": "81f8ce75e81bbdbf5ecc5ba8dde7aaa40491dfa3bcb347dfe864f2b97133995f"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001107",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T06:00:00.002Z",
+        "price": 93
+      },
+      "receivedAt": "2025-01-03T06:00:00.002Z",
+      "stateDigest": "c1c5b149ef991b67e2308ecca181773993e07f5d745dda68cd2d0145af49f4d6"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001108",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T07:00:00.000Z",
+          "open": 93,
+          "high": 94.282,
+          "low": 92.721,
+          "close": 94,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T07:00:00.000Z",
+      "stateDigest": "542d71b49f4268817255a9c034d73da7efcfdc888e91eac97841a2a8bc274599"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001109",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T07:00:00.002Z",
+        "price": 94
+      },
+      "receivedAt": "2025-01-03T07:00:00.002Z",
+      "stateDigest": "1a7d32a30e32e3b1f0e290f97915cbe8e1fc823b13daa68c03f97482c7fab616"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001110",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T08:00:00.000Z",
+          "open": 94,
+          "high": 95.285,
+          "low": 93.718,
+          "close": 95,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T08:00:00.000Z",
+      "stateDigest": "59e4e1e51f3f7a5cf8f7051ae6c8f816aee3da47ba00eaf8f7ca3f20fa92be6b"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001111",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T08:00:00.002Z",
+        "price": 95
+      },
+      "receivedAt": "2025-01-03T08:00:00.002Z",
+      "stateDigest": "3226c0e87c5f3dd222a084833bbf48ee1e065681c6501211f47b921a83610e64"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001112",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T09:00:00.000Z",
+          "open": 95,
+          "high": 96.28799999999998,
+          "low": 94.715,
+          "close": 96,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T09:00:00.000Z",
+      "stateDigest": "75372c911c5020394b20e82763c3300100ffd2639ece71b97ddf8f177c029a47"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001113",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T09:00:00.002Z",
+        "price": 96
+      },
+      "receivedAt": "2025-01-03T09:00:00.002Z",
+      "stateDigest": "f4f9040269765d2606d2f7b7e8cabe3d83176ba4e4af0345ddca7daf27d147de"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001114",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T10:00:00.000Z",
+          "open": 96,
+          "high": 97.29099999999998,
+          "low": 95.712,
+          "close": 97,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T10:00:00.000Z",
+      "stateDigest": "45c46b78c33e485519154bc8d55310c5443c0545ae38fc8a38d19865b50dadc5"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001115",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T10:00:00.002Z",
+        "price": 97
+      },
+      "receivedAt": "2025-01-03T10:00:00.002Z",
+      "stateDigest": "3fca983cb8210cc3a37bdbe9a26f326a6358ace75ecca4cec5c812c9c39d22bd"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001116",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T11:00:00.000Z",
+          "open": 97,
+          "high": 98.29399999999998,
+          "low": 96.709,
+          "close": 98,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T11:00:00.000Z",
+      "stateDigest": "c58744567f3a25bd850bd5b8d77ea60bf520204b6a49cc5cada636b3ed41cc00"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001117",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T11:00:00.002Z",
+        "price": 98
+      },
+      "receivedAt": "2025-01-03T11:00:00.002Z",
+      "stateDigest": "a7a03934776331d422b9c953e9db5b770c6a960e99b36894d7914637b67cbb7e"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001118",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T12:00:00.000Z",
+          "open": 98,
+          "high": 99.29699999999998,
+          "low": 97.706,
+          "close": 99,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T12:00:00.000Z",
+      "stateDigest": "8fecef01ed5c152040ab3c426714f07df15f46b40ecb1a6c949774b47fd2269e"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001119",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T12:00:00.002Z",
+        "price": 99
+      },
+      "receivedAt": "2025-01-03T12:00:00.002Z",
+      "stateDigest": "c150c78c33d788a071b4f2c355ddcb79a679d0b6f3b743bf689e63551aef3cbe"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001120",
+        "type": "CLOSED_BAR",
+        "bar": {
+          "closedAt": "2025-01-03T13:00:00.000Z",
+          "open": 99,
+          "high": 100.29999999999998,
+          "low": 98.703,
+          "close": 100,
+          "volume": 1000
+        }
+      },
+      "receivedAt": "2025-01-03T13:00:00.000Z",
+      "stateDigest": "8e6108c47ebe44453a66251256ef528385a98edc8c96c6621c7a50a767ab5000"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001121",
+        "type": "SIGNAL",
+        "signal": {
+          "id": "00000000-0000-4000-8000-000000000010",
+          "provider": "CUSTOM",
+          "event": "BULLISH",
+          "observedAt": "2025-01-03T13:00:00.000Z",
+          "availableAt": "2025-01-03T13:00:00.000Z"
+        }
+      },
+      "receivedAt": "2025-01-03T13:00:00.001Z",
+      "stateDigest": "531a43052916a3f00865993f19804626a7d038e0d8d8b0a1a7f3a98571da752a"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000001122",
+        "type": "QUOTE",
+        "observedAt": "2025-01-03T13:00:00.002Z",
+        "price": 100
+      },
+      "receivedAt": "2025-01-03T13:00:00.002Z",
+      "stateDigest": "33871fb1a6b84ac8bfb06ed3f76538750a990e30afc9ba703a0c68ec337fb59e"
+    },
+    {
+      "event": {
+        "requestId": "00000000-0000-4000-8000-000000009001",
+        "type": "EMERGENCY"
+      },
+      "receivedAt": "2025-01-03T13:00:00.003Z",
+      "stateDigest": "ebed6456cd92245ce26ed9b5ad6dacb521f06eac9a8a22c390f675dba414399d"
+    }
+  ],
+  "state": {
+    "version": 1,
+    "classification": "AUTHOR_REPORTED",
+    "qualification": "NONE",
+    "mode": "DEMO",
+    "ordersEnabled": false,
+    "liveEnabled": false,
+    "config": {
+      "version": 1,
+      "sessionId": "00000000-0000-4000-8000-000000000500",
+      "methodVersion": "opengrail-session-v1",
+      "clockMode": "SYNTHETIC_PLAYBACK",
+      "origin": "SYNTHETIC_FIXTURE",
+      "strategy": {
+        "record": {
+          "version": 1,
+          "id": "00000000-0000-4000-8000-000000000001",
+          "rootId": "00000000-0000-4000-8000-000000000001",
+          "revision": 1,
+          "requestId": "00000000-0000-4000-8000-000000000002",
+          "createdAt": "2025-01-01T00:00:00.000Z",
+          "author": {
+            "kind": "HUMAN",
+            "id": "human_0000000000000000000000000000000000000000000000000000000000000000",
+            "sponsorId": "human_0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "content": {
+            "name": "Invented continuous signal fixture",
+            "description": "Deterministic synthetic input, not a registered participant or tested market strategy.",
+            "assumptions": "Friction, fills and data are authored simulation assumptions.",
+            "falsification": "Reject economic claims that cannot be independently reproduced with permitted unseen data.",
+            "sources": [],
+            "definition": {
+              "schemaVersion": 1,
+              "market": {
+                "symbol": "BTC/USDT",
+                "timeframe": "1h",
+                "direction": "LONG"
+              },
+              "entry": {
+                "type": "SIGNAL",
+                "provider": "CUSTOM",
+                "event": "BULLISH",
+                "maxAgeBars": 3
+              },
+              "risk": {
+                "positionPct": 1,
+                "maxOpenPositions": 1,
+                "stopLossPct": 2,
+                "takeProfitPct": 4,
+                "maxDailyLossPct": 1
+              },
+              "costs": {
+                "feeBps": 10,
+                "slippageBps": 10
+              },
+              "execution": {
+                "mode": "DEMO",
+                "leverage": 1,
+                "ordersEnabled": false
+              }
+            },
+            "relation": null
+          },
+          "policyAccepted": "public-strategy-v1",
+          "verification": "UNTESTED",
+          "executionEnabled": false
+        },
+        "digest": "4f79b7f6203adac98ca94929e85ca1d7872f6775f367c40dab5dc1427e219588"
+      },
+      "initialCapital": 1000,
+      "provenance": "SYNTHETIC",
+      "rights": {
+        "permission": "CREATED_SYNTHETIC",
+        "acknowledged": true,
+        "note": "Invented deterministic triangular-wave OHLC fixture created locally; no external source or real market prices."
+      },
+      "sourceLabel": "Invented triangular-wave event stream",
+      "ordersEnabled": false,
+      "liveEnabled": false
+    },
+    "startedAt": "2025-01-01T00:00:00.000Z",
+    "lastReceivedAt": "2025-01-03T13:00:00.003Z",
+    "methodDigest": "45738aef6ad08cd8a4fa360eb137a72202b0053e55c5e4c0f5bef6c137aa4bd6",
+    "status": "STOPPING",
+    "failure": null,
+    "capacityHalted": false,
+    "dataGap": false,
+    "emergencyAt": "2025-01-03T13:00:00.003Z",
+    "sequence": 124,
+    "headDigest": "c11e2a509394aef68c241eb97a383a58cb1f3c3b74c3f83c84cc1d12f02be594",
+    "events": [
+      {
+        "sequence": 1,
+        "requestId": "00000000-0000-4000-8000-000000001000",
+        "eventDigest": "458e79f5c9f6ed8a88e9035d51415a721ca5478bd9162abfb4a0b27e01ea3b58",
+        "receivedAt": "2025-01-01T01:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "b5860621a8b7c7b05409410124ddc06ac7eed0316f457e20cea9a1c9dc5dbc8d",
+        "digest": "24f3efceeaed0c01d17ca9b9f9251f26508683ba79f0fe4e6fd35991968df7cd"
+      },
+      {
+        "sequence": 2,
+        "requestId": "00000000-0000-4000-8000-000000001001",
+        "eventDigest": "e0a34f1737643ed72802801f558b4ada8ee6ee72b00bf0560b500a0828019ce2",
+        "receivedAt": "2025-01-01T01:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "24f3efceeaed0c01d17ca9b9f9251f26508683ba79f0fe4e6fd35991968df7cd",
+        "digest": "910c929ffc563931c4fc6db4676f61736e6c199814ed714c2f24df9f30e0cbe3"
+      },
+      {
+        "sequence": 3,
+        "requestId": "00000000-0000-4000-8000-000000001002",
+        "eventDigest": "1e8db908cd04a7f8cf859bc714848baf6ab53c01e6581df7a5f457d962993ea0",
+        "receivedAt": "2025-01-01T02:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "910c929ffc563931c4fc6db4676f61736e6c199814ed714c2f24df9f30e0cbe3",
+        "digest": "73127fc922deab2b13071fe1034069cbdeba2ca109b6a2207e59afbe08ab67cd"
+      },
+      {
+        "sequence": 4,
+        "requestId": "00000000-0000-4000-8000-000000001003",
+        "eventDigest": "4fbff51aa4d7388d4052a9140b9cfbbefe4f7179d57f6c23443d4fbdceca46a3",
+        "receivedAt": "2025-01-01T02:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "73127fc922deab2b13071fe1034069cbdeba2ca109b6a2207e59afbe08ab67cd",
+        "digest": "b4e481c43ab583c184cb4ebd15481d7f48eb3d473e8ff96e38e151b103133188"
+      },
+      {
+        "sequence": 5,
+        "requestId": "00000000-0000-4000-8000-000000001004",
+        "eventDigest": "7415f730af0e9ae3e8ecc6531c0a53007220159d787730c05eb1c4722c401c97",
+        "receivedAt": "2025-01-01T03:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "b4e481c43ab583c184cb4ebd15481d7f48eb3d473e8ff96e38e151b103133188",
+        "digest": "e14ccb0affdcdce12d0b60bfebbc85af24fc65ce90bd9827b1c7c3a3704a6061"
+      },
+      {
+        "sequence": 6,
+        "requestId": "00000000-0000-4000-8000-000000001005",
+        "eventDigest": "00fe063aa35853aabdf895bd01bd6e48f30cba01ee80062922142fb0e0adfb1f",
+        "receivedAt": "2025-01-01T03:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "e14ccb0affdcdce12d0b60bfebbc85af24fc65ce90bd9827b1c7c3a3704a6061",
+        "digest": "a20c8855a9afffb53b15d40cd2ef6eb19c0ee125930ac299be33d0a0f7ebaf0f"
+      },
+      {
+        "sequence": 7,
+        "requestId": "00000000-0000-4000-8000-000000001006",
+        "eventDigest": "0aa4da043629d25647f2e0ecb74d1fbfce2703b84e447b3d58f2571680a074a5",
+        "receivedAt": "2025-01-01T04:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "a20c8855a9afffb53b15d40cd2ef6eb19c0ee125930ac299be33d0a0f7ebaf0f",
+        "digest": "bbe4c9c7a06aaad0c963d6300bba0df4fe4ddd1a56207ab6092ffcc4242ae49b"
+      },
+      {
+        "sequence": 8,
+        "requestId": "00000000-0000-4000-8000-000000001007",
+        "eventDigest": "706b9f96e81d0eaaaab05736f0f489398ff7a461cd7406b4657225f64b95b5b3",
+        "receivedAt": "2025-01-01T04:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "bbe4c9c7a06aaad0c963d6300bba0df4fe4ddd1a56207ab6092ffcc4242ae49b",
+        "digest": "5e082896f44b0a4a2846ffb15b7059d0cf116d750dee5ef99a34304c654d6f24"
+      },
+      {
+        "sequence": 9,
+        "requestId": "00000000-0000-4000-8000-000000001008",
+        "eventDigest": "8c9b81c97fda48fdbfa47d1d27fd46e1199c11ab49113105c992c4069c349e0c",
+        "receivedAt": "2025-01-01T05:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "5e082896f44b0a4a2846ffb15b7059d0cf116d750dee5ef99a34304c654d6f24",
+        "digest": "631215fbeb7113c10e90cbc1f5a613a6b1167405d1c1f2a7acf240af19aac185"
+      },
+      {
+        "sequence": 10,
+        "requestId": "00000000-0000-4000-8000-000000001009",
+        "eventDigest": "048013d67c39c3a070169e013be7632c406bd008dbb689aa5b9ae1b43ffcef66",
+        "receivedAt": "2025-01-01T05:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "631215fbeb7113c10e90cbc1f5a613a6b1167405d1c1f2a7acf240af19aac185",
+        "digest": "4f231a1717f51e9f44288933bf2355d97a580f1c37742ac584ae907553ed5072"
+      },
+      {
+        "sequence": 11,
+        "requestId": "00000000-0000-4000-8000-000000001010",
+        "eventDigest": "8392354248033e9994ac87d454ac69ab239491cf8c4be3c847f4d8432507256d",
+        "receivedAt": "2025-01-01T06:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "4f231a1717f51e9f44288933bf2355d97a580f1c37742ac584ae907553ed5072",
+        "digest": "45088eccc385f30c52052fac5ed4640ffaea0055cf74a8d4b236008af5521d34"
+      },
+      {
+        "sequence": 12,
+        "requestId": "00000000-0000-4000-8000-000000001011",
+        "eventDigest": "172251ff98ac51f5c754a7a0e73782133b669a6479393982ee099e515560b82c",
+        "receivedAt": "2025-01-01T06:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "45088eccc385f30c52052fac5ed4640ffaea0055cf74a8d4b236008af5521d34",
+        "digest": "26222871cef7e7c40ad229665b19123c69308b0a15a3808087b40a2b28a3dd54"
+      },
+      {
+        "sequence": 13,
+        "requestId": "00000000-0000-4000-8000-000000001012",
+        "eventDigest": "2c710201049296d36e93d66de192a389bf6657e67143b91c12913c8aa5200907",
+        "receivedAt": "2025-01-01T07:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "26222871cef7e7c40ad229665b19123c69308b0a15a3808087b40a2b28a3dd54",
+        "digest": "f776c1f25aaf09ac2b022e8f8675c51b3b55bebbcce2815e5c412d18c4079c51"
+      },
+      {
+        "sequence": 14,
+        "requestId": "00000000-0000-4000-8000-000000001013",
+        "eventDigest": "ca9c1d7d073154bce3286be93e756b180807f6c816b427090fae27b8da93f952",
+        "receivedAt": "2025-01-01T07:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "f776c1f25aaf09ac2b022e8f8675c51b3b55bebbcce2815e5c412d18c4079c51",
+        "digest": "083969e0b02a54e10b43b10d263cd69624f9d28cc147716c90efbc9f1c890bb0"
+      },
+      {
+        "sequence": 15,
+        "requestId": "00000000-0000-4000-8000-000000001014",
+        "eventDigest": "2147f9443563b0469dd88e295b688e355162f1f7c2c7acd140b319e159533808",
+        "receivedAt": "2025-01-01T08:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "083969e0b02a54e10b43b10d263cd69624f9d28cc147716c90efbc9f1c890bb0",
+        "digest": "55cbdebdd2219db02bf058b539111b5b72d84b8d413287a4fc0aecd18caf4d39"
+      },
+      {
+        "sequence": 16,
+        "requestId": "00000000-0000-4000-8000-000000001015",
+        "eventDigest": "36a5fbbd195f8fe4261d943fb66be667ece98b52f4fd316917cd045dfce9d771",
+        "receivedAt": "2025-01-01T08:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "55cbdebdd2219db02bf058b539111b5b72d84b8d413287a4fc0aecd18caf4d39",
+        "digest": "ff7d5524d79f8fbfe668a9de5e03805b11ef50de585e728ebeac71ec796af945"
+      },
+      {
+        "sequence": 17,
+        "requestId": "00000000-0000-4000-8000-000000001016",
+        "eventDigest": "2cdc07123a2ab353c2e7b85af96fae49081bb919fd23bdc19dcb779242ce0ce8",
+        "receivedAt": "2025-01-01T09:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "ff7d5524d79f8fbfe668a9de5e03805b11ef50de585e728ebeac71ec796af945",
+        "digest": "7e301d1d1f906bc319017eb414de231e7bcb1311a9d36d83fc2a6be06e137803"
+      },
+      {
+        "sequence": 18,
+        "requestId": "00000000-0000-4000-8000-000000001017",
+        "eventDigest": "17553264c8192afda9c6e3c68d0d5cd2523cb0438045cfa948f63bf5a6fbd8ea",
+        "receivedAt": "2025-01-01T09:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "7e301d1d1f906bc319017eb414de231e7bcb1311a9d36d83fc2a6be06e137803",
+        "digest": "5c16ff9daadf23065fe34ff987a2a54bc9ca4f7cc309b96422f6ddbb4648b2c1"
+      },
+      {
+        "sequence": 19,
+        "requestId": "00000000-0000-4000-8000-000000001018",
+        "eventDigest": "297f86055a8fdf14e6515d40f2d575faee147fc958ddf6f77f1402643333df41",
+        "receivedAt": "2025-01-01T10:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "5c16ff9daadf23065fe34ff987a2a54bc9ca4f7cc309b96422f6ddbb4648b2c1",
+        "digest": "e409b5b1f51eda61db3f0fdfeebeb587e721a64e2a9e2c06ae1915fa3c392a44"
+      },
+      {
+        "sequence": 20,
+        "requestId": "00000000-0000-4000-8000-000000001019",
+        "eventDigest": "9dc2c807af0d34f3b27723fee740743aace8d24679ade60c8743f97696abc72f",
+        "receivedAt": "2025-01-01T10:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "e409b5b1f51eda61db3f0fdfeebeb587e721a64e2a9e2c06ae1915fa3c392a44",
+        "digest": "458aee6d1d99a46126b6533826969c3b3f6afa1cafecafe84f521bf5a98c2f41"
+      },
+      {
+        "sequence": 21,
+        "requestId": "00000000-0000-4000-8000-000000001020",
+        "eventDigest": "2a1956175182ccafeb1669af40e71afd17ec9efb84653573832a9016c4b5b686",
+        "receivedAt": "2025-01-01T11:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "458aee6d1d99a46126b6533826969c3b3f6afa1cafecafe84f521bf5a98c2f41",
+        "digest": "862af2f576a6c940d589b6136398a085c902df2785cd7eb28d4e9969a43705ca"
+      },
+      {
+        "sequence": 22,
+        "requestId": "00000000-0000-4000-8000-000000001021",
+        "eventDigest": "10abf5eb1e62480770c13e1048b37e053a807efa6041e68ce4e01ff93426766b",
+        "receivedAt": "2025-01-01T11:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "862af2f576a6c940d589b6136398a085c902df2785cd7eb28d4e9969a43705ca",
+        "digest": "6f53db3f4d182680305a1e89179d73cbb11b083b0afb82fbf68738918e1e0d72"
+      },
+      {
+        "sequence": 23,
+        "requestId": "00000000-0000-4000-8000-000000001022",
+        "eventDigest": "a33a048ae65b8abec8ee0e0caac033953aa6f09e1be9ad2edcab7679023104a7",
+        "receivedAt": "2025-01-01T12:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "6f53db3f4d182680305a1e89179d73cbb11b083b0afb82fbf68738918e1e0d72",
+        "digest": "4edb797edb393993a17e25d5f23f90dcdc2c2a1fcb6b820259948bb2aed6cd7e"
+      },
+      {
+        "sequence": 24,
+        "requestId": "00000000-0000-4000-8000-000000001023",
+        "eventDigest": "25dd624458789eb7a2e94246b1ef00a9e7bb2aff00c92dcd542bf685b60ad188",
+        "receivedAt": "2025-01-01T12:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "4edb797edb393993a17e25d5f23f90dcdc2c2a1fcb6b820259948bb2aed6cd7e",
+        "digest": "a93e0065432cf7b30cf950c5d29d5e8f27476d8c79d992e59f45106e2eb7dde8"
+      },
+      {
+        "sequence": 25,
+        "requestId": "00000000-0000-4000-8000-000000001024",
+        "eventDigest": "2316f98bc50d0d918c236845caf9dc80e1ba2e8aa17db0aface5dc8f5dfa8d78",
+        "receivedAt": "2025-01-01T13:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "a93e0065432cf7b30cf950c5d29d5e8f27476d8c79d992e59f45106e2eb7dde8",
+        "digest": "5fd855cd15dbb264cb665d9b93dcecee91905bf5043e1cf496bb3900f90915ea"
+      },
+      {
+        "sequence": 26,
+        "requestId": "00000000-0000-4000-8000-000000001025",
+        "eventDigest": "33477bb691f681cff793ff81150cc562e1b0ae95aedec8cdfe56e09e3f265cf3",
+        "receivedAt": "2025-01-01T13:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "5fd855cd15dbb264cb665d9b93dcecee91905bf5043e1cf496bb3900f90915ea",
+        "digest": "448606c57dfd677deab3e528665203f812d5b382087e939df4ae649ef91afe0f"
+      },
+      {
+        "sequence": 27,
+        "requestId": "00000000-0000-4000-8000-000000001026",
+        "eventDigest": "77e7cc64ada879c82e571034e09b89dce631b864c2ae3e5fba4994f724f8d25f",
+        "receivedAt": "2025-01-01T14:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "448606c57dfd677deab3e528665203f812d5b382087e939df4ae649ef91afe0f",
+        "digest": "d0d4eb67dfd6ce81f968c188d0519cd58cbc674fb8d5c34ad923126701aaadf1"
+      },
+      {
+        "sequence": 28,
+        "requestId": "00000000-0000-4000-8000-000000001027",
+        "eventDigest": "d0e312e158bac52d03c5a8708bd0d4c8533acaa892e0781de9f7e12eba97c4ba",
+        "receivedAt": "2025-01-01T14:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d0d4eb67dfd6ce81f968c188d0519cd58cbc674fb8d5c34ad923126701aaadf1",
+        "digest": "eed105e5a0337c175c594de5f8d10edf3b040d37742d2343820971af9eabcde2"
+      },
+      {
+        "sequence": 29,
+        "requestId": "00000000-0000-4000-8000-000000001028",
+        "eventDigest": "88a308993a3aeeb168172b93170c06a9b54cb9a9bdaa01a0303ecdb8983c4541",
+        "receivedAt": "2025-01-01T15:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "eed105e5a0337c175c594de5f8d10edf3b040d37742d2343820971af9eabcde2",
+        "digest": "c6f8c940f1c9463b4d993db0f2cf2f3f9384e48b8c7ba80051451addf7d07716"
+      },
+      {
+        "sequence": 30,
+        "requestId": "00000000-0000-4000-8000-000000001029",
+        "eventDigest": "c46d2750b83d4095fc0531302a997e6f986fb768a9006c4486927ef0a332580b",
+        "receivedAt": "2025-01-01T15:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "c6f8c940f1c9463b4d993db0f2cf2f3f9384e48b8c7ba80051451addf7d07716",
+        "digest": "37b96dbf8a3fd241b62bfff34dcf4c521c52276d2e4279af95418b5515b81f2d"
+      },
+      {
+        "sequence": 31,
+        "requestId": "00000000-0000-4000-8000-000000001030",
+        "eventDigest": "99f9f35f9e86979c0ac9855e66f08947efb1e5c95ddb8ddb015d18705714198f",
+        "receivedAt": "2025-01-01T16:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "37b96dbf8a3fd241b62bfff34dcf4c521c52276d2e4279af95418b5515b81f2d",
+        "digest": "0a5dc0511e998c926c63da73afdeac48ec95c8244de61def746ca141504996ed"
+      },
+      {
+        "sequence": 32,
+        "requestId": "00000000-0000-4000-8000-000000001031",
+        "eventDigest": "190ed181d3b1462704c82ca96cf56726efcdd91a9a6102dd5e140b44a6ba689d",
+        "receivedAt": "2025-01-01T16:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "0a5dc0511e998c926c63da73afdeac48ec95c8244de61def746ca141504996ed",
+        "digest": "f32c4772babb8da0bc994001dc3b40c0d0b24ec7d2e786ee0322fc07cfa68b68"
+      },
+      {
+        "sequence": 33,
+        "requestId": "00000000-0000-4000-8000-000000001032",
+        "eventDigest": "5e3aa70fe6431f0b12b852da4887afa95cda7cc0306bc2f3b84e4fd32a31ebc7",
+        "receivedAt": "2025-01-01T17:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "f32c4772babb8da0bc994001dc3b40c0d0b24ec7d2e786ee0322fc07cfa68b68",
+        "digest": "5e5abe2081cdbc6ae2003b6bdfc8f8721c83214514814fa2131d7a7956e54487"
+      },
+      {
+        "sequence": 34,
+        "requestId": "00000000-0000-4000-8000-000000001033",
+        "eventDigest": "359e76072d42474e43143879a22f913c488c1b40187714896c1bd203ca3ca3e9",
+        "receivedAt": "2025-01-01T17:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "5e5abe2081cdbc6ae2003b6bdfc8f8721c83214514814fa2131d7a7956e54487",
+        "digest": "32428fab66690eab095fbd39a71732898933d541fc172b8cd8cf3ea0432cda50"
+      },
+      {
+        "sequence": 35,
+        "requestId": "00000000-0000-4000-8000-000000001034",
+        "eventDigest": "b4b016b0c63cc3a30c60005968b2ac3f97a0b1e75380f148619a5f2348e56b32",
+        "receivedAt": "2025-01-01T18:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "32428fab66690eab095fbd39a71732898933d541fc172b8cd8cf3ea0432cda50",
+        "digest": "73ba1dad40605fec2d0a5c8329ac8352ca6d3f04a2982e5e7a866d8336847aba"
+      },
+      {
+        "sequence": 36,
+        "requestId": "00000000-0000-4000-8000-000000001035",
+        "eventDigest": "cb08c2fa30c256845d1345f59766dc90706cb63e1fe4aec7a8ffca766109547f",
+        "receivedAt": "2025-01-01T18:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "73ba1dad40605fec2d0a5c8329ac8352ca6d3f04a2982e5e7a866d8336847aba",
+        "digest": "4940fe8b5f5def51f6263d696de38cf5340612b2eaa4379404009e1f8e07c0d4"
+      },
+      {
+        "sequence": 37,
+        "requestId": "00000000-0000-4000-8000-000000001036",
+        "eventDigest": "ca768dac0a09a4c4618b7fa101e07d9705cb307034793e42bc861b746ac8f5e6",
+        "receivedAt": "2025-01-01T19:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "4940fe8b5f5def51f6263d696de38cf5340612b2eaa4379404009e1f8e07c0d4",
+        "digest": "691917e0523e0a21863ade7c9cdf0ef9adcf25b0b65349d02cdcedca7746b3d0"
+      },
+      {
+        "sequence": 38,
+        "requestId": "00000000-0000-4000-8000-000000001037",
+        "eventDigest": "e86172b7a4379cd90a61f9c947b58c7a4e1d35c36e2f57d607218ce0d45896a2",
+        "receivedAt": "2025-01-01T19:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "691917e0523e0a21863ade7c9cdf0ef9adcf25b0b65349d02cdcedca7746b3d0",
+        "digest": "9fe1768ac1d7cce416eb518ba67510cd7a8c58bf4c5b102028d5074d0361e3c0"
+      },
+      {
+        "sequence": 39,
+        "requestId": "00000000-0000-4000-8000-000000001038",
+        "eventDigest": "a1bccdb65aa795b49e4e5cd756680b656e3c888ec3439d34586c283182010878",
+        "receivedAt": "2025-01-01T20:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "9fe1768ac1d7cce416eb518ba67510cd7a8c58bf4c5b102028d5074d0361e3c0",
+        "digest": "342b989dcca7f51d348c0d5f6300f4db0ecc08020bbb70b07a4f962be1383c48"
+      },
+      {
+        "sequence": 40,
+        "requestId": "00000000-0000-4000-8000-000000001039",
+        "eventDigest": "f7b0926e807bfae028eb353fef5c32258ec633c3cc1ad95e801a5f5eea78a818",
+        "receivedAt": "2025-01-01T20:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "342b989dcca7f51d348c0d5f6300f4db0ecc08020bbb70b07a4f962be1383c48",
+        "digest": "ffd8b6a94ea0f31acbf6ca668310efe526a4f5ec4c4b851c1b0eae20a14588e9"
+      },
+      {
+        "sequence": 41,
+        "requestId": "00000000-0000-4000-8000-000000001040",
+        "eventDigest": "76bb2f46ecdb8fe4fb9f46cc55e289cb1e71a0189e49bc0a346c3b39c1962900",
+        "receivedAt": "2025-01-01T21:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "ffd8b6a94ea0f31acbf6ca668310efe526a4f5ec4c4b851c1b0eae20a14588e9",
+        "digest": "9917af1c5ddf2b6c60957e82255469f545130f51317b18d633e9598885156c7b"
+      },
+      {
+        "sequence": 42,
+        "requestId": "00000000-0000-4000-8000-000000001041",
+        "eventDigest": "bd798784d041754e0a226212facc35c0a367b817520f62424d4ac39b0366b894",
+        "receivedAt": "2025-01-01T21:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "9917af1c5ddf2b6c60957e82255469f545130f51317b18d633e9598885156c7b",
+        "digest": "ca246142cfbd64ea667f68462eb86350a21bcf54fbee0df03408b8159665e3d3"
+      },
+      {
+        "sequence": 43,
+        "requestId": "00000000-0000-4000-8000-000000001042",
+        "eventDigest": "de7bfa4dbd35e2da22b7f50f1e13c039b9952c3e3a410440209985f8738972ea",
+        "receivedAt": "2025-01-01T22:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "ca246142cfbd64ea667f68462eb86350a21bcf54fbee0df03408b8159665e3d3",
+        "digest": "e3797b1dcddf309b610d32d34742125f1923028acd9ad2d658cc80a94e246f6d"
+      },
+      {
+        "sequence": 44,
+        "requestId": "00000000-0000-4000-8000-000000001043",
+        "eventDigest": "564dc3f483a4f61700655e1ffa36343b5e225ab7bf1aa458185b5828a365795e",
+        "receivedAt": "2025-01-01T22:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "e3797b1dcddf309b610d32d34742125f1923028acd9ad2d658cc80a94e246f6d",
+        "digest": "917df59fffc5d2d04c3b6535081e419874f2927a6193881c00a4c70102a0ece6"
+      },
+      {
+        "sequence": 45,
+        "requestId": "00000000-0000-4000-8000-000000001044",
+        "eventDigest": "4c3745da9c8a007e24783042591f5e5a662a1af365b3736683fe5d2acaea5c9b",
+        "receivedAt": "2025-01-01T23:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "917df59fffc5d2d04c3b6535081e419874f2927a6193881c00a4c70102a0ece6",
+        "digest": "37ef5d6931af0343d3eef593a463524ca4ea93a8305192f240d97ee4ce311557"
+      },
+      {
+        "sequence": 46,
+        "requestId": "00000000-0000-4000-8000-000000001045",
+        "eventDigest": "cd0713f655c77c95272491583072f81128b0fa3d50aefa47e4ab89f7ff5a764d",
+        "receivedAt": "2025-01-01T23:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "37ef5d6931af0343d3eef593a463524ca4ea93a8305192f240d97ee4ce311557",
+        "digest": "d8ad232171001472d7e003bd720a46b9d0c5a7f7e19854f128aebf18b65c3512"
+      },
+      {
+        "sequence": 47,
+        "requestId": "00000000-0000-4000-8000-000000001046",
+        "eventDigest": "0c7004a0ea61751702398a60cdaef41b9326dbc4635ecbe8e6a1a88c6b3ff39c",
+        "receivedAt": "2025-01-02T00:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "d8ad232171001472d7e003bd720a46b9d0c5a7f7e19854f128aebf18b65c3512",
+        "digest": "73395e4a447c5194a64161009f773774f27cbe5cfa4022cb0ef5e93b096c6435"
+      },
+      {
+        "sequence": 48,
+        "requestId": "00000000-0000-4000-8000-000000001047",
+        "eventDigest": "9189d84ce3d8bebb283e0ed9b19afa00a7390e4365595e93dba6cc0d76d6cd50",
+        "receivedAt": "2025-01-02T00:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "73395e4a447c5194a64161009f773774f27cbe5cfa4022cb0ef5e93b096c6435",
+        "digest": "532eb4ef54179412bf33720c0c4fae9e32a2aa3081cf367183dc1aa51b050809"
+      },
+      {
+        "sequence": 49,
+        "requestId": "00000000-0000-4000-8000-000000001048",
+        "eventDigest": "4f3bb65949900083d7d326b8d30e1654aa9264c6d312ea2c5c7693522a164afd",
+        "receivedAt": "2025-01-02T01:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "532eb4ef54179412bf33720c0c4fae9e32a2aa3081cf367183dc1aa51b050809",
+        "digest": "c36e19bfe53cc658c9b82b6d927d2571f18d3eb184c20383b329ef8b45e571f6"
+      },
+      {
+        "sequence": 50,
+        "requestId": "00000000-0000-4000-8000-000000001049",
+        "eventDigest": "198c39de342d2065aad36abad008f77128e233bc4137b960bca506a63c02a275",
+        "receivedAt": "2025-01-02T01:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "c36e19bfe53cc658c9b82b6d927d2571f18d3eb184c20383b329ef8b45e571f6",
+        "digest": "91f781aed128caec82843444e7353e0bcbcf1b76d117b12cd9aa1fc664de47a6"
+      },
+      {
+        "sequence": 51,
+        "requestId": "00000000-0000-4000-8000-000000001050",
+        "eventDigest": "8f45fd20ae897f72afb60aa3d3cdd43c2e81084c2a2e29cec452c7ca7630dc42",
+        "receivedAt": "2025-01-02T02:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "91f781aed128caec82843444e7353e0bcbcf1b76d117b12cd9aa1fc664de47a6",
+        "digest": "1a0e01bf995133f169efeff1619f711f038eaf22fdd6dd7050596295c3623bb5"
+      },
+      {
+        "sequence": 52,
+        "requestId": "00000000-0000-4000-8000-000000001051",
+        "eventDigest": "46ac7d4cc8664a951b34a510c29b87edec7438a729e3fb621dc63b911d643a63",
+        "receivedAt": "2025-01-02T02:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "1a0e01bf995133f169efeff1619f711f038eaf22fdd6dd7050596295c3623bb5",
+        "digest": "2991425875d4bcaa49a9fdfc3c2b12be1fdc213ea84a1baa66efcd6f0be46f64"
+      },
+      {
+        "sequence": 53,
+        "requestId": "00000000-0000-4000-8000-000000001052",
+        "eventDigest": "1a6825fe077c1e408f34289b4ead37abaa0e5dfb594791e8ca10e55ce3a22371",
+        "receivedAt": "2025-01-02T03:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "2991425875d4bcaa49a9fdfc3c2b12be1fdc213ea84a1baa66efcd6f0be46f64",
+        "digest": "64a18cd3c9a4599767606ef677386f95048211552280e0018d60a343c1ea2c35"
+      },
+      {
+        "sequence": 54,
+        "requestId": "00000000-0000-4000-8000-000000001053",
+        "eventDigest": "31db96d87fca2aed3b2d7e9fcf063e9d3e41829016e3daf46fc19e54fe233f39",
+        "receivedAt": "2025-01-02T03:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "64a18cd3c9a4599767606ef677386f95048211552280e0018d60a343c1ea2c35",
+        "digest": "21b0cd783f72dddab6d5cc33d8570bd851e462322d2950afea4c13f7979ce270"
+      },
+      {
+        "sequence": 55,
+        "requestId": "00000000-0000-4000-8000-000000001054",
+        "eventDigest": "1adb00d212932db219ea0c6f964c5f8ca50a75828531ba4b451bc713ce35d16f",
+        "receivedAt": "2025-01-02T04:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "21b0cd783f72dddab6d5cc33d8570bd851e462322d2950afea4c13f7979ce270",
+        "digest": "8968b0cd7f4834a8ebdc2fffee147e0997513284fe44fd2f365c5beae28583b0"
+      },
+      {
+        "sequence": 56,
+        "requestId": "00000000-0000-4000-8000-000000001055",
+        "eventDigest": "6163733643b75538069b30de05d8fe2e33aae7a5f90fd68fc08536fc40c5e509",
+        "receivedAt": "2025-01-02T04:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "8968b0cd7f4834a8ebdc2fffee147e0997513284fe44fd2f365c5beae28583b0",
+        "digest": "30fb74a3e844d8ca0709c168b7a2d0b528b04e22eb3dff243210cdcb7d706d8e"
+      },
+      {
+        "sequence": 57,
+        "requestId": "00000000-0000-4000-8000-000000001056",
+        "eventDigest": "8a48ef33663f404ce4ca7287c8a8f8d49d910548b5534182f3fa153b606ffc4e",
+        "receivedAt": "2025-01-02T05:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "30fb74a3e844d8ca0709c168b7a2d0b528b04e22eb3dff243210cdcb7d706d8e",
+        "digest": "b50cc5cb9352332940b81565b73737c2fc12f89a71fed0665b0b6d5a1684436b"
+      },
+      {
+        "sequence": 58,
+        "requestId": "00000000-0000-4000-8000-000000001057",
+        "eventDigest": "c8f1242b8e872b68d4343388374b1333eb49384e549a7cfd218c7d398e6a5aad",
+        "receivedAt": "2025-01-02T05:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "b50cc5cb9352332940b81565b73737c2fc12f89a71fed0665b0b6d5a1684436b",
+        "digest": "ad54bc98c1fbb369e36efdd38750c2ad5ae0b07235129d0cae61d2aca48eeb5e"
+      },
+      {
+        "sequence": 59,
+        "requestId": "00000000-0000-4000-8000-000000001058",
+        "eventDigest": "0bd697424f13322306617be056d8c58ea08e9c1cc4797c6169b755015ea09fbf",
+        "receivedAt": "2025-01-02T06:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "ad54bc98c1fbb369e36efdd38750c2ad5ae0b07235129d0cae61d2aca48eeb5e",
+        "digest": "0781e8ba36cb3afea9d52540213b93349b5fdb95f983659d09218bb9f521831d"
+      },
+      {
+        "sequence": 60,
+        "requestId": "00000000-0000-4000-8000-000000001059",
+        "eventDigest": "6d799dd129c396bc1e8bd3e2326f60f11d66c5e7cb7acae7561540b3064b80ee",
+        "receivedAt": "2025-01-02T06:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "0781e8ba36cb3afea9d52540213b93349b5fdb95f983659d09218bb9f521831d",
+        "digest": "213382a9996b3923d429ce7dbc3f6bf9ab85fd6bbff0baf7ec2d1b348d2c0de4"
+      },
+      {
+        "sequence": 61,
+        "requestId": "00000000-0000-4000-8000-000000001060",
+        "eventDigest": "17560ff5a5871f1488ecef59bc8b6106d8d2502882984d498ebdb6bda7ce7050",
+        "receivedAt": "2025-01-02T07:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "213382a9996b3923d429ce7dbc3f6bf9ab85fd6bbff0baf7ec2d1b348d2c0de4",
+        "digest": "5f45f30c4b82d70a084856eebc685ebaa85689489f5bcd28638da67344adeb03"
+      },
+      {
+        "sequence": 62,
+        "requestId": "00000000-0000-4000-8000-000000001061",
+        "eventDigest": "21ad143f40b7c3824d5ce25700b8145e79e74b4947d15044ca6e57d1fd8c2064",
+        "receivedAt": "2025-01-02T07:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "5f45f30c4b82d70a084856eebc685ebaa85689489f5bcd28638da67344adeb03",
+        "digest": "49770c9051a7f38e835f133d9cf35f3f43e92f0ea0b13c447c6f8f29cc44182c"
+      },
+      {
+        "sequence": 63,
+        "requestId": "00000000-0000-4000-8000-000000001062",
+        "eventDigest": "94caff5e2fda796752e433fe51a6fa2940911604c7ff50e6a5b3f57201876034",
+        "receivedAt": "2025-01-02T08:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "49770c9051a7f38e835f133d9cf35f3f43e92f0ea0b13c447c6f8f29cc44182c",
+        "digest": "08f54f6539af2285067ce041ce63bfd6283d081b04a16063c4d76a46195001c1"
+      },
+      {
+        "sequence": 64,
+        "requestId": "00000000-0000-4000-8000-000000001063",
+        "eventDigest": "c7547fb21a1c22ad2eb3eb86d4e5f84e86d102f6bf4b2d53fec398f945788fb9",
+        "receivedAt": "2025-01-02T08:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "08f54f6539af2285067ce041ce63bfd6283d081b04a16063c4d76a46195001c1",
+        "digest": "9e97ee6d2f26045037a64ab6517c6c1251713a8ac09a1435a86263a0dca1e715"
+      },
+      {
+        "sequence": 65,
+        "requestId": "00000000-0000-4000-8000-000000001064",
+        "eventDigest": "da045746328f3ae0f6fbd250a5318cfa80c64e43c3815255678db9c64f6b5a81",
+        "receivedAt": "2025-01-02T09:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "9e97ee6d2f26045037a64ab6517c6c1251713a8ac09a1435a86263a0dca1e715",
+        "digest": "d2480e1c85d050b4fdcee6af669ba13660d1b0a362c2292d6c4e1d7044c1221a"
+      },
+      {
+        "sequence": 66,
+        "requestId": "00000000-0000-4000-8000-000000001065",
+        "eventDigest": "08bfca692ddf9a1c86e0f7817ed0f1a60ea2934f4bb2b629a1ee293210efe84d",
+        "receivedAt": "2025-01-02T09:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d2480e1c85d050b4fdcee6af669ba13660d1b0a362c2292d6c4e1d7044c1221a",
+        "digest": "4a272c825e229435f35e41f92a4a9c6fcada14bfc5570c31e2f1b97398393ed6"
+      },
+      {
+        "sequence": 67,
+        "requestId": "00000000-0000-4000-8000-000000001066",
+        "eventDigest": "aa44b2db9377b23e597a4d516fcaaf928605336894eed072ab6be3da13d60225",
+        "receivedAt": "2025-01-02T10:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "4a272c825e229435f35e41f92a4a9c6fcada14bfc5570c31e2f1b97398393ed6",
+        "digest": "8ec015a14f2d85a2e55ac6bf25077d9c6983541a2dbd34ae0853c78f94aabae5"
+      },
+      {
+        "sequence": 68,
+        "requestId": "00000000-0000-4000-8000-000000001067",
+        "eventDigest": "508f7bda24a337f9d1aa485ac2866e6f02af3eaabca430402f75678f49816b91",
+        "receivedAt": "2025-01-02T10:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "8ec015a14f2d85a2e55ac6bf25077d9c6983541a2dbd34ae0853c78f94aabae5",
+        "digest": "4413906685f60888c112a4bf59a059f1f15edf3ecad31914379b3ba39c2f37c4"
+      },
+      {
+        "sequence": 69,
+        "requestId": "00000000-0000-4000-8000-000000001068",
+        "eventDigest": "3b1fcd21d5423e043a2855cdf069bcf674226a4bc3439d63f225acdfeaa91b34",
+        "receivedAt": "2025-01-02T11:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "4413906685f60888c112a4bf59a059f1f15edf3ecad31914379b3ba39c2f37c4",
+        "digest": "37b511b3031574a8c28e6095e8452c79cf08b57f2494ef1f6676fa2e429ca308"
+      },
+      {
+        "sequence": 70,
+        "requestId": "00000000-0000-4000-8000-000000001069",
+        "eventDigest": "51a18c905fa833a9f33337bcb46c2bb64513bacea577fc6eeba1ea25c99e1c99",
+        "receivedAt": "2025-01-02T11:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "37b511b3031574a8c28e6095e8452c79cf08b57f2494ef1f6676fa2e429ca308",
+        "digest": "110c4a7a1534f2e3310091d3001360419b4ea2803d092b4d13a9f85b381d55d3"
+      },
+      {
+        "sequence": 71,
+        "requestId": "00000000-0000-4000-8000-000000001070",
+        "eventDigest": "86ae9f27634783d5a9c3bf5241e83b901e413e5d9f43b02d01e75a2ca70fa710",
+        "receivedAt": "2025-01-02T12:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "110c4a7a1534f2e3310091d3001360419b4ea2803d092b4d13a9f85b381d55d3",
+        "digest": "a765c172d9ab268cbba0f452befd62deead10d54ac7b21bc141a333d9182fc02"
+      },
+      {
+        "sequence": 72,
+        "requestId": "00000000-0000-4000-8000-000000001071",
+        "eventDigest": "85db7283adb1eedc06290928166e30a7becacd9bf075007f280a6e220f897806",
+        "receivedAt": "2025-01-02T12:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "a765c172d9ab268cbba0f452befd62deead10d54ac7b21bc141a333d9182fc02",
+        "digest": "b7c508e500af383a05a2a7cc580a8038759ff5b739c06fd1b71689a0a90e5ad5"
+      },
+      {
+        "sequence": 73,
+        "requestId": "00000000-0000-4000-8000-000000001072",
+        "eventDigest": "6b4d5445696c74c2153f893e436dc3f0c87d7e60f990f98a5b170848f152055a",
+        "receivedAt": "2025-01-02T13:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "b7c508e500af383a05a2a7cc580a8038759ff5b739c06fd1b71689a0a90e5ad5",
+        "digest": "b83f82b40238966d2826dfd342fd9cb2f498fb5d8ef3f37ce48c7875fc4fcf6d"
+      },
+      {
+        "sequence": 74,
+        "requestId": "00000000-0000-4000-8000-000000001073",
+        "eventDigest": "f3d6dac01d7e65f17f4338dc9dca3539ee5e8c150a74bfdfe7b3d862803849e9",
+        "receivedAt": "2025-01-02T13:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "b83f82b40238966d2826dfd342fd9cb2f498fb5d8ef3f37ce48c7875fc4fcf6d",
+        "digest": "b0df80d89acc03c2df179e3fa76f3fd388b370ccd3119cf9d0775446335156cd"
+      },
+      {
+        "sequence": 75,
+        "requestId": "00000000-0000-4000-8000-000000001074",
+        "eventDigest": "7d5aa2fe3760f7c46807d9ead7ff8f450e75e5d0f416b818d8f00fbfd067d476",
+        "receivedAt": "2025-01-02T14:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "b0df80d89acc03c2df179e3fa76f3fd388b370ccd3119cf9d0775446335156cd",
+        "digest": "2a5e5f594df513bb88c38ec32101eebdebdb394ccb312e96972bf1882388113c"
+      },
+      {
+        "sequence": 76,
+        "requestId": "00000000-0000-4000-8000-000000001075",
+        "eventDigest": "910150181136933b6f6baecdcda50b3b475a3780145c2347ad41974635fdf622",
+        "receivedAt": "2025-01-02T14:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "2a5e5f594df513bb88c38ec32101eebdebdb394ccb312e96972bf1882388113c",
+        "digest": "70e79fdf59b68de92a3e7a034ca055faa8582d32ad1956c19edc002147549a39"
+      },
+      {
+        "sequence": 77,
+        "requestId": "00000000-0000-4000-8000-000000001076",
+        "eventDigest": "b4f46b38c264a143b6e30dc77e8bd4c6e7b96395b2dc978fab045148b4ff0a3a",
+        "receivedAt": "2025-01-02T15:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "70e79fdf59b68de92a3e7a034ca055faa8582d32ad1956c19edc002147549a39",
+        "digest": "d08805cb3769b248e6e70c31720aa3e2e89c483c27239788341423cd38290918"
+      },
+      {
+        "sequence": 78,
+        "requestId": "00000000-0000-4000-8000-000000001077",
+        "eventDigest": "863662ed99f3658b26a8bc29a8a07183f79c5fa14cbb3d38af355fcfa170aaa8",
+        "receivedAt": "2025-01-02T15:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d08805cb3769b248e6e70c31720aa3e2e89c483c27239788341423cd38290918",
+        "digest": "1af53bc64f88af3cdd4e3757c22dbb07ad3b7046ccce0dc185962b7a180a6078"
+      },
+      {
+        "sequence": 79,
+        "requestId": "00000000-0000-4000-8000-000000001078",
+        "eventDigest": "6cfd7520aa1d8565c777cb4601d4e60e06535fa4f7c4739595fb9fec1cdf1963",
+        "receivedAt": "2025-01-02T16:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "1af53bc64f88af3cdd4e3757c22dbb07ad3b7046ccce0dc185962b7a180a6078",
+        "digest": "d46b486f81297849757229ee58d3182a426e4089e2c81c052130e1a7dd227cf3"
+      },
+      {
+        "sequence": 80,
+        "requestId": "00000000-0000-4000-8000-000000001079",
+        "eventDigest": "ef831a307a05d151bf61ff0c9df337e5babe09df953cf1b88b7698484daf4a92",
+        "receivedAt": "2025-01-02T16:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d46b486f81297849757229ee58d3182a426e4089e2c81c052130e1a7dd227cf3",
+        "digest": "46a741d4647d880b4ed6753029b856e94285120d2f25260fc184578a758fcdac"
+      },
+      {
+        "sequence": 81,
+        "requestId": "00000000-0000-4000-8000-000000001080",
+        "eventDigest": "397a3ffcd1b07e8b06d8534ece651cb8cc4c246305559b7033125824765acba1",
+        "receivedAt": "2025-01-02T17:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "46a741d4647d880b4ed6753029b856e94285120d2f25260fc184578a758fcdac",
+        "digest": "3ec31faaf18ff83d5b3eb0ef91d5c350f24f8d3b7c9d132049a00aaea20d1403"
+      },
+      {
+        "sequence": 82,
+        "requestId": "00000000-0000-4000-8000-000000001081",
+        "eventDigest": "0815a49bb6ac0255a6b5e983451af3f1b30c6249eea307ebf0479759463dca0a",
+        "receivedAt": "2025-01-02T17:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "3ec31faaf18ff83d5b3eb0ef91d5c350f24f8d3b7c9d132049a00aaea20d1403",
+        "digest": "95459e9016a7d94d71042ae4d7de65ab376bd0b37f4b78cdb21f4d4b057d0920"
+      },
+      {
+        "sequence": 83,
+        "requestId": "00000000-0000-4000-8000-000000001082",
+        "eventDigest": "9e8a2128ca59c9e2a2f8c0d606a4507d0ca6065575e2027e02f2155ea5b02d90",
+        "receivedAt": "2025-01-02T18:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "95459e9016a7d94d71042ae4d7de65ab376bd0b37f4b78cdb21f4d4b057d0920",
+        "digest": "f1011c38eca6ddfa22f62f0fcbdbb38adc1470352307f055915150287a2104d5"
+      },
+      {
+        "sequence": 84,
+        "requestId": "00000000-0000-4000-8000-000000001083",
+        "eventDigest": "48b20e52d594c333e3db1f48d4292c47eeb9ffb0c3de154808ee2be6b4432f40",
+        "receivedAt": "2025-01-02T18:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "f1011c38eca6ddfa22f62f0fcbdbb38adc1470352307f055915150287a2104d5",
+        "digest": "dcfebf3ff81166e811754e0736ffbcfa2130fd03b96634658b35bb38c00beb23"
+      },
+      {
+        "sequence": 85,
+        "requestId": "00000000-0000-4000-8000-000000001084",
+        "eventDigest": "679050987751a7e1c041db90b562aa69e233c58b2e50d762f110fca991456298",
+        "receivedAt": "2025-01-02T19:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "dcfebf3ff81166e811754e0736ffbcfa2130fd03b96634658b35bb38c00beb23",
+        "digest": "d5ad3f51b242081541dc3d29d3e3325966bb79841a743c77f2e1159d920ecc9e"
+      },
+      {
+        "sequence": 86,
+        "requestId": "00000000-0000-4000-8000-000000001085",
+        "eventDigest": "96e53f0b4d2080d1c08d6751bc8f56b545925e6b30833f664b351ed0c3bee679",
+        "receivedAt": "2025-01-02T19:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d5ad3f51b242081541dc3d29d3e3325966bb79841a743c77f2e1159d920ecc9e",
+        "digest": "0c3b2237fe83a80387ec97508cf633d73e20d3f72cebaa6e661ab3f7208946ff"
+      },
+      {
+        "sequence": 87,
+        "requestId": "00000000-0000-4000-8000-000000001086",
+        "eventDigest": "ecafd0600b15e751f146136ba5fd1b1b2c8c4fd7be9e7ffbb3c1a45755311792",
+        "receivedAt": "2025-01-02T20:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "0c3b2237fe83a80387ec97508cf633d73e20d3f72cebaa6e661ab3f7208946ff",
+        "digest": "41f7b5e111a00073322f8e28101b7c1ff33fa74393ee6046e71633ad617117c3"
+      },
+      {
+        "sequence": 88,
+        "requestId": "00000000-0000-4000-8000-000000001087",
+        "eventDigest": "24c31fb703f37eadd0e0985310430b887f0b70baca06f45205faec8fc9b1f18a",
+        "receivedAt": "2025-01-02T20:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "41f7b5e111a00073322f8e28101b7c1ff33fa74393ee6046e71633ad617117c3",
+        "digest": "5696a7ff6e49731fee20d25408918144161c7173aa18085f32a7c8c093499851"
+      },
+      {
+        "sequence": 89,
+        "requestId": "00000000-0000-4000-8000-000000001088",
+        "eventDigest": "c90c5a2da8fbd7b448602073a27e40dd8e9a1c00ba96af913e67644b147d96d0",
+        "receivedAt": "2025-01-02T21:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "5696a7ff6e49731fee20d25408918144161c7173aa18085f32a7c8c093499851",
+        "digest": "5392026cabba0c427d604f7d81c3be5dd61c6dd59d0930a0050fde5d0fb6efcd"
+      },
+      {
+        "sequence": 90,
+        "requestId": "00000000-0000-4000-8000-000000001089",
+        "eventDigest": "aefd9f21d0641bd8291f3389f8ec968d872a2276ecc924ecfde9ba05eb7af385",
+        "receivedAt": "2025-01-02T21:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "5392026cabba0c427d604f7d81c3be5dd61c6dd59d0930a0050fde5d0fb6efcd",
+        "digest": "21c8331ad6fc3cbad93bd758ec3f03ad6d490a5274cd940af74ffc9acac6b042"
+      },
+      {
+        "sequence": 91,
+        "requestId": "00000000-0000-4000-8000-000000001090",
+        "eventDigest": "b8f1ac22315b329717765e1fb2a3fd70fd75f191d04eb0eccbd8d8701e7c2c8b",
+        "receivedAt": "2025-01-02T22:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "21c8331ad6fc3cbad93bd758ec3f03ad6d490a5274cd940af74ffc9acac6b042",
+        "digest": "b5686822061121480bd7700f6f55dae86edfc8c50e950ea490d85cbb54646b26"
+      },
+      {
+        "sequence": 92,
+        "requestId": "00000000-0000-4000-8000-000000001091",
+        "eventDigest": "f17d664ecf8572e763af267ed211ed6457dc4a5df7b1a4c489e18cd4dd501786",
+        "receivedAt": "2025-01-02T22:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "b5686822061121480bd7700f6f55dae86edfc8c50e950ea490d85cbb54646b26",
+        "digest": "c5a84deaa6964373a56667f38d76fc4e7ac7cc8d8865c15cf12c9786b994c49d"
+      },
+      {
+        "sequence": 93,
+        "requestId": "00000000-0000-4000-8000-000000001092",
+        "eventDigest": "3e22d76e3aff0a0099227a739e5f0423740537831875499ff6ede6dd203a76af",
+        "receivedAt": "2025-01-02T23:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "c5a84deaa6964373a56667f38d76fc4e7ac7cc8d8865c15cf12c9786b994c49d",
+        "digest": "926eee5a93a9a6ca1a7b98e04cf0ac70e5962390b15edb3c209635984a082859"
+      },
+      {
+        "sequence": 94,
+        "requestId": "00000000-0000-4000-8000-000000001093",
+        "eventDigest": "1fbffd30da0124f6d64d012ac50cf2742b515bebe7af4b00c66b082b2318884d",
+        "receivedAt": "2025-01-02T23:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "926eee5a93a9a6ca1a7b98e04cf0ac70e5962390b15edb3c209635984a082859",
+        "digest": "0c143e9fedef9128aab9fcb2177e3799c16febad3a648cc72ee6e0d1f254054f"
+      },
+      {
+        "sequence": 95,
+        "requestId": "00000000-0000-4000-8000-000000001094",
+        "eventDigest": "8dfc36f2f166db4d31628ccb2ba58f54cdc0683cc07cd2671c99e50b8f8b9ee4",
+        "receivedAt": "2025-01-03T00:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "0c143e9fedef9128aab9fcb2177e3799c16febad3a648cc72ee6e0d1f254054f",
+        "digest": "0fbd1e9482eae49b3c815fe49f30fd3494127f0837c18776a8bf1444d5eea43d"
+      },
+      {
+        "sequence": 96,
+        "requestId": "00000000-0000-4000-8000-000000001095",
+        "eventDigest": "51845a72196011dffd472119fda77af4297e5e140a848c6c6a79f738292638b9",
+        "receivedAt": "2025-01-03T00:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "0fbd1e9482eae49b3c815fe49f30fd3494127f0837c18776a8bf1444d5eea43d",
+        "digest": "9797fddfc6f1754e01bb291b0736e7e671f27218b95552efc18db0d115fd2932"
+      },
+      {
+        "sequence": 97,
+        "requestId": "00000000-0000-4000-8000-000000001096",
+        "eventDigest": "3955de8d4ac420ad23a6c975ed64f1d6e46577f20fc69df96c0604512922d0fd",
+        "receivedAt": "2025-01-03T01:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "9797fddfc6f1754e01bb291b0736e7e671f27218b95552efc18db0d115fd2932",
+        "digest": "ddedf5667cc74dae2070b4c72b9fbe08836e93d93abe43c46837485cf8822bb6"
+      },
+      {
+        "sequence": 98,
+        "requestId": "00000000-0000-4000-8000-000000001097",
+        "eventDigest": "939c9bac8f2163c1a40f53f763238e73e88fff2e00b7a837c394e2a2c8ae85cc",
+        "receivedAt": "2025-01-03T01:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "ddedf5667cc74dae2070b4c72b9fbe08836e93d93abe43c46837485cf8822bb6",
+        "digest": "3d9e6ac8a59e75c146e1f11a4128b10b140875a1d89e670ec22396f3f990f13b"
+      },
+      {
+        "sequence": 99,
+        "requestId": "00000000-0000-4000-8000-000000001098",
+        "eventDigest": "9a29e37553a1ffa04160e1fc76ab3166f85410a4e78b4c7b8c98924b61ba7dff",
+        "receivedAt": "2025-01-03T02:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "3d9e6ac8a59e75c146e1f11a4128b10b140875a1d89e670ec22396f3f990f13b",
+        "digest": "62baf4ee30a8dea26f1250fe4b6a11587e46fb0cba5fc25aea17ad165db25f38"
+      },
+      {
+        "sequence": 100,
+        "requestId": "00000000-0000-4000-8000-000000001099",
+        "eventDigest": "4bffeacd0ee6e4d3313ecef71bab48c077be3e173d1570799db74492b0940c78",
+        "receivedAt": "2025-01-03T02:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "62baf4ee30a8dea26f1250fe4b6a11587e46fb0cba5fc25aea17ad165db25f38",
+        "digest": "06e133f581c6a70e92ef677a307a324ae34e0fd4d37045ab71b9e9b394fc38a9"
+      },
+      {
+        "sequence": 101,
+        "requestId": "00000000-0000-4000-8000-000000001100",
+        "eventDigest": "88f3ff53ab7f132b4edae62ab51434caafb967222f0ff2b678a122c0a63a44f4",
+        "receivedAt": "2025-01-03T03:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "06e133f581c6a70e92ef677a307a324ae34e0fd4d37045ab71b9e9b394fc38a9",
+        "digest": "276f2282db6ce4c8afd61d8cac672f4df1fcbd644afe210fd25006d8c13d20d9"
+      },
+      {
+        "sequence": 102,
+        "requestId": "00000000-0000-4000-8000-000000001101",
+        "eventDigest": "3aa899edcfa237a7b4572c528fa3f7ff33242dd2432f01a9b05cd745baaa75ac",
+        "receivedAt": "2025-01-03T03:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "276f2282db6ce4c8afd61d8cac672f4df1fcbd644afe210fd25006d8c13d20d9",
+        "digest": "e5ac4abae91e09fb3f7bea1956cb3f73fc8da96667918034740a5ca04f6ac613"
+      },
+      {
+        "sequence": 103,
+        "requestId": "00000000-0000-4000-8000-000000001102",
+        "eventDigest": "e89fd09d9cb393000bafb59fa7b2e9acf0ac27340a76b06c01270ba8f89fe64a",
+        "receivedAt": "2025-01-03T04:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "e5ac4abae91e09fb3f7bea1956cb3f73fc8da96667918034740a5ca04f6ac613",
+        "digest": "651ab60a81bb57741238c37635cddc1bcf2ef45da836dc2b7af5dbe81d3f3136"
+      },
+      {
+        "sequence": 104,
+        "requestId": "00000000-0000-4000-8000-000000001103",
+        "eventDigest": "35966972d941c4bfea716acaa8a295369df5f24d25371041fc824dcf529bd45f",
+        "receivedAt": "2025-01-03T04:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "651ab60a81bb57741238c37635cddc1bcf2ef45da836dc2b7af5dbe81d3f3136",
+        "digest": "4f3c9523e1bac98f4df9b0542b7570134eb905483602dcb980c3764b9b4d9f5d"
+      },
+      {
+        "sequence": 105,
+        "requestId": "00000000-0000-4000-8000-000000001104",
+        "eventDigest": "4e5643e15671200aaf25e080efdbf9554451058ae5462121fdcbe91ce7d5ec95",
+        "receivedAt": "2025-01-03T05:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "4f3c9523e1bac98f4df9b0542b7570134eb905483602dcb980c3764b9b4d9f5d",
+        "digest": "f468edb41a5950caff94b8e98db2165eea6bc922f353e89fcba02cc590302872"
+      },
+      {
+        "sequence": 106,
+        "requestId": "00000000-0000-4000-8000-000000001105",
+        "eventDigest": "d296e50f4b2b2ce9abd22daeb2c4c49d316947c4e9507315d03f9e5040278246",
+        "receivedAt": "2025-01-03T05:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "f468edb41a5950caff94b8e98db2165eea6bc922f353e89fcba02cc590302872",
+        "digest": "f653e3d6c0a5bf0a0c1b07127e1bc079a14782d1f614d4a934ef6babc08df8b5"
+      },
+      {
+        "sequence": 107,
+        "requestId": "00000000-0000-4000-8000-000000001106",
+        "eventDigest": "d8c230ad44361199d961272a9aa5e8e55d048681cd0ddfb02322069a6eb8faad",
+        "receivedAt": "2025-01-03T06:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "f653e3d6c0a5bf0a0c1b07127e1bc079a14782d1f614d4a934ef6babc08df8b5",
+        "digest": "3c30341f7bc69702f921a55fade10b1b8c38942b0516b1ad5f484a6cc49a4b5c"
+      },
+      {
+        "sequence": 108,
+        "requestId": "00000000-0000-4000-8000-000000001107",
+        "eventDigest": "22f2702c778f641bdcda51b4b0ce0d12656f4b44ad7072f9d4143ac4455d6e50",
+        "receivedAt": "2025-01-03T06:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "3c30341f7bc69702f921a55fade10b1b8c38942b0516b1ad5f484a6cc49a4b5c",
+        "digest": "9e0abef81c6c7a12e8fb764eae9ce2ed6776fb902a60324e0617347a130368bb"
+      },
+      {
+        "sequence": 109,
+        "requestId": "00000000-0000-4000-8000-000000001108",
+        "eventDigest": "1f1fd3812aa8d6886d19447f4f0fea5cd9d47f9edc097d2ca1f2cc5682518198",
+        "receivedAt": "2025-01-03T07:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "9e0abef81c6c7a12e8fb764eae9ce2ed6776fb902a60324e0617347a130368bb",
+        "digest": "97cb02276458941d67c63776b3bb04c8175c9805e0af3f09612cabce1a3b1797"
+      },
+      {
+        "sequence": 110,
+        "requestId": "00000000-0000-4000-8000-000000001109",
+        "eventDigest": "d63c6662665f0c5e343330b69c303fb12130df95afdef418d2608648d1a561be",
+        "receivedAt": "2025-01-03T07:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "97cb02276458941d67c63776b3bb04c8175c9805e0af3f09612cabce1a3b1797",
+        "digest": "fb4f0dd8c85c3f1450bcf18f20c11880f1bf79c0886c19aedc12be7d7a27f839"
+      },
+      {
+        "sequence": 111,
+        "requestId": "00000000-0000-4000-8000-000000001110",
+        "eventDigest": "5b914cae6f558e0de08c112b6b87c7391d80d2c9683afca3a197a0079c4f9d99",
+        "receivedAt": "2025-01-03T08:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "fb4f0dd8c85c3f1450bcf18f20c11880f1bf79c0886c19aedc12be7d7a27f839",
+        "digest": "417a5e7d652806cd64e722393480d6478d93a4863acb50c0af840b6375b935db"
+      },
+      {
+        "sequence": 112,
+        "requestId": "00000000-0000-4000-8000-000000001111",
+        "eventDigest": "2df5448c7c8c8a6baa27dd53da06d1bef0207655b44d257f6446323d4ddd4819",
+        "receivedAt": "2025-01-03T08:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "417a5e7d652806cd64e722393480d6478d93a4863acb50c0af840b6375b935db",
+        "digest": "eddc4419789a4770f5b3658c25dff2b2463456ab697a4a216c1fe15d5321e1af"
+      },
+      {
+        "sequence": 113,
+        "requestId": "00000000-0000-4000-8000-000000001112",
+        "eventDigest": "19076385b4ebdac743d6ae7758f62d66bba2155d92079c4cd0c2ebf6721b12f5",
+        "receivedAt": "2025-01-03T09:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "eddc4419789a4770f5b3658c25dff2b2463456ab697a4a216c1fe15d5321e1af",
+        "digest": "adab4a53592c67b00efcbc1247ccf11fc8cda00af814b2c81bea9128c2f49fc6"
+      },
+      {
+        "sequence": 114,
+        "requestId": "00000000-0000-4000-8000-000000001113",
+        "eventDigest": "70fcbe18ebae2c58c2400f6962d5bb0534c6430fc5e10f8767f7cdad518162ea",
+        "receivedAt": "2025-01-03T09:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "adab4a53592c67b00efcbc1247ccf11fc8cda00af814b2c81bea9128c2f49fc6",
+        "digest": "cb884619e9e5a4fd7119beada17cf7c785e1c77f194df58b0b18a998e44fcfc4"
+      },
+      {
+        "sequence": 115,
+        "requestId": "00000000-0000-4000-8000-000000001114",
+        "eventDigest": "abe74e1f4f23503c01019822316766f565d867c7efaf7a2b467aabcc4579b63d",
+        "receivedAt": "2025-01-03T10:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "cb884619e9e5a4fd7119beada17cf7c785e1c77f194df58b0b18a998e44fcfc4",
+        "digest": "f515d0e66c99e44b603e6753e3d5de70c616871434d0cb9c3a0c0757341287ea"
+      },
+      {
+        "sequence": 116,
+        "requestId": "00000000-0000-4000-8000-000000001115",
+        "eventDigest": "c497aeda79a427f36abb296cf49cf81012a0c6128289929ee7502c54245099ae",
+        "receivedAt": "2025-01-03T10:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "f515d0e66c99e44b603e6753e3d5de70c616871434d0cb9c3a0c0757341287ea",
+        "digest": "b6322df754d7cb77dcd8c81a23e3ee420a471ca5e3bd8c39b35204e3c61b0947"
+      },
+      {
+        "sequence": 117,
+        "requestId": "00000000-0000-4000-8000-000000001116",
+        "eventDigest": "1688fe6bd3660fefa7b15c6785c16d984d897226773b45990652ac56ac17a990",
+        "receivedAt": "2025-01-03T11:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "b6322df754d7cb77dcd8c81a23e3ee420a471ca5e3bd8c39b35204e3c61b0947",
+        "digest": "9ccfaa3b81fdc7101814335801b1c9a03fb94e6e8b9b108d585b2d7ec64dd191"
+      },
+      {
+        "sequence": 118,
+        "requestId": "00000000-0000-4000-8000-000000001117",
+        "eventDigest": "f929927e91ea9bd213b83ce534d397e37ac01f86dcead0c28262f6c7d8275dd4",
+        "receivedAt": "2025-01-03T11:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "9ccfaa3b81fdc7101814335801b1c9a03fb94e6e8b9b108d585b2d7ec64dd191",
+        "digest": "9f34572194cf9ee99e6de878165bcf4c59a0e652b3d7d86c2b024c5576b48e9d"
+      },
+      {
+        "sequence": 119,
+        "requestId": "00000000-0000-4000-8000-000000001118",
+        "eventDigest": "f7e26d5fecda7dcb3481db16633ad2b3456f55871b2757675b65455b699d62eb",
+        "receivedAt": "2025-01-03T12:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "9f34572194cf9ee99e6de878165bcf4c59a0e652b3d7d86c2b024c5576b48e9d",
+        "digest": "d373cd99bf3d3e2e490565af9680756610bb75f17696be4c64fc9fbce37eb319"
+      },
+      {
+        "sequence": 120,
+        "requestId": "00000000-0000-4000-8000-000000001119",
+        "eventDigest": "1f4b45002313c9fa77bc20841dcbe2ff44c41980b421543fd7ed8deb8cb9e14a",
+        "receivedAt": "2025-01-03T12:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "d373cd99bf3d3e2e490565af9680756610bb75f17696be4c64fc9fbce37eb319",
+        "digest": "fe4b534bda409a249bfad857dbfdfee6d49d5536042502395a01358b786c3756"
+      },
+      {
+        "sequence": 121,
+        "requestId": "00000000-0000-4000-8000-000000001120",
+        "eventDigest": "b17f49e948fd2c02a563ecc291efe580371090283fb62344c0d16dfce33d8bea",
+        "receivedAt": "2025-01-03T13:00:00.000Z",
+        "disposition": "ACCEPTED",
+        "reason": "BAR_RECEIVED",
+        "previousDigest": "fe4b534bda409a249bfad857dbfdfee6d49d5536042502395a01358b786c3756",
+        "digest": "1ca26f8509c6494d2655d8be1d8f527bd29e8bafdcf44b1ebe72c8af758aa74c"
+      },
+      {
+        "sequence": 122,
+        "requestId": "00000000-0000-4000-8000-000000001121",
+        "eventDigest": "affa7c28b2f6a0d6c472e761d37ff817470099d1b746c88407bbce63a0a390d1",
+        "receivedAt": "2025-01-03T13:00:00.001Z",
+        "disposition": "ACCEPTED",
+        "reason": "SIGNAL_RECEIVED",
+        "previousDigest": "1ca26f8509c6494d2655d8be1d8f527bd29e8bafdcf44b1ebe72c8af758aa74c",
+        "digest": "f3d46cbe7f0268ae4cb9ff7824402b6ebd46429c0e6a85a901476ec24751ae0c"
+      },
+      {
+        "sequence": 123,
+        "requestId": "00000000-0000-4000-8000-000000001122",
+        "eventDigest": "bc7efe4448566d65201fa2ae84a525dd55c5c961349106d2dd26b71ed7bd0c6e",
+        "receivedAt": "2025-01-03T13:00:00.002Z",
+        "disposition": "ACCEPTED",
+        "reason": "QUOTE_RECEIVED",
+        "previousDigest": "f3d46cbe7f0268ae4cb9ff7824402b6ebd46429c0e6a85a901476ec24751ae0c",
+        "digest": "c513bae839e04812ace71a6faacf62ca2713d2f1a4a19d282ea3549b0833510e"
+      },
+      {
+        "sequence": 124,
+        "requestId": "00000000-0000-4000-8000-000000009001",
+        "eventDigest": "e1dba0f742f375453c06513511b2f9696456829bee99522cd2bae227ce6c495a",
+        "receivedAt": "2025-01-03T13:00:00.003Z",
+        "disposition": "ACCEPTED",
+        "reason": "EMERGENCY_STOP",
+        "previousDigest": "c513bae839e04812ace71a6faacf62ca2713d2f1a4a19d282ea3549b0833510e",
+        "digest": "c11e2a509394aef68c241eb97a383a58cb1f3c3b74c3f83c84cc1d12f02be594"
+      }
+    ],
+    "bars": [
+      {
+        "closedAt": "2025-01-01T01:00:00.000Z",
+        "open": 100,
+        "high": 100.29999999999998,
+        "low": 87.736,
+        "close": 88,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T02:00:00.000Z",
+        "open": 88,
+        "high": 89.267,
+        "low": 87.736,
+        "close": 89,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T03:00:00.000Z",
+        "open": 89,
+        "high": 90.27,
+        "low": 88.733,
+        "close": 90,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T04:00:00.000Z",
+        "open": 90,
+        "high": 91.273,
+        "low": 89.73,
+        "close": 91,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T05:00:00.000Z",
+        "open": 91,
+        "high": 92.276,
+        "low": 90.727,
+        "close": 92,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T06:00:00.000Z",
+        "open": 92,
+        "high": 93.279,
+        "low": 91.724,
+        "close": 93,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T07:00:00.000Z",
+        "open": 93,
+        "high": 94.282,
+        "low": 92.721,
+        "close": 94,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T08:00:00.000Z",
+        "open": 94,
+        "high": 95.285,
+        "low": 93.718,
+        "close": 95,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T09:00:00.000Z",
+        "open": 95,
+        "high": 96.28799999999998,
+        "low": 94.715,
+        "close": 96,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T10:00:00.000Z",
+        "open": 96,
+        "high": 97.29099999999998,
+        "low": 95.712,
+        "close": 97,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T11:00:00.000Z",
+        "open": 97,
+        "high": 98.29399999999998,
+        "low": 96.709,
+        "close": 98,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T12:00:00.000Z",
+        "open": 98,
+        "high": 99.29699999999998,
+        "low": 97.706,
+        "close": 99,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T13:00:00.000Z",
+        "open": 99,
+        "high": 100.29999999999998,
+        "low": 98.703,
+        "close": 100,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T14:00:00.000Z",
+        "open": 100,
+        "high": 101.30299999999998,
+        "low": 99.7,
+        "close": 101,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T15:00:00.000Z",
+        "open": 101,
+        "high": 102.30599999999998,
+        "low": 100.697,
+        "close": 102,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T16:00:00.000Z",
+        "open": 102,
+        "high": 103.30899999999998,
+        "low": 101.694,
+        "close": 103,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T17:00:00.000Z",
+        "open": 103,
+        "high": 104.31199999999998,
+        "low": 102.691,
+        "close": 104,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T18:00:00.000Z",
+        "open": 104,
+        "high": 105.31499999999998,
+        "low": 103.688,
+        "close": 105,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T19:00:00.000Z",
+        "open": 105,
+        "high": 106.31799999999998,
+        "low": 104.685,
+        "close": 106,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T20:00:00.000Z",
+        "open": 106,
+        "high": 107.32099999999998,
+        "low": 105.682,
+        "close": 107,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T21:00:00.000Z",
+        "open": 107,
+        "high": 108.32399999999998,
+        "low": 106.679,
+        "close": 108,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T22:00:00.000Z",
+        "open": 108,
+        "high": 109.327,
+        "low": 107.676,
+        "close": 109.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-01T23:00:00.000Z",
+        "open": 109.00000000000001,
+        "high": 110.33,
+        "low": 108.67300000000002,
+        "close": 110.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T00:00:00.000Z",
+        "open": 110.00000000000001,
+        "high": 111.333,
+        "low": 109.67000000000002,
+        "close": 111.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T01:00:00.000Z",
+        "open": 111.00000000000001,
+        "high": 112.336,
+        "low": 110.66700000000002,
+        "close": 112.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T02:00:00.000Z",
+        "open": 112.00000000000001,
+        "high": 112.336,
+        "low": 110.66700000000002,
+        "close": 111.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T03:00:00.000Z",
+        "open": 111.00000000000001,
+        "high": 111.333,
+        "low": 109.67000000000002,
+        "close": 110.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T04:00:00.000Z",
+        "open": 110.00000000000001,
+        "high": 110.33,
+        "low": 108.67300000000002,
+        "close": 109.00000000000001,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T05:00:00.000Z",
+        "open": 109.00000000000001,
+        "high": 109.327,
+        "low": 107.676,
+        "close": 108,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T06:00:00.000Z",
+        "open": 108,
+        "high": 108.32399999999998,
+        "low": 106.679,
+        "close": 107,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T07:00:00.000Z",
+        "open": 107,
+        "high": 107.32099999999998,
+        "low": 105.682,
+        "close": 106,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T08:00:00.000Z",
+        "open": 106,
+        "high": 106.31799999999998,
+        "low": 104.685,
+        "close": 105,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T09:00:00.000Z",
+        "open": 105,
+        "high": 105.31499999999998,
+        "low": 103.688,
+        "close": 104,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T10:00:00.000Z",
+        "open": 104,
+        "high": 104.31199999999998,
+        "low": 102.691,
+        "close": 103,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T11:00:00.000Z",
+        "open": 103,
+        "high": 103.30899999999998,
+        "low": 101.694,
+        "close": 102,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T12:00:00.000Z",
+        "open": 102,
+        "high": 102.30599999999998,
+        "low": 100.697,
+        "close": 101,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T13:00:00.000Z",
+        "open": 101,
+        "high": 101.30299999999998,
+        "low": 99.7,
+        "close": 100,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T14:00:00.000Z",
+        "open": 100,
+        "high": 100.29999999999998,
+        "low": 98.703,
+        "close": 99,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T15:00:00.000Z",
+        "open": 99,
+        "high": 99.29699999999998,
+        "low": 97.706,
+        "close": 98,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T16:00:00.000Z",
+        "open": 98,
+        "high": 98.29399999999998,
+        "low": 96.709,
+        "close": 97,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T17:00:00.000Z",
+        "open": 97,
+        "high": 97.29099999999998,
+        "low": 95.712,
+        "close": 96,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T18:00:00.000Z",
+        "open": 96,
+        "high": 96.28799999999998,
+        "low": 94.715,
+        "close": 95,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T19:00:00.000Z",
+        "open": 95,
+        "high": 95.285,
+        "low": 93.718,
+        "close": 94,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T20:00:00.000Z",
+        "open": 94,
+        "high": 94.282,
+        "low": 92.721,
+        "close": 93,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T21:00:00.000Z",
+        "open": 93,
+        "high": 93.279,
+        "low": 91.724,
+        "close": 92,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T22:00:00.000Z",
+        "open": 92,
+        "high": 92.276,
+        "low": 90.727,
+        "close": 91,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-02T23:00:00.000Z",
+        "open": 91,
+        "high": 91.273,
+        "low": 89.73,
+        "close": 90,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T00:00:00.000Z",
+        "open": 90,
+        "high": 90.27,
+        "low": 88.733,
+        "close": 89,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T01:00:00.000Z",
+        "open": 89,
+        "high": 89.267,
+        "low": 87.736,
+        "close": 88,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T02:00:00.000Z",
+        "open": 88,
+        "high": 89.267,
+        "low": 87.736,
+        "close": 89,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T03:00:00.000Z",
+        "open": 89,
+        "high": 90.27,
+        "low": 88.733,
+        "close": 90,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T04:00:00.000Z",
+        "open": 90,
+        "high": 91.273,
+        "low": 89.73,
+        "close": 91,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T05:00:00.000Z",
+        "open": 91,
+        "high": 92.276,
+        "low": 90.727,
+        "close": 92,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T06:00:00.000Z",
+        "open": 92,
+        "high": 93.279,
+        "low": 91.724,
+        "close": 93,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T07:00:00.000Z",
+        "open": 93,
+        "high": 94.282,
+        "low": 92.721,
+        "close": 94,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T08:00:00.000Z",
+        "open": 94,
+        "high": 95.285,
+        "low": 93.718,
+        "close": 95,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T09:00:00.000Z",
+        "open": 95,
+        "high": 96.28799999999998,
+        "low": 94.715,
+        "close": 96,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T10:00:00.000Z",
+        "open": 96,
+        "high": 97.29099999999998,
+        "low": 95.712,
+        "close": 97,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T11:00:00.000Z",
+        "open": 97,
+        "high": 98.29399999999998,
+        "low": 96.709,
+        "close": 98,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T12:00:00.000Z",
+        "open": 98,
+        "high": 99.29699999999998,
+        "low": 97.706,
+        "close": 99,
+        "volume": 1000
+      },
+      {
+        "closedAt": "2025-01-03T13:00:00.000Z",
+        "open": 99,
+        "high": 100.29999999999998,
+        "low": 98.703,
+        "close": 100,
+        "volume": 1000
+      }
+    ],
+    "quotes": [
+      {
+        "observedAt": "2025-01-01T01:00:00.002Z",
+        "receivedAt": "2025-01-01T01:00:00.002Z",
+        "price": 88,
+        "sequence": 2
+      },
+      {
+        "observedAt": "2025-01-01T02:00:00.002Z",
+        "receivedAt": "2025-01-01T02:00:00.002Z",
+        "price": 89,
+        "sequence": 4
+      },
+      {
+        "observedAt": "2025-01-01T03:00:00.002Z",
+        "receivedAt": "2025-01-01T03:00:00.002Z",
+        "price": 90,
+        "sequence": 6
+      },
+      {
+        "observedAt": "2025-01-01T04:00:00.002Z",
+        "receivedAt": "2025-01-01T04:00:00.002Z",
+        "price": 91,
+        "sequence": 8
+      },
+      {
+        "observedAt": "2025-01-01T05:00:00.002Z",
+        "receivedAt": "2025-01-01T05:00:00.002Z",
+        "price": 92,
+        "sequence": 10
+      },
+      {
+        "observedAt": "2025-01-01T06:00:00.002Z",
+        "receivedAt": "2025-01-01T06:00:00.002Z",
+        "price": 93,
+        "sequence": 12
+      },
+      {
+        "observedAt": "2025-01-01T07:00:00.002Z",
+        "receivedAt": "2025-01-01T07:00:00.002Z",
+        "price": 94,
+        "sequence": 14
+      },
+      {
+        "observedAt": "2025-01-01T08:00:00.002Z",
+        "receivedAt": "2025-01-01T08:00:00.002Z",
+        "price": 95,
+        "sequence": 16
+      },
+      {
+        "observedAt": "2025-01-01T09:00:00.002Z",
+        "receivedAt": "2025-01-01T09:00:00.002Z",
+        "price": 96,
+        "sequence": 18
+      },
+      {
+        "observedAt": "2025-01-01T10:00:00.002Z",
+        "receivedAt": "2025-01-01T10:00:00.002Z",
+        "price": 97,
+        "sequence": 20
+      },
+      {
+        "observedAt": "2025-01-01T11:00:00.002Z",
+        "receivedAt": "2025-01-01T11:00:00.002Z",
+        "price": 98,
+        "sequence": 22
+      },
+      {
+        "observedAt": "2025-01-01T12:00:00.002Z",
+        "receivedAt": "2025-01-01T12:00:00.002Z",
+        "price": 99,
+        "sequence": 24
+      },
+      {
+        "observedAt": "2025-01-01T13:00:00.002Z",
+        "receivedAt": "2025-01-01T13:00:00.002Z",
+        "price": 100,
+        "sequence": 26
+      },
+      {
+        "observedAt": "2025-01-01T14:00:00.002Z",
+        "receivedAt": "2025-01-01T14:00:00.002Z",
+        "price": 101,
+        "sequence": 28
+      },
+      {
+        "observedAt": "2025-01-01T15:00:00.002Z",
+        "receivedAt": "2025-01-01T15:00:00.002Z",
+        "price": 102,
+        "sequence": 30
+      },
+      {
+        "observedAt": "2025-01-01T16:00:00.002Z",
+        "receivedAt": "2025-01-01T16:00:00.002Z",
+        "price": 103,
+        "sequence": 32
+      },
+      {
+        "observedAt": "2025-01-01T17:00:00.002Z",
+        "receivedAt": "2025-01-01T17:00:00.002Z",
+        "price": 104,
+        "sequence": 34
+      },
+      {
+        "observedAt": "2025-01-01T18:00:00.002Z",
+        "receivedAt": "2025-01-01T18:00:00.002Z",
+        "price": 105,
+        "sequence": 36
+      },
+      {
+        "observedAt": "2025-01-01T19:00:00.002Z",
+        "receivedAt": "2025-01-01T19:00:00.002Z",
+        "price": 106,
+        "sequence": 38
+      },
+      {
+        "observedAt": "2025-01-01T20:00:00.002Z",
+        "receivedAt": "2025-01-01T20:00:00.002Z",
+        "price": 107,
+        "sequence": 40
+      },
+      {
+        "observedAt": "2025-01-01T21:00:00.002Z",
+        "receivedAt": "2025-01-01T21:00:00.002Z",
+        "price": 108,
+        "sequence": 42
+      },
+      {
+        "observedAt": "2025-01-01T22:00:00.002Z",
+        "receivedAt": "2025-01-01T22:00:00.002Z",
+        "price": 109.00000000000001,
+        "sequence": 44
+      },
+      {
+        "observedAt": "2025-01-01T23:00:00.002Z",
+        "receivedAt": "2025-01-01T23:00:00.002Z",
+        "price": 110.00000000000001,
+        "sequence": 46
+      },
+      {
+        "observedAt": "2025-01-02T00:00:00.002Z",
+        "receivedAt": "2025-01-02T00:00:00.002Z",
+        "price": 111.00000000000001,
+        "sequence": 48
+      },
+      {
+        "observedAt": "2025-01-02T01:00:00.002Z",
+        "receivedAt": "2025-01-02T01:00:00.002Z",
+        "price": 112.00000000000001,
+        "sequence": 50
+      },
+      {
+        "observedAt": "2025-01-02T02:00:00.002Z",
+        "receivedAt": "2025-01-02T02:00:00.002Z",
+        "price": 111.00000000000001,
+        "sequence": 52
+      },
+      {
+        "observedAt": "2025-01-02T03:00:00.002Z",
+        "receivedAt": "2025-01-02T03:00:00.002Z",
+        "price": 110.00000000000001,
+        "sequence": 54
+      },
+      {
+        "observedAt": "2025-01-02T04:00:00.002Z",
+        "receivedAt": "2025-01-02T04:00:00.002Z",
+        "price": 109.00000000000001,
+        "sequence": 56
+      },
+      {
+        "observedAt": "2025-01-02T05:00:00.002Z",
+        "receivedAt": "2025-01-02T05:00:00.002Z",
+        "price": 108,
+        "sequence": 58
+      },
+      {
+        "observedAt": "2025-01-02T06:00:00.002Z",
+        "receivedAt": "2025-01-02T06:00:00.002Z",
+        "price": 107,
+        "sequence": 60
+      },
+      {
+        "observedAt": "2025-01-02T07:00:00.002Z",
+        "receivedAt": "2025-01-02T07:00:00.002Z",
+        "price": 106,
+        "sequence": 62
+      },
+      {
+        "observedAt": "2025-01-02T08:00:00.002Z",
+        "receivedAt": "2025-01-02T08:00:00.002Z",
+        "price": 105,
+        "sequence": 64
+      },
+      {
+        "observedAt": "2025-01-02T09:00:00.002Z",
+        "receivedAt": "2025-01-02T09:00:00.002Z",
+        "price": 104,
+        "sequence": 66
+      },
+      {
+        "observedAt": "2025-01-02T10:00:00.002Z",
+        "receivedAt": "2025-01-02T10:00:00.002Z",
+        "price": 103,
+        "sequence": 68
+      },
+      {
+        "observedAt": "2025-01-02T11:00:00.002Z",
+        "receivedAt": "2025-01-02T11:00:00.002Z",
+        "price": 102,
+        "sequence": 70
+      },
+      {
+        "observedAt": "2025-01-02T12:00:00.002Z",
+        "receivedAt": "2025-01-02T12:00:00.002Z",
+        "price": 101,
+        "sequence": 72
+      },
+      {
+        "observedAt": "2025-01-02T13:00:00.002Z",
+        "receivedAt": "2025-01-02T13:00:00.002Z",
+        "price": 100,
+        "sequence": 74
+      },
+      {
+        "observedAt": "2025-01-02T14:00:00.002Z",
+        "receivedAt": "2025-01-02T14:00:00.002Z",
+        "price": 99,
+        "sequence": 76
+      },
+      {
+        "observedAt": "2025-01-02T15:00:00.002Z",
+        "receivedAt": "2025-01-02T15:00:00.002Z",
+        "price": 98,
+        "sequence": 78
+      },
+      {
+        "observedAt": "2025-01-02T16:00:00.002Z",
+        "receivedAt": "2025-01-02T16:00:00.002Z",
+        "price": 97,
+        "sequence": 80
+      },
+      {
+        "observedAt": "2025-01-02T17:00:00.002Z",
+        "receivedAt": "2025-01-02T17:00:00.002Z",
+        "price": 96,
+        "sequence": 82
+      },
+      {
+        "observedAt": "2025-01-02T18:00:00.002Z",
+        "receivedAt": "2025-01-02T18:00:00.002Z",
+        "price": 95,
+        "sequence": 84
+      },
+      {
+        "observedAt": "2025-01-02T19:00:00.002Z",
+        "receivedAt": "2025-01-02T19:00:00.002Z",
+        "price": 94,
+        "sequence": 86
+      },
+      {
+        "observedAt": "2025-01-02T20:00:00.002Z",
+        "receivedAt": "2025-01-02T20:00:00.002Z",
+        "price": 93,
+        "sequence": 88
+      },
+      {
+        "observedAt": "2025-01-02T21:00:00.002Z",
+        "receivedAt": "2025-01-02T21:00:00.002Z",
+        "price": 92,
+        "sequence": 90
+      },
+      {
+        "observedAt": "2025-01-02T22:00:00.002Z",
+        "receivedAt": "2025-01-02T22:00:00.002Z",
+        "price": 91,
+        "sequence": 92
+      },
+      {
+        "observedAt": "2025-01-02T23:00:00.002Z",
+        "receivedAt": "2025-01-02T23:00:00.002Z",
+        "price": 90,
+        "sequence": 94
+      },
+      {
+        "observedAt": "2025-01-03T00:00:00.002Z",
+        "receivedAt": "2025-01-03T00:00:00.002Z",
+        "price": 89,
+        "sequence": 96
+      },
+      {
+        "observedAt": "2025-01-03T01:00:00.002Z",
+        "receivedAt": "2025-01-03T01:00:00.002Z",
+        "price": 88,
+        "sequence": 98
+      },
+      {
+        "observedAt": "2025-01-03T02:00:00.002Z",
+        "receivedAt": "2025-01-03T02:00:00.002Z",
+        "price": 89,
+        "sequence": 100
+      },
+      {
+        "observedAt": "2025-01-03T03:00:00.002Z",
+        "receivedAt": "2025-01-03T03:00:00.002Z",
+        "price": 90,
+        "sequence": 102
+      },
+      {
+        "observedAt": "2025-01-03T04:00:00.002Z",
+        "receivedAt": "2025-01-03T04:00:00.002Z",
+        "price": 91,
+        "sequence": 104
+      },
+      {
+        "observedAt": "2025-01-03T05:00:00.002Z",
+        "receivedAt": "2025-01-03T05:00:00.002Z",
+        "price": 92,
+        "sequence": 106
+      },
+      {
+        "observedAt": "2025-01-03T06:00:00.002Z",
+        "receivedAt": "2025-01-03T06:00:00.002Z",
+        "price": 93,
+        "sequence": 108
+      },
+      {
+        "observedAt": "2025-01-03T07:00:00.002Z",
+        "receivedAt": "2025-01-03T07:00:00.002Z",
+        "price": 94,
+        "sequence": 110
+      },
+      {
+        "observedAt": "2025-01-03T08:00:00.002Z",
+        "receivedAt": "2025-01-03T08:00:00.002Z",
+        "price": 95,
+        "sequence": 112
+      },
+      {
+        "observedAt": "2025-01-03T09:00:00.002Z",
+        "receivedAt": "2025-01-03T09:00:00.002Z",
+        "price": 96,
+        "sequence": 114
+      },
+      {
+        "observedAt": "2025-01-03T10:00:00.002Z",
+        "receivedAt": "2025-01-03T10:00:00.002Z",
+        "price": 97,
+        "sequence": 116
+      },
+      {
+        "observedAt": "2025-01-03T11:00:00.002Z",
+        "receivedAt": "2025-01-03T11:00:00.002Z",
+        "price": 98,
+        "sequence": 118
+      },
+      {
+        "observedAt": "2025-01-03T12:00:00.002Z",
+        "receivedAt": "2025-01-03T12:00:00.002Z",
+        "price": 99,
+        "sequence": 120
+      },
+      {
+        "observedAt": "2025-01-03T13:00:00.002Z",
+        "receivedAt": "2025-01-03T13:00:00.002Z",
+        "price": 100,
+        "sequence": 123
+      }
+    ],
+    "signals": [
+      {
+        "signal": {
+          "id": "00000000-0000-4000-8000-000000000010",
+          "provider": "CUSTOM",
+          "event": "BULLISH",
+          "observedAt": "2025-01-03T13:00:00.000Z",
+          "availableAt": "2025-01-03T13:00:00.000Z"
+        },
+        "receivedAt": "2025-01-03T13:00:00.001Z",
+        "sequence": 122
+      }
+    ],
+    "consumed": [
+      "00000000-0000-4000-8000-000000000010"
+    ],
+    "pending": null,
+    "openPositions": [
+      {
+        "id": "session_position_1",
+        "direction": "LONG",
+        "entryBar": 60,
+        "entryAt": "2025-01-03T13:00:00.002Z",
+        "entryObservedAt": "2025-01-03T13:00:00.002Z",
+        "entrySequence": 123,
+        "quantity": 0.0999000999000999,
+        "entryPrice": 100.1,
+        "collateral": 10,
+        "entryFee": 0.01,
+        "stopLoss": 98.098,
+        "takeProfit": 104.104,
+        "gridLevel": null,
+        "signalId": "00000000-0000-4000-8000-000000000010"
+      }
+    ],
+    "trades": [],
+    "audit": [
+      {
+        "sequence": 0,
+        "at": "2025-01-01T00:00:00.000Z",
+        "sourceObservedAt": null,
+        "barIndex": null,
+        "type": "START",
+        "reason": "STARTED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 1,
+        "at": "2025-01-01T01:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T01:00:00.000Z",
+        "barIndex": 0,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 2,
+        "at": "2025-01-01T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T01:00:00.002Z",
+        "barIndex": 0,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 3,
+        "at": "2025-01-01T02:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T02:00:00.000Z",
+        "barIndex": 1,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 4,
+        "at": "2025-01-01T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T02:00:00.002Z",
+        "barIndex": 1,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 5,
+        "at": "2025-01-01T03:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T03:00:00.000Z",
+        "barIndex": 2,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 6,
+        "at": "2025-01-01T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T03:00:00.002Z",
+        "barIndex": 2,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 7,
+        "at": "2025-01-01T04:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T04:00:00.000Z",
+        "barIndex": 3,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 8,
+        "at": "2025-01-01T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T04:00:00.002Z",
+        "barIndex": 3,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 9,
+        "at": "2025-01-01T05:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T05:00:00.000Z",
+        "barIndex": 4,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 10,
+        "at": "2025-01-01T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T05:00:00.002Z",
+        "barIndex": 4,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 11,
+        "at": "2025-01-01T06:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T06:00:00.000Z",
+        "barIndex": 5,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 12,
+        "at": "2025-01-01T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T06:00:00.002Z",
+        "barIndex": 5,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 13,
+        "at": "2025-01-01T07:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T07:00:00.000Z",
+        "barIndex": 6,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 14,
+        "at": "2025-01-01T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T07:00:00.002Z",
+        "barIndex": 6,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 15,
+        "at": "2025-01-01T08:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T08:00:00.000Z",
+        "barIndex": 7,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 16,
+        "at": "2025-01-01T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T08:00:00.002Z",
+        "barIndex": 7,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 17,
+        "at": "2025-01-01T09:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T09:00:00.000Z",
+        "barIndex": 8,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 18,
+        "at": "2025-01-01T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T09:00:00.002Z",
+        "barIndex": 8,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 19,
+        "at": "2025-01-01T10:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T10:00:00.000Z",
+        "barIndex": 9,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 20,
+        "at": "2025-01-01T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T10:00:00.002Z",
+        "barIndex": 9,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 21,
+        "at": "2025-01-01T11:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T11:00:00.000Z",
+        "barIndex": 10,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 22,
+        "at": "2025-01-01T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T11:00:00.002Z",
+        "barIndex": 10,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 23,
+        "at": "2025-01-01T12:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T12:00:00.000Z",
+        "barIndex": 11,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 24,
+        "at": "2025-01-01T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T12:00:00.002Z",
+        "barIndex": 11,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 25,
+        "at": "2025-01-01T13:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T13:00:00.000Z",
+        "barIndex": 12,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 26,
+        "at": "2025-01-01T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T13:00:00.002Z",
+        "barIndex": 12,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 27,
+        "at": "2025-01-01T14:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T14:00:00.000Z",
+        "barIndex": 13,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 28,
+        "at": "2025-01-01T14:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T14:00:00.002Z",
+        "barIndex": 13,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 29,
+        "at": "2025-01-01T15:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T15:00:00.000Z",
+        "barIndex": 14,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 30,
+        "at": "2025-01-01T15:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T15:00:00.002Z",
+        "barIndex": 14,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 31,
+        "at": "2025-01-01T16:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T16:00:00.000Z",
+        "barIndex": 15,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 32,
+        "at": "2025-01-01T16:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T16:00:00.002Z",
+        "barIndex": 15,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 33,
+        "at": "2025-01-01T17:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T17:00:00.000Z",
+        "barIndex": 16,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 34,
+        "at": "2025-01-01T17:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T17:00:00.002Z",
+        "barIndex": 16,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 35,
+        "at": "2025-01-01T18:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T18:00:00.000Z",
+        "barIndex": 17,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 36,
+        "at": "2025-01-01T18:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T18:00:00.002Z",
+        "barIndex": 17,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 37,
+        "at": "2025-01-01T19:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T19:00:00.000Z",
+        "barIndex": 18,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 38,
+        "at": "2025-01-01T19:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T19:00:00.002Z",
+        "barIndex": 18,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 39,
+        "at": "2025-01-01T20:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T20:00:00.000Z",
+        "barIndex": 19,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 40,
+        "at": "2025-01-01T20:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T20:00:00.002Z",
+        "barIndex": 19,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 41,
+        "at": "2025-01-01T21:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T21:00:00.000Z",
+        "barIndex": 20,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 42,
+        "at": "2025-01-01T21:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T21:00:00.002Z",
+        "barIndex": 20,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 43,
+        "at": "2025-01-01T22:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T22:00:00.000Z",
+        "barIndex": 21,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 44,
+        "at": "2025-01-01T22:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T22:00:00.002Z",
+        "barIndex": 21,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 45,
+        "at": "2025-01-01T23:00:00.000Z",
+        "sourceObservedAt": "2025-01-01T23:00:00.000Z",
+        "barIndex": 22,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 46,
+        "at": "2025-01-01T23:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T23:00:00.002Z",
+        "barIndex": 22,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 47,
+        "at": "2025-01-02T00:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T00:00:00.000Z",
+        "barIndex": 22,
+        "type": "RESET",
+        "reason": "DAILY_RESET",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 47,
+        "at": "2025-01-02T00:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T00:00:00.000Z",
+        "barIndex": 23,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 48,
+        "at": "2025-01-02T00:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T00:00:00.002Z",
+        "barIndex": 23,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 49,
+        "at": "2025-01-02T01:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T01:00:00.000Z",
+        "barIndex": 24,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 50,
+        "at": "2025-01-02T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T01:00:00.002Z",
+        "barIndex": 24,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 51,
+        "at": "2025-01-02T02:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T02:00:00.000Z",
+        "barIndex": 25,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 52,
+        "at": "2025-01-02T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T02:00:00.002Z",
+        "barIndex": 25,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 53,
+        "at": "2025-01-02T03:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T03:00:00.000Z",
+        "barIndex": 26,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 54,
+        "at": "2025-01-02T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T03:00:00.002Z",
+        "barIndex": 26,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 55,
+        "at": "2025-01-02T04:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T04:00:00.000Z",
+        "barIndex": 27,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 56,
+        "at": "2025-01-02T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T04:00:00.002Z",
+        "barIndex": 27,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 57,
+        "at": "2025-01-02T05:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T05:00:00.000Z",
+        "barIndex": 28,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 58,
+        "at": "2025-01-02T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T05:00:00.002Z",
+        "barIndex": 28,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 59,
+        "at": "2025-01-02T06:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T06:00:00.000Z",
+        "barIndex": 29,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 60,
+        "at": "2025-01-02T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T06:00:00.002Z",
+        "barIndex": 29,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 61,
+        "at": "2025-01-02T07:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T07:00:00.000Z",
+        "barIndex": 30,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 62,
+        "at": "2025-01-02T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T07:00:00.002Z",
+        "barIndex": 30,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 63,
+        "at": "2025-01-02T08:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T08:00:00.000Z",
+        "barIndex": 31,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 64,
+        "at": "2025-01-02T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T08:00:00.002Z",
+        "barIndex": 31,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 65,
+        "at": "2025-01-02T09:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T09:00:00.000Z",
+        "barIndex": 32,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 66,
+        "at": "2025-01-02T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T09:00:00.002Z",
+        "barIndex": 32,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 67,
+        "at": "2025-01-02T10:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T10:00:00.000Z",
+        "barIndex": 33,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 68,
+        "at": "2025-01-02T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T10:00:00.002Z",
+        "barIndex": 33,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 69,
+        "at": "2025-01-02T11:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T11:00:00.000Z",
+        "barIndex": 34,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 70,
+        "at": "2025-01-02T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T11:00:00.002Z",
+        "barIndex": 34,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 71,
+        "at": "2025-01-02T12:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T12:00:00.000Z",
+        "barIndex": 35,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 72,
+        "at": "2025-01-02T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T12:00:00.002Z",
+        "barIndex": 35,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 73,
+        "at": "2025-01-02T13:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T13:00:00.000Z",
+        "barIndex": 36,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 74,
+        "at": "2025-01-02T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T13:00:00.002Z",
+        "barIndex": 36,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 75,
+        "at": "2025-01-02T14:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T14:00:00.000Z",
+        "barIndex": 37,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 76,
+        "at": "2025-01-02T14:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T14:00:00.002Z",
+        "barIndex": 37,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 77,
+        "at": "2025-01-02T15:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T15:00:00.000Z",
+        "barIndex": 38,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 78,
+        "at": "2025-01-02T15:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T15:00:00.002Z",
+        "barIndex": 38,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 79,
+        "at": "2025-01-02T16:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T16:00:00.000Z",
+        "barIndex": 39,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 80,
+        "at": "2025-01-02T16:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T16:00:00.002Z",
+        "barIndex": 39,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 81,
+        "at": "2025-01-02T17:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T17:00:00.000Z",
+        "barIndex": 40,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 82,
+        "at": "2025-01-02T17:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T17:00:00.002Z",
+        "barIndex": 40,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 83,
+        "at": "2025-01-02T18:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T18:00:00.000Z",
+        "barIndex": 41,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 84,
+        "at": "2025-01-02T18:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T18:00:00.002Z",
+        "barIndex": 41,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 85,
+        "at": "2025-01-02T19:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T19:00:00.000Z",
+        "barIndex": 42,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 86,
+        "at": "2025-01-02T19:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T19:00:00.002Z",
+        "barIndex": 42,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 87,
+        "at": "2025-01-02T20:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T20:00:00.000Z",
+        "barIndex": 43,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 88,
+        "at": "2025-01-02T20:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T20:00:00.002Z",
+        "barIndex": 43,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 89,
+        "at": "2025-01-02T21:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T21:00:00.000Z",
+        "barIndex": 44,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 90,
+        "at": "2025-01-02T21:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T21:00:00.002Z",
+        "barIndex": 44,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 91,
+        "at": "2025-01-02T22:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T22:00:00.000Z",
+        "barIndex": 45,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 92,
+        "at": "2025-01-02T22:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T22:00:00.002Z",
+        "barIndex": 45,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 93,
+        "at": "2025-01-02T23:00:00.000Z",
+        "sourceObservedAt": "2025-01-02T23:00:00.000Z",
+        "barIndex": 46,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 94,
+        "at": "2025-01-02T23:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T23:00:00.002Z",
+        "barIndex": 46,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 95,
+        "at": "2025-01-03T00:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T00:00:00.000Z",
+        "barIndex": 46,
+        "type": "RESET",
+        "reason": "DAILY_RESET",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 95,
+        "at": "2025-01-03T00:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T00:00:00.000Z",
+        "barIndex": 47,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 96,
+        "at": "2025-01-03T00:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T00:00:00.002Z",
+        "barIndex": 47,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 97,
+        "at": "2025-01-03T01:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T01:00:00.000Z",
+        "barIndex": 48,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 98,
+        "at": "2025-01-03T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T01:00:00.002Z",
+        "barIndex": 48,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 99,
+        "at": "2025-01-03T02:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T02:00:00.000Z",
+        "barIndex": 49,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 100,
+        "at": "2025-01-03T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T02:00:00.002Z",
+        "barIndex": 49,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 101,
+        "at": "2025-01-03T03:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T03:00:00.000Z",
+        "barIndex": 50,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 102,
+        "at": "2025-01-03T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T03:00:00.002Z",
+        "barIndex": 50,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 103,
+        "at": "2025-01-03T04:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T04:00:00.000Z",
+        "barIndex": 51,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 104,
+        "at": "2025-01-03T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T04:00:00.002Z",
+        "barIndex": 51,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 105,
+        "at": "2025-01-03T05:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T05:00:00.000Z",
+        "barIndex": 52,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 106,
+        "at": "2025-01-03T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T05:00:00.002Z",
+        "barIndex": 52,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 107,
+        "at": "2025-01-03T06:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T06:00:00.000Z",
+        "barIndex": 53,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 108,
+        "at": "2025-01-03T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T06:00:00.002Z",
+        "barIndex": 53,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 109,
+        "at": "2025-01-03T07:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T07:00:00.000Z",
+        "barIndex": 54,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 110,
+        "at": "2025-01-03T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T07:00:00.002Z",
+        "barIndex": 54,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 111,
+        "at": "2025-01-03T08:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T08:00:00.000Z",
+        "barIndex": 55,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 112,
+        "at": "2025-01-03T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T08:00:00.002Z",
+        "barIndex": 55,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 113,
+        "at": "2025-01-03T09:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T09:00:00.000Z",
+        "barIndex": 56,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 114,
+        "at": "2025-01-03T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T09:00:00.002Z",
+        "barIndex": 56,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 115,
+        "at": "2025-01-03T10:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T10:00:00.000Z",
+        "barIndex": 57,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 116,
+        "at": "2025-01-03T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T10:00:00.002Z",
+        "barIndex": 57,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 117,
+        "at": "2025-01-03T11:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T11:00:00.000Z",
+        "barIndex": 58,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 118,
+        "at": "2025-01-03T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T11:00:00.002Z",
+        "barIndex": 58,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 119,
+        "at": "2025-01-03T12:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T12:00:00.000Z",
+        "barIndex": 59,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 120,
+        "at": "2025-01-03T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T12:00:00.002Z",
+        "barIndex": 59,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 121,
+        "at": "2025-01-03T13:00:00.000Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.000Z",
+        "barIndex": 60,
+        "type": "RECEIPT",
+        "reason": "BAR_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 122,
+        "at": "2025-01-03T13:00:00.001Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.000Z",
+        "barIndex": 60,
+        "type": "RECEIPT",
+        "reason": "SIGNAL_RECEIVED",
+        "positionId": null,
+        "signalId": "00000000-0000-4000-8000-000000000010"
+      },
+      {
+        "sequence": 122,
+        "at": "2025-01-03T13:00:00.001Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.000Z",
+        "barIndex": 60,
+        "type": "RECEIPT",
+        "reason": "SIGNAL_CONSUMED",
+        "positionId": null,
+        "signalId": "00000000-0000-4000-8000-000000000010"
+      },
+      {
+        "sequence": 122,
+        "at": "2025-01-03T13:00:00.001Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.000Z",
+        "barIndex": 60,
+        "type": "DECISION",
+        "reason": "SIGNAL_RECEIVED",
+        "positionId": null,
+        "signalId": "00000000-0000-4000-8000-000000000010"
+      },
+      {
+        "sequence": 123,
+        "at": "2025-01-03T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.002Z",
+        "barIndex": 60,
+        "type": "RECEIPT",
+        "reason": "QUOTE_RECEIVED",
+        "positionId": null,
+        "signalId": null
+      },
+      {
+        "sequence": 123,
+        "at": "2025-01-03T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.002Z",
+        "barIndex": 60,
+        "type": "ENTRY",
+        "reason": "SIGNAL_RECEIVED",
+        "positionId": "session_position_1",
+        "signalId": "00000000-0000-4000-8000-000000000010"
+      },
+      {
+        "sequence": 124,
+        "at": "2025-01-03T13:00:00.003Z",
+        "sourceObservedAt": null,
+        "barIndex": 60,
+        "type": "HALT",
+        "reason": "EMERGENCY_STOP",
+        "positionId": null,
+        "signalId": null
+      }
+    ],
+    "equity": [
+      {
+        "sequence": 2,
+        "at": "2025-01-01T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T01:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 4,
+        "at": "2025-01-01T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T02:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 6,
+        "at": "2025-01-01T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T03:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 8,
+        "at": "2025-01-01T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T04:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 10,
+        "at": "2025-01-01T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T05:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 12,
+        "at": "2025-01-01T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T06:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 14,
+        "at": "2025-01-01T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T07:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 16,
+        "at": "2025-01-01T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T08:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 18,
+        "at": "2025-01-01T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T09:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 20,
+        "at": "2025-01-01T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T10:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 22,
+        "at": "2025-01-01T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T11:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 24,
+        "at": "2025-01-01T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T12:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 26,
+        "at": "2025-01-01T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T13:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 28,
+        "at": "2025-01-01T14:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T14:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 30,
+        "at": "2025-01-01T15:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T15:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 32,
+        "at": "2025-01-01T16:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T16:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 34,
+        "at": "2025-01-01T17:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T17:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 36,
+        "at": "2025-01-01T18:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T18:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 38,
+        "at": "2025-01-01T19:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T19:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 40,
+        "at": "2025-01-01T20:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T20:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 42,
+        "at": "2025-01-01T21:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T21:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 44,
+        "at": "2025-01-01T22:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T22:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 46,
+        "at": "2025-01-01T23:00:00.002Z",
+        "sourceObservedAt": "2025-01-01T23:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 48,
+        "at": "2025-01-02T00:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T00:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 50,
+        "at": "2025-01-02T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T01:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 52,
+        "at": "2025-01-02T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T02:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 54,
+        "at": "2025-01-02T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T03:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 56,
+        "at": "2025-01-02T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T04:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 58,
+        "at": "2025-01-02T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T05:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 60,
+        "at": "2025-01-02T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T06:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 62,
+        "at": "2025-01-02T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T07:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 64,
+        "at": "2025-01-02T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T08:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 66,
+        "at": "2025-01-02T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T09:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 68,
+        "at": "2025-01-02T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T10:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 70,
+        "at": "2025-01-02T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T11:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 72,
+        "at": "2025-01-02T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T12:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 74,
+        "at": "2025-01-02T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T13:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 76,
+        "at": "2025-01-02T14:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T14:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 78,
+        "at": "2025-01-02T15:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T15:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 80,
+        "at": "2025-01-02T16:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T16:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 82,
+        "at": "2025-01-02T17:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T17:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 84,
+        "at": "2025-01-02T18:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T18:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 86,
+        "at": "2025-01-02T19:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T19:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 88,
+        "at": "2025-01-02T20:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T20:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 90,
+        "at": "2025-01-02T21:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T21:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 92,
+        "at": "2025-01-02T22:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T22:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 94,
+        "at": "2025-01-02T23:00:00.002Z",
+        "sourceObservedAt": "2025-01-02T23:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 96,
+        "at": "2025-01-03T00:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T00:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 98,
+        "at": "2025-01-03T01:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T01:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 100,
+        "at": "2025-01-03T02:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T02:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 102,
+        "at": "2025-01-03T03:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T03:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 104,
+        "at": "2025-01-03T04:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T04:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 106,
+        "at": "2025-01-03T05:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T05:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 108,
+        "at": "2025-01-03T06:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T06:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 110,
+        "at": "2025-01-03T07:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T07:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 112,
+        "at": "2025-01-03T08:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T08:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 114,
+        "at": "2025-01-03T09:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T09:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 116,
+        "at": "2025-01-03T10:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T10:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 118,
+        "at": "2025-01-03T11:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T11:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 120,
+        "at": "2025-01-03T12:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T12:00:00.002Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "sequence": 123,
+        "at": "2025-01-03T13:00:00.002Z",
+        "sourceObservedAt": "2025-01-03T13:00:00.002Z",
+        "equity": 999.9600399600399,
+        "cash": 989.99,
+        "reservedCollateral": 10,
+        "openPositions": 1,
+        "dailyHalted": false
+      }
+    ],
+    "daily": {
+      "day": "2025-01-03",
+      "baseline": 1000,
+      "halted": false
+    },
+    "counters": {
+      "positions": 1,
+      "dcaEntries": 0
+    },
+    "account": {
+      "markedAt": "2025-01-03T13:00:00.002Z",
+      "sourceObservedAt": "2025-01-03T13:00:00.002Z",
+      "cash": 989.99,
+      "equity": 999.9600399600399,
+      "reservedCollateral": 10,
+      "unrealizedPnl": -0.03996003996003883,
+      "realizedPnl": 0,
+      "totalFees": 0.01,
+      "turnover": 10
+    },
+    "stateDigest": "ebed6456cd92245ce26ed9b5ad6dacb521f06eac9a8a22c390f675dba414399d"
+  },
+  "journalDigest": "f2ff2695e4546289e36b8660938787758ecaaafc04cd9be14cac2a7151aa4729"
+}
