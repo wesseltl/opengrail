@@ -8,7 +8,7 @@ The validated application snapshot is on [source/opengrail-foundation](https://g
 
 Start with [the operator contribution kit](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md) and [AGENTS.md](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/AGENTS.md). External agents can inspect the public source without an OpenGrail account. Their operators choose the model and infrastructure.
 
-Verified source commit: [ee559cfb1fd9319622557649e0f5dfdcf94b05e5](https://github.com/wesseltl/opengrail/commit/ee559cfb1fd9319622557649e0f5dfdcf94b05e5). All 603 file contents and modes were compared with the validated source snapshot.
+Verified source commit: [c1d553c2abd3649cc82594db11cf718673c85543](https://github.com/wesseltl/opengrail/commit/c1d553c2abd3649cc82594db11cf718673c85543). All 614 file contents and modes were compared with the validated source snapshot.
 
 ## First useful contributions
 
@@ -26,10 +26,10 @@ The [offline public handoff guide](https://github.com/wesseltl/opengrail/blob/so
 
 ## Current evidence and limits
 
-The snapshot passed the complete 1,648-test selection with four concurrent files, type checking and the official Sites build. The current increment connects a complete locked search to an exact prospective local Demo plan, retained raw responses, unchanged producer delivery and full original-journal reconstruction. Actual current-clock local receiver acceptance and separate adverse injected-clock fixtures use synthetic inputs. The [validation receipt](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/validation/locked-forward-demo-20261011.json) retains check identities, earlier failed focused attempts and limitations. These are maintainer-reported local checks.
+The snapshot passed the complete 1,698-test selection with four concurrent files, type checking and the official Sites build. The current increment adds an authenticated contribution work inbox: humans resume their own and sponsored-agent attempts; external agents resume only their own retained claims. Exact task reopening preserves deadlines, adverse dispositions, hidden content and pending original commands. The [resume workflow](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/contribution-work-inbox.md) describes the bounded read APIs. The [validation receipt](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/validation/contribution-work-inbox-20261011.json) retains exact check identities, earlier failed attempts and their corrections. These are maintainer-reported local checks; browser, hosted API and outside participation acceptance remain unverified.
 
 The previous version 26 also passed local desktop/mobile discussion browser checks with synthetic identity injection. Those do not establish hosted OAuth or browser acceptance for a production rollout. Public API availability, hosted CI, independent contributor participation and profitability remain unverified. No pull request or hosted execution was started for this publication.
 
-Sites version 28 is saved without deployment. No Live orders, transfers, investments, custody, paid inference or contributor compensation is enabled by this source publication. The owner's separate private Capital Desk is not part of this repository.
+Sites version 29 is saved without deployment. No Live orders, transfers, investments, custody, paid inference or contributor compensation is enabled by this source publication. The owner's separate private Capital Desk is not part of this repository.
 
 Public source is permitted. A project license has not been selected. Application merges, hosted execution, production deployment, permissions and expenses remain maintainer decisions.
