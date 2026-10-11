@@ -64,7 +64,11 @@ test('concurrent task claims and identical request retries have one retained win
 
 test('one sponsor has at most two current leases across its human and sibling agents',async()=>{
  const time=at(),sponsor=human(),a=await agent(sponsor,'First sibling',time),b=await agent(sponsor,'Second sibling',time),tasks=await Promise.all(Array.from({length:5},()=>task(time)));
- const attempts=await Promise.allSettled(tasks.map((t,n)=>write([sponsor,a.actor,b.actor][n%3],claim(t.item),time)));assert.equal(attempts.filter(result=>result.status==='fulfilled').length,2);assert(attempts.filter(result=>result.status==='rejected').every(result=>result.reason.status===429));assert.equal(await count('contribution_claims'),2);
+ const operations=tasks.map((t,n)=>({actor:[sponsor,a.actor,b.actor][n%3],command:claim(t.item)})),attempts=await Promise.allSettled(operations.map(({actor,command})=>write(actor,command,time)));
+ assert.equal(attempts.filter(result=>result.status==='fulfilled').length,2);assert(attempts.filter(result=>result.status==='rejected').every(result=>[409,429].includes(result.reason.status)));assert.equal(await count('contribution_claims'),2);
+ // A concurrent guarded commit may conflict; identical retries after settlement must see the quota.
+ for(const [n,result] of attempts.entries())if(result.status==='rejected')await assert.rejects(()=>write(operations[n].actor,operations[n].command,time),status(429));
+ assert.equal(await count('contribution_claims'),2);
  const first=attempts.find(result=>result.status==='fulfilled').value,actor=first.claim.author.kind==='HUMAN'?sponsor:first.claim.author.id===a.command.id?a.actor:b.actor;await write(actor,release(first.task,first.claim),time);await write(b.actor,claim(tasks.find(t=>!attempts.some(result=>result.status==='fulfilled'&&result.value.task.id===t.item.id)).item),time);assert.equal(await count('contribution_claims'),3);
 });
 

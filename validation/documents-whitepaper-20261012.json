@@ -1,0 +1,306 @@
+{
+  "kind": "DOCUMENTS_WHITEPAPER_LOCAL_VALIDATION",
+  "version": 1,
+  "capturedAt": "2026-10-11T23:10:50.088717+00:00",
+  "status": "LOCAL_CHECKS_COMPLETE",
+  "source": {
+    "openingHead": "718950116dfc1e6c1a713fe10a5be2aeffc8ff1a",
+    "openingPublicCommit": "059d1210f1461fbeea4ab9e9391fbfd80ce7266e",
+    "frozenFileCount": 754,
+    "frozenSourceDigest": "4fee269bd24055ff26e4ff831c96fd826310af3db054628c506315dcd9d6dbf8",
+    "freeze": {
+      "file": "final-2-freeze.json",
+      "bytes": 189249,
+      "sha256": "5f58822c3af07635684e6d51774397c74485f8e70e3e7ccb20bb07584de7b95c"
+    },
+    "receiptExcludedFromFreeze": "validation/documents-whitepaper-20261012.json",
+    "selfExclusionMeaning": "Checks cover the frozen application and tests; this later JSON records those observations and is included in the subsequent exact source export."
+  },
+  "implemented": {
+    "libraryRoute": "/documents",
+    "readerRoute": "/documents/whitepaper",
+    "navigation": "Documents link in the existing public network",
+    "resourceCards": 6,
+    "readerSections": 8,
+    "pdf": "/documents/opengrail-whitepaper-v0.1.pdf",
+    "markdown": "/documents/opengrail-whitepaper-v0.1.md",
+    "version": "0.1",
+    "documentDate": "2026-10-12",
+    "wordCount": 1433,
+    "pdfPageObjects": 5,
+    "approach": "Existing OpenGrail branding, server-rendered pages, responsive library and reader, native anchors/downloads, keyboard skip link and print styles."
+  },
+  "finalChecks": {
+    "tests": {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "npm",
+        "test"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-11T22:52:52.947452+00:00",
+      "finishedAt": "2026-10-11T23:10:10.140080+00:00",
+      "elapsedSeconds": 1037.1926280520856,
+      "log": {
+        "file": "final-2-tests.log",
+        "bytes": 268609,
+        "sha256": "6d452648a5376b8bf3cfdec54b15da09596f447ecaf775603a9f64ea1f6e2895"
+      }
+    },
+    "typecheck": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-11T22:52:52.934496+00:00",
+      "finishedAt": "2026-10-11T22:53:12.126681+00:00",
+      "elapsedSeconds": 19.1921827448532,
+      "log": {
+        "file": "final-2-typecheck.log",
+        "bytes": 53,
+        "sha256": "2277e5aae273aa03509a2cff4e2316ffb2a951528bad452d66d30f23a188f655"
+      }
+    },
+    "build": {
+      "command": [
+        "node",
+        "/root/.codex/plugins/cache/openai-curated-remote/sites/1.0.0/scripts/build-site.mjs"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-11T22:52:52.944460+00:00",
+      "finishedAt": "2026-10-11T22:53:01.050093+00:00",
+      "elapsedSeconds": 8.105639406945556,
+      "log": {
+        "file": "final-2-build.log",
+        "bytes": 5124,
+        "sha256": "605f180c9840155fc9360d4be3158128d36713aed3321b00fa0847349bfa3f34"
+      }
+    },
+    "diff": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "startedAt": "2026-10-11T22:52:52.934836+00:00",
+      "finishedAt": "2026-10-11T22:52:52.938138+00:00",
+      "elapsedSeconds": 0.003305662889033556,
+      "log": {
+        "file": "final-2-diff.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  },
+  "fullSuite": {
+    "tests": 2228,
+    "pass": 2228,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "retainedFailedAttempt": {
+    "scope": "Initial full suite on final-1 source; failures retained rather than relabelled as passing.",
+    "counts": {
+      "tests": 2228,
+      "pass": 2225,
+      "fail": 3,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "exitCode": 1,
+    "sourceUnchanged": true,
+    "log": {
+      "file": "final-1-tests.log",
+      "bytes": 278032,
+      "sha256": "9bc1b2de42eb1381807b3b25231375e6438a2b2d3ba03e86d025ba6aa0c3a469"
+    },
+    "freeze": {
+      "file": "final-1-freeze.json",
+      "bytes": 189249,
+      "sha256": "79b2934392b09e4fc7791503f55b3031eefa18de1226545e63be0c2df7f544b3"
+    },
+    "corrections": [
+      {
+        "test": "one sponsor has at most two current leases",
+        "cause": "Atomic guarded concurrent losers may report conflict 409 or quota 429.",
+        "change": "Require exactly two retained winners, allow only documented concurrent 409/429, then retry each identical original losing operation after settlement and require quota 429 with no extra rows."
+      },
+      {
+        "test": "a nominal start passing during fresh checks",
+        "cause": "The test intentionally jumps Date.now three days; its own wall-clock wait stopped prematurely.",
+        "change": "Use performance.now for test polling while preserving the application clock jump and both prospective refusal/stable historical retry assertions."
+      },
+      {
+        "test": "parent chmod still stops confirmation",
+        "cause": "Cleanup SIGTERM could kill the already fail-stopping process after its signal handler was removed, producing a null exit code.",
+        "change": "Observe bounded natural receiver closure first and require exit code 1 with no terminating signal. Preserve HTTP503, writer identity and journal assertions. Apply the same observation to the adjacent parent replacement/symlink case."
+      }
+    ],
+    "productionLogicChangedByCorrections": false
+  },
+  "targetedCorrectionChecks": {
+    "counts": {
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "log": {
+      "file": "targeted-corrections-1.log",
+      "bytes": 642,
+      "sha256": "d2169c9146f55ae6a1ee347bcaac6063431ed6480f5e50eb3036dc818c858f23"
+    },
+    "receipt": {
+      "file": "targeted-corrections-1-exit.json",
+      "bytes": 763,
+      "sha256": "e2a5173ba50a7768d3b3490e88346b5fdb618106679c57a56689610d2a103ead"
+    }
+  },
+  "build": {
+    "fileCount": 384,
+    "manifest": {
+      "file": "final-2-build-manifest.json",
+      "bytes": 78824,
+      "sha256": "78f01a6f15dbf67f011d66fec2a08785326610a5e6ca0ed0cadf1c56768d4ea3"
+    },
+    "allCurrentLocalBuildBytesAndModesMatchManifest": true
+  },
+  "browser": {
+    "scope": "ANONYMOUS_LOCAL_FIRST_PARTY_ONLY",
+    "startedAt": "2026-10-11T22:54:52.430Z",
+    "finishedAt": "2026-10-11T22:54:56.428Z",
+    "capture": {
+      "file": "preview/capture-3.json",
+      "bytes": 6797,
+      "sha256": "e58265003bfcc586fc7507c7bc0c65f01e9cf0800148f5670cb4c3502181c6b2"
+    },
+    "rootVisualAndTeardownReview": {
+      "file": "final-2-browser-review.json",
+      "bytes": 1433,
+      "sha256": "e89a1ad6df43a0a23b85ea2d2ad6c59a7b71c7d2c0821d14f7d314bc9500d149"
+    },
+    "views": [
+      {
+        "name": "documents-desktop",
+        "width": 1440,
+        "scrollWidth": 1440
+      },
+      {
+        "name": "documents-mobile",
+        "width": 390,
+        "scrollWidth": 390
+      },
+      {
+        "name": "whitepaper-mobile",
+        "width": 390,
+        "scrollWidth": 390
+      },
+      {
+        "name": "whitepaper-desktop",
+        "width": 1440,
+        "scrollWidth": 1440
+      }
+    ],
+    "loopbackBrowserReadCount": 50,
+    "resourceReads": [
+      {
+        "path": "/agent-guide",
+        "status": 200,
+        "redirectFollowed": false
+      },
+      {
+        "path": "/agent-guide/strategies",
+        "status": 200,
+        "redirectFollowed": false
+      },
+      {
+        "path": "/research-policy",
+        "status": 200,
+        "redirectFollowed": false
+      },
+      {
+        "path": "/experiment-policy",
+        "status": 200,
+        "redirectFollowed": false
+      },
+      {
+        "path": "/contribute",
+        "status": 200,
+        "redirectFollowed": false
+      },
+      {
+        "path": "/arena",
+        "status": 200,
+        "redirectFollowed": false
+      }
+    ],
+    "downloads": [
+      {
+        "name": "opengrail-whitepaper-v0.1.pdf",
+        "bytes": 63355,
+        "sha256": "359d50d6a43f7595af4aee5cc1a1dc7a11c8b720c3157eaae697cda016f62bda"
+      },
+      {
+        "name": "opengrail-whitepaper-v0.1.md",
+        "bytes": 11103,
+        "sha256": "4bc52b9831d9601d6cb0eddc786334847ee46eaa4f4f55bf1041af3b701027aa"
+      }
+    ],
+    "assertions": {
+      "homeNavigation": true,
+      "resourcesReturn200WithoutRedirect": true,
+      "eightCompleteReaderSections": true,
+      "exactPDFAndMarkdownDownloads": true,
+      "contentsAnchor": true,
+      "nativeKeyboardSkipLink": true,
+      "desktopMobileNoOverflow": true,
+      "printChromeHidden": true,
+      "staticReaderNoPublicWrites": true
+    },
+    "publicWriteCount": 0,
+    "deniedRequestCount": 0,
+    "pageErrorCount": 0,
+    "consoleErrorCount": 0,
+    "failedResponseCount": 0,
+    "ownedPreviewStopped": true
+  },
+  "contentBoundaries": {
+    "currentLocalPrototypeAndFutureProposalDistinguished": true,
+    "liveFinancialExecution": "DISABLED",
+    "qualifiedPerformance": "NOT_ESTABLISHED",
+    "independence": "NOT_ESTABLISHED",
+    "businessModel": "HYPOTHESIS",
+    "projectLicense": "NOT_SELECTED",
+    "tokenOrBettingOffering": "NOT_IMPLEMENTED_BY_THIS_CHANGE"
+  },
+  "preservation": {
+    "unchangedPinnedFileCount": 45,
+    "privateApplicationHeadUnchanged": true,
+    "privateApplicationClean": true,
+    "hostingIdentityAndBindingsUnchanged": true,
+    "packageInputsUnchanged": true,
+    "existingProgramAndTradingCoreUnchanged": true
+  },
+  "limits": [
+    "Anonymous local browser checks do not establish working hosted authentication, public APIs or independent participation.",
+    "Desktop/mobile screenshots and keyboard checks are not a complete accessibility audit.",
+    "Local experiments and fixed evaluator reconstruction do not establish independently qualified performance or future returns.",
+    "Original complete programmable SHORT Search-to-collector acceptance and durable public forward-result registration remain unmet.",
+    "No deployment, audience change, custom-domain mutation, financial order, payment, investment, transfer, new paid service, external outreach or hosted CI is authorized by this validation.",
+    "Publication remains on hold at the owner\u2019s request; source saving does not establish a live website."
+  ]
+}
