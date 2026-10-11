@@ -51,7 +51,7 @@ Example uses a reviewed first-party binary and invented prices. Caller files are
 
 ## Outstanding full goal
 
-Per-candidate chronological TRAIN/TEST generation, persistent forward program state and independent qualification remain to be integrated. Public program manifests/outcomes, same-implementation generator comparison, paired human computational review and comparative arena provenance are prepared in task 031; production deployment and hosted acceptance remain unverified. Browser/source preparation is not hosted acceptance, recruited operators, authentic market-data custody or verified reputation. The [task specification](tasks/030-programmable-signal-strategies.md) keeps these requirements explicit. No profitable-strategy claim follows from passing synthetic tests.
+Programmable selection-before-TEST is integrated separately in task 032: exact V2 candidates generate their own signals, complete adverse TRAIN evidence locks selection, and a sole separate TEST starts fresh. See [the programmable search workflow](program-search.md). Persistent forward program state, existing Plans integration and independent qualification remain outstanding. Public program manifests/outcomes, same-implementation generator comparison, paired human computational review and comparative arena provenance are prepared in task 031; production deployment and hosted acceptance remain unverified. Browser/source preparation is not hosted acceptance, recruited operators, authentic market-data custody or verified reputation. The [task specification](tasks/030-programmable-signal-strategies.md) keeps these requirements explicit. No profitable-strategy claim follows from passing synthetic tests.
 
 
 ## Share a complete program experiment

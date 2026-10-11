@@ -66,7 +66,7 @@ test('comparison arena describes bounded public cohorts without granting evaluat
  const spec=await (await get()).json(),arena=spec.comparisonArena;
  assert.equal(arena.page,'/arena');assert.equal(arena.selection,'USER_SELECTED_EXACT_PUBLIC_COHORT');
  assert.equal(arena.localCommand,'node scripts/compare-arena.mjs compare MEMBERS.json NEW_REPORT.json');assert.equal(arena.offlineVisibility,'SUPPLIED_SNAPSHOTS_NOT_CURRENTLY_VERIFIED');assert.equal(arena.offlineReviewHeads,'SUPPLIED_NOT_AUTHENTICATED_OR_CURRENT');
- assert.deepEqual(arena.methods,['BATCH_DEMO']);assert.equal(arena.continuousEvidence,'RETAINED_NONCOMPARABLE_MEMBER');
+ assert.deepEqual(arena.methods,['BATCH_DEMO','PROGRAM_DEMO']);assert.equal(arena.commonProtocol,'METHOD_SPECIFIC_EXACT_COMMON_PROTOCOL');assert.match(arena.protocols.BATCH_DEMO,/EXACT_DATASET_SIGNALS/);assert.match(arena.protocols.PROGRAM_DEMO,/PER_PROGRAM_GENERATED_SIGNALS/);assert.equal(arena.programGenerator,'FULL_SAME_IMPLEMENTATION_RECONSTRUCTION');assert.equal(arena.continuousEvidence,'RETAINED_NONCOMPARABLE_MEMBER');
  assert.equal(arena.riskRanking,'DESCRIPTIVE_NONANNUALIZED_PERIOD_SHARPE');assert.equal(arena.classification,'AUTHOR_REPORTED');assert.equal(arena.qualification,'NONE');assert.equal(arena.independence,'NOT_ESTABLISHED');
  for(const key of ['allMembersRequired','adverseAttemptsRetained','currentReviewHistory'])assert.equal(arena[key],true,key);
  for(const key of ['completeExternalSearchHistory','independentCustody','qualifiedRankings','publicReportSubmission','hostedCompute','submittedCodeExecution','newPermissions','ordersEnabled','liveEnabled'])assert.equal(arena[key],false,key);
@@ -104,7 +104,7 @@ test('verified public foundation and actual issue metadata establish no hosted C
  for(const field of ['sourceAccessRequired','tokenIntake','automaticSubmission','newPermissions','hostedConnectivityVerified'])assert.equal(guide[field],false,field);
   assert.deepEqual(contributions.sourceRepository,{visibility:'PUBLIC',publicSourceAllowed:true,url:'https://github.com/wesseltl/opengrail',repositoryId:1414301089,invitedAccessRequired:false,connectionEstablished:true,applicationSourcePublished:true,applicationSourceBranch:'source/opengrail-foundation',applicationSourceCommit:'e727f28ad9772abd8f8c165dd016c02c22715fbc',applicationSourceTree:'551a50f9aa25807458a7f8c2fad3f9653c301d56',applicationSourceUrl:'https://github.com/wesseltl/opengrail/tree/e727f28ad9772abd8f8c165dd016c02c22715fbc',applicationSourceFileCount:575,defaultBranch:'main',defaultBranchApplicationSourcePublished:false,verifiedAt:'2026-10-11',hostedCiVerified:false});
   assert.deepEqual(contributions.starterIssues,[{number:1,url:'https://github.com/wesseltl/opengrail/issues/1',title:'Keyboard and mobile discussion usability'},{number:2,url:'https://github.com/wesseltl/opengrail/issues/2',title:'Schema-safe contributor onboarding'},{number:3,url:'https://github.com/wesseltl/opengrail/issues/3',title:'Independent retained-retry review'}]);
-  assert.equal(contributions.starterIssueSourceCommit,contributions.sourceRepository.applicationSourceCommit);
+  assert.equal(contributions.starterIssueSourceCommit,contributions.sourceRepository.applicationSourceCommit);assert.equal(contributions.sourceBaselines.starterIssues,contributions.starterIssueSourceCommit);assert.deepEqual(contributions.sourceBaselines.lastVerified,{commit:'3740a4d242951e1ea0268d17d313df813f76351b',tree:'5c24fd5db2382552af924de398500ca7d75ec5b6',files:695,verifiedAt:'2026-10-11',scope:'BEFORE_TASK_032',hostedAvailabilityVerified:false});
   assert.equal(contributions.platformTaskMapping,'OPERATOR_DECLARED_NOT_VERIFIED');
   assert.deepEqual(contributions.publicHandoff,{format:'PUBLIC_CONTRIBUTION_HANDOFF',guide:'docs/public-contribution-handoff.md',cli:'scripts/contribution-public-handoff.mjs',transport:'SPONSOR_LOCAL_OFFLINE',platformSubmissionField:'handoffDigest',optionalPublicCi:true,publicCiPolicyVersion:1,snapshotProvenance:'OFFLINE_UNAUTHENTICATED_SNAPSHOT',issueTaskCorrespondence:'OPERATOR_DECLARED_NOT_VERIFIED',classification:'AUTHOR_REPORTED',qualification:'NONE',networkRequests:false,credentialIntake:false,checkerExecution:false,artifactRetrieval:false,mergeAuthority:false,deploymentAuthority:false,reputationAwarded:false,privateHandoffPreserved:true});
  const evidence=contributions.privateCiEvidence;assert.equal(evidence.policyVersion,2);assert.equal(evidence.transport,'SPONSOR_LOCAL_REPOSITORY_PINNED_GET');assert.equal(evidence.evidence,'PRIVATE_LOCAL_MODE_0600');
@@ -199,4 +199,18 @@ test('research assistance contract retains domain separation, human review and e
  assert.match(endpoint.readSelection,/No domain preserves the strategy feed/);
  assert.equal(spec.endpoints.find(item=>item.path===assist.machineGuide).authentication,'NONE');
  assert.equal(spec.credentials.fixedScope,'PUBLIC_RESEARCH_SUBMIT');
+});
+
+
+test('programmable search advertises real local generation and durable admission without forward or public authority',async()=>{
+ const spec=await (await get()).json(),search=spec.programmableStrategies.search;
+ assert.equal(search.page,'/search');assert.equal(search.guide,'/agent-guide/program-search');assert.equal(search.cli,'scripts/program-search.mjs');assert.equal(search.method,'LOCAL_PROGRAM_SEARCH');assert.equal(search.sourceVersion,2);
+ assert.equal(search.limits.attemptBytes,22*1024*1024);assert.equal(search.limits.ledgerBytes,128*1024*1024);assert.equal(search.limits.candidates,4);
+ for(const key of ['allCandidateOutcomesRetained','wholeGeneratorReconstruction','freshStatePerPhase','oneTestAdmission','admissionBeforeWorker'])assert.equal(search[key],true,key);
+ for(const key of ['suppliedSignals','mixedRuleProgramCohort','automaticPublication','hostedCompute'])assert.equal(search[key],false,key);
+ assert.equal(search.browserPersistence,'OWNER_SCOPED_INDEXEDDB');assert.equal(search.generator,'SAME_IMPLEMENTATION_RECONSTRUCTION');assert.equal(search.qualification,'NONE');assert.equal(search.unseen,'NOT_ESTABLISHED');assert.equal(spec.programmableStrategies.forward,'NOT_INTEGRATED');
+ assert.equal(spec.strategySearch.browserPersistence,'PAGE_MEMORY_AND_EXPLICIT_EXPORT');assert.equal(spec.strategySearch.limits.ledgerBytes,64*1024*1024);
+ assert.equal(spec.executionEnabled,false);assert(!spec.endpoints.some(endpoint=>endpoint.path.includes('program-search')));
+ // Actual anonymous route must only describe local computation, never perform it.
+ for(const name of ['evaluateProgramSearchAttempt','runProgramReplay','compareProgramOutcome'])assert(!bundle.outputFiles[0].text.includes('function '+name),name);
 });

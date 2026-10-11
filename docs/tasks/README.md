@@ -41,3 +41,5 @@ An early contribution is useful when it satisfies a reviewed task, adds a meanin
 - [030 — Programmable signal strategies](030-programmable-signal-strategies.md): real restricted binary source and local causal execution, exact fingerprints, complete adverse history; public registry/search/forward integration remains outstanding.
 
 - [031 — Public program experiments](031-public-program-experiments.md): exact inert public manifests/outcomes, local generator reconstruction, paired review and comparative provenance; hosted rollout and independent qualification remain separate.
+
+- [032 — Programmable selection before TEST](032-program-search.md): actual per-candidate generators, complete reconstruction and locked sole TEST with durable local browser/CLI admission; persistent forward and independently witnessed custody remain separate.

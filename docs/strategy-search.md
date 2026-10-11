@@ -1,5 +1,7 @@
 # Selection before TEST
 
+Search offers separate Rules and Programs modes. The Rules protocol below keeps its original version, bytes and page-memory behavior. Programs uses actual restricted signal generation, durable local admission and complete retained reconstruction; see [programmable search](program-search.md). Mixing rule/program candidates is not supported in this increment.
+
 The `/search` workspace and `scripts/search-strategies.mjs` implement one bounded local selection protocol. It is separate from public experiment registration. It neither fabricates public receipts nor removes any existing post-selection concern or review blocker.
 
 Freeze two to four exact visible source snapshots, one TRAIN dataset and signals, initial capital, identical market/cost/risk definitions, a fixed return/trade/drawdown rule and the later TEST interval. No TEST prices or signals are accepted at freeze. All candidates run through the existing fixed primary and reference computations with one retained disposition each, in frozen order. Selection waits for the entire result set. Ineligible/no-trade/failed/interrupted/disagreeing trials remain retained; NO_SELECTION blocks TEST.
