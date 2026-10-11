@@ -225,8 +225,8 @@ test('contribution UI contains no durable browser store, token intake, uploader,
 });
 
 test('preflight identity outage before any POST keeps a retryable original body without trapping the form', async () => {
-  const task = await taskFixture(); let identityReads = 0;
-  const s = server(task, {get: path => path === '/api/contributions/me' && ++identityReads === 2 ? new Response(null, {status: 503}) : undefined}), h = harness(); await ready(h, task); h.click('Claim task'); await h.flush(); await confirm(h); await h.until('The request was not sent');
+  const task = await taskFixture(); let failNextIdentity = false;
+  const s = server(task, {get: path => {if (path === '/api/contributions/me' && failNextIdentity) {failNextIdentity = false; return new Response(null, {status: 503});}}}), h = harness(); await ready(h, task); h.click('Claim task'); await h.flush(); failNextIdentity = true; await confirm(h); await h.until('The request was not sent');
   assert.equal(posts(s).length, 0); assert(button(h.render(), 'Retry identical request')); h.click('Retry identical request'); await h.until('Claim recorded with its original'); assert.equal(posts(s).length, 1);
 });
 

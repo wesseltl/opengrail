@@ -17,7 +17,7 @@ test('anonymous actual route returns the current API specification without ident
  assert.deepEqual(spec.endpoints.slice(0,3).map(value=>[value.path,value.methods,value.authentication]),[
   ['/api/network/capabilities',['GET'],'NONE'],['/api/network/agents',['GET','POST'],'SIGNED_IN_HUMAN'],['/api/network/agent',['GET'],'AGENT_BEARER'],
  ]);assert(spec.endpoints.slice(0,3).every(value=>value.queryParameters===false));
- assert.deepEqual(spec.endpoints.slice(3).map(value=>[value.path,value.methods]),[['/api/research',['GET','POST']],['/api/research/agent',['POST']],['/api/research/me',['GET']],['/api/research/reports',['GET']],['/api/strategies',['GET','POST']],['/api/strategies/agent',['POST']],['/api/strategies/me',['GET']],['/api/strategies/reports',['GET']],['/api/experiments',['GET','POST']],['/api/experiments/agent',['POST']],['/api/experiments/me',['GET']],['/api/experiments/reports',['GET']],['/api/experiments/reviews',['GET','POST']],['/api/experiments/reviews/me',['GET']],['/api/experiments/reviews/reports',['GET']],['/api/experiments/reviews/agent',['POST']],['/api/network/quickstart',['GET']],['/api/contributions',['GET','POST']],['/api/contributions/agent',['POST']],['/api/contributions/me',['GET']],['/api/strategies/evidence',['GET']],['/api/network/strategy-quickstart',['GET']],['/api/assistance',['GET','POST']],['/api/assistance/agent',['POST']],['/api/assistance/me',['GET']],['/api/assistance/reports',['GET']],['/api/contributions/discussion',['GET','POST']],['/api/contributions/discussion/agent',['POST']],['/api/contributions/discussion/me',['GET']],['/api/contributions/discussion/reports',['GET']]]);
+ assert.deepEqual(spec.endpoints.slice(3).map(value=>[value.path,value.methods]),[['/api/research',['GET','POST']],['/api/research/agent',['POST']],['/api/research/me',['GET']],['/api/research/reports',['GET']],['/api/strategies',['GET','POST']],['/api/strategies/agent',['POST']],['/api/strategies/me',['GET']],['/api/strategies/reports',['GET']],['/api/experiments',['GET','POST']],['/api/experiments/agent',['POST']],['/api/experiments/me',['GET']],['/api/experiments/reports',['GET']],['/api/experiments/reviews',['GET','POST']],['/api/experiments/reviews/me',['GET']],['/api/experiments/reviews/reports',['GET']],['/api/experiments/reviews/agent',['POST']],['/api/network/quickstart',['GET']],['/api/contributions',['GET','POST']],['/api/contributions/agent',['POST']],['/api/contributions/me',['GET']],['/api/contributions/work',['GET']],['/api/contributions/work/agent',['GET']],['/api/strategies/evidence',['GET']],['/api/network/strategy-quickstart',['GET']],['/api/assistance',['GET','POST']],['/api/assistance/agent',['POST']],['/api/assistance/me',['GET']],['/api/assistance/reports',['GET']],['/api/contributions/discussion',['GET','POST']],['/api/contributions/discussion/agent',['POST']],['/api/contributions/discussion/me',['GET']],['/api/contributions/discussion/reports',['GET']]]);
  for(const endpoint of spec.endpoints.slice(3))assert(readFileSync('.'+endpoint.path.replace('/api/','/app/api/')+'/route.ts','utf8').length>0);
  const dependencies=Object.keys(bundle.metafile.inputs);assert(dependencies.some(value=>value.endsWith('app/api/network/capabilities/route.ts')));
  for(const forbidden of ['app/network-store.ts','app/network-http.ts','app/chatgpt-auth.ts','db/index.ts'])assert(!dependencies.some(value=>value.endsWith(forbidden)));
@@ -111,6 +111,19 @@ test('all non-GET route methods are read-only refusals with an explicit GET allo
  for(const method of ['POST','PUT','PATCH','DELETE','HEAD','OPTIONS']){
   const response=await get({method});assert.equal(response.status,405,method);assert.equal(response.headers.get('Allow'),'GET');assert.equal(response.headers.get('Cache-Control'),'no-store');assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');
  }
+});
+
+test('participant work discovery exposes exact read scopes without extending writer authority',async()=>{
+ const spec=await (await get()).json(),inbox=spec.contributions.workInbox;
+ const human=spec.endpoints.find(item=>item.path===inbox.humanReadPath),agent=spec.endpoints.find(item=>item.path===inbox.agentReadPath);
+ assert.deepEqual(human.methods,['GET']);assert.deepEqual(agent.methods,['GET']);
+ assert.equal(human.authentication,'SIGNED_IN_HUMAN');assert.equal(agent.authentication,'AGENT_BEARER');assert.equal(agent.httpsRequired,true);
+ assert.deepEqual(human.queryParameters,['cursor']);assert.deepEqual(agent.queryParameters,['cursor']);
+ assert.equal(inbox.humanScope,'OWN_AND_SPONSORED_AGENT_CLAIMS');assert.equal(inbox.agentScope,'EXACT_AUTHENTICATED_AGENT_CLAIMS');
+ assert.equal(inbox.cursorScope,'AUTHENTICATED_PARTICIPANT');assert.equal(inbox.limits.page,5);assert.equal(inbox.limits.responseBytes,524288);
+ assert.equal(inbox.retainedTerminalAttempts,true);
+ for(const field of ['frozenSnapshot','automaticPolling','automaticClaims','newWritePermissions','schemaChanged','reputationAwarded','hostedAcceptanceVerified'])assert.equal(inbox[field],false,field);
+ assert.equal(spec.credentials.fixedScope,'PUBLIC_RESEARCH_SUBMIT');
 });
 
 test('exact strategy evidence is an anonymous retained read without evaluation or qualification authority',async()=>{

@@ -2,6 +2,7 @@ import {networkAgentSchema} from './network-model';
 import {researchDigest,researchPublicHumanId,researchAuthorReferenceSchema,type ResearchAuthorReference} from './research-model';
 import type {NetworkPrincipal} from './network-store';
 import * as M from './contribution-model';
+import {contributionWorkLimits,validateContributionWorkPage,type ContributionWorkPage} from './contribution-work-model';
 
 type TaskRow={id:string;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type ClaimRow=TaskRow&{task_id:string;task_digest:string;task_sequence:number;expires_at:string};
@@ -130,6 +131,34 @@ export class ContributionRepository{
   const current=(await this.freshClaims([claim]))[0],final=await this.stableTask(fresh.task,fresh.history),read=M.contributionClaimGetSchema.parse({version:1,task:this.projectTask(final.task,final.history),item:this.projectClaim(current,after.get(claimId)!,final.history,at),executionEnabled:false});return {read,history:after.get(claimId)!};
  }
  async getClaim(claimId:string,at=new Date().toISOString()){return (await this.readClaim(claimId,at)).read;}
+ /** Authenticated bounded work discovery. Existing coordination writers are
+  * unchanged; the final SELECT observes retained rows, heads and authority. */
+ async work(actor:M.ContributionActor,cursor:string|null=null,at=new Date().toISOString()):Promise<ContributionWorkPage>{
+  clock(at);if(cursor!==null)identity(cursor);
+  const context=await this.context(actor,at),scope=context.author.kind==='HUMAN'?'SPONSOR':'AGENT',column=scope==='SPONSOR'?'sponsor_key':'author_key',selected=scope==='SPONSOR'?context.sponsor:context.key;
+  await this.requireCredential(context,at);
+  const observedClaims=new Map<string,Claim>(),observedTasks=new Map<string,Task>(),observedParents=new Map<string,TaskHistory>(),observedHistories=new Map<string,ClaimHistory>();
+  for(let attempt=0;attempt<contributionWorkLimits.reconciliationAttempts;attempt++){
+   const anchorRow=cursor?await this.db.prepare(`SELECT ${claimColumns} FROM contribution_claims WHERE id=? AND ${column}=?`).bind(cursor,selected).first<ClaimRow>():null;
+   if(cursor&&!anchorRow){await this.requireCredential(context,at);throw new M.ContributionError('Contribution work cursor not found in this participant scope.',404);}
+   const anchor=anchorRow?await this.checkClaim(anchorRow):null;
+   const rows=(await this.db.prepare(`SELECT ${claimColumns} FROM contribution_claims WHERE ${column}=? ${anchor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT ${contributionWorkLimits.page+1}`).bind(selected,...anchor?[anchor.record.createdAt,anchor.record.createdAt,anchor.record.id]:[]).all<ClaimRow>()).results;
+   if(rows.length>contributionWorkLimits.page+1||new Set(rows.map(row=>row.id)).size!==rows.length||rows.some(row=>row[column]!==selected))throw inconsistent();
+   const claims=await Promise.all(rows.map(row=>this.checkClaim(row))),allClaims=[...claims,...anchor?[anchor]:[]];
+   if(new Set(allClaims.map(claim=>claim.row.id)).size!==allClaims.length)throw inconsistent();
+   const ids=[...new Set(allClaims.map(claim=>claim.row.task_id))],taskRows=ids.length?(await this.db.prepare(`SELECT ${taskColumns} FROM contribution_tasks WHERE id IN (${ids.map(()=>'?').join(',')}) LIMIT ${ids.length+1}`).bind(...ids).all<TaskRow>()).results:[];
+   if(taskRows.length!==ids.length||new Set(taskRows.map(row=>row.id)).size!==ids.length||taskRows.some(row=>!ids.includes(row.id)))throw inconsistent();
+   const tasks=await Promise.all(taskRows.map(row=>this.checkTask(row))),byId=new Map(tasks.map(task=>[task.row.id,task])),parents=await this.taskHistories(tasks),histories=await this.claimHistories(allClaims,byId,parents,at);
+   for(const claim of allClaims){const old=observedClaims.get(claim.row.id),history=histories.get(claim.row.id)!;if(old&&JSON.stringify(old.row)!==JSON.stringify(claim.row))throw inconsistent();const previous=observedHistories.get(claim.row.id);if(previous)this.advance(previous,history);observedClaims.set(claim.row.id,claim);observedHistories.set(claim.row.id,history);}
+   for(const task of tasks){const old=observedTasks.get(task.row.id),parent=parents.get(task.row.id)!;if(old&&JSON.stringify(old.row)!==JSON.stringify(task.row))throw inconsistent();const previous=observedParents.get(task.row.id);if(previous)this.advance(previous,parent);observedTasks.set(task.row.id,task);observedParents.set(task.row.id,parent);}
+   const page=claims.slice(0,contributionWorkLimits.page),items=page.map(claim=>{const task=byId.get(claim.row.task_id)!;return {task:this.projectTask(task,parents.get(task.row.id)!),claim:this.projectClaim(claim,histories.get(claim.row.id)!,parents.get(task.row.id)!,at)};});
+   const result=await validateContributionWorkPage({version:1,scope,participant:context.author,checkedAt:at,items,nextCursor:claims.length>contributionWorkLimits.page?page.at(-1)!.row.id:null,executionEnabled:false});
+   const values:Values=[],clauses=[this.credentialClause(context,at,values),this.pinRows('contribution_tasks',tasks.map(task=>task.row),values),this.pinRows('contribution_task_events',[...parents.values()].flatMap(history=>history.rows),values),this.headsClause('contribution_task_events',tasks.map(task=>({id:task.row.id,sequence:parents.get(task.row.id)!.events.length})),values),this.pinRows('contribution_claims',allClaims.map(claim=>claim.row),values),this.pinRows('contribution_claim_events',[...histories.values()].flatMap(history=>history.rows),values),this.headsClause('contribution_claim_events',allClaims.map(claim=>({id:claim.row.id,sequence:histories.get(claim.row.id)!.events.length})),values)];
+   if(await this.db.prepare(`SELECT 1 AS contribution_work_stable WHERE ${clauses.join(' AND ')}`).bind(...values).first())return result;
+   await this.requireCredential(context,at);
+  }
+  throw new M.ContributionError('Contribution work changed during the bounded read. Refresh to inspect current records.',503);
+ }
  private pinRows(table:typeof tables[number],rows:(TaskRow|ClaimRow|EventRow)[],values:Values){
   if(!rows.length)return '1=1';const columns=table==='contribution_tasks'?['id','author_key','sponsor_key','request_id','command_digest','payload','digest','created_at']:table==='contribution_claims'?['id','task_id','task_digest','task_sequence','author_key','sponsor_key','request_id','command_digest','payload','digest','created_at','expires_at']:[table==='contribution_task_events'?'task_id':'claim_id','sequence','author_key','sponsor_key','request_id','command_digest','payload','digest','state','reason','created_at'];
   return `NOT EXISTS(SELECT 1 FROM json_each(${add(values,JSON.stringify(rows))}) expected WHERE NOT EXISTS(SELECT 1 FROM ${table} retained WHERE ${columns.map(column=>`retained.${column}=json_extract(expected.value,'$.${column}')`).join(' AND ')}))`;

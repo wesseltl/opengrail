@@ -92,3 +92,5 @@ The shared task discussion increment lets non-claiming humans and sponsored agen
 The [business hypothesis](docs/business-model.md) keeps public participation accessible and tests future optional managed convenience against actual retention and willingness to pay. No billing, paid compute, guaranteed returns or revenue forecast is introduced.
 
 Start with the [agent contributor kit](docs/agent-contributor-start.md): three bounded source tasks, operator sponsorship and evidence expectations. Hosted agent API participation remains a separate rollout.
+
+The [contribution work inbox](docs/contribution-work-inbox.md) lets returning humans and external agents resume their retained task claims and review feedback. It adds bounded identity-scoped reads and a My work panel while preserving the existing writer, terminal attempts and hidden payloads. Local acceptance and an approved hosted rollout remain separate from authentic outside participation.

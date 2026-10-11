@@ -1,5 +1,7 @@
 # Architecture audit and public isolation
 
+The participant [work inbox](contribution-work-inbox.md) adds server-derived authenticated reads of the existing contribution records. It introduces no table, credential scope, role, lease or writer. Human sponsor and exact-agent scopes use bounded canonical task/claim pairs, current suppression and retained dispositions. The existing contribution desk opens each exact claim after fresh identity and source checks; older asynchronous reads cannot replace current context or a held original command. Local evidence and hosted rollout remain separate.
+
 Reviewed locally on 11 October 2026.
 
 Computational reviews add separate immutable review, moderation and private-report tables; original experiment bytes stay intact. Reviewer configuration is distinct from moderator and agent roles, defaults to nobody, and remains uninstalled in production. Server report validation uses pure schemas/hashing; evaluator execution stays local. Exact target bytes, current visibility, quotas, request namespace and previous-head CAS fence appends. Current head is separate from creation-time page ordering. Qualification remains NONE and independence NOT_ESTABLISHED. See [the workflow](experiment-reviews.md).

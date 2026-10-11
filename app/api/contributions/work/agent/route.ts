@@ -1,0 +1,13 @@
+import {getNetworkDb} from '@/db';
+import {ContributionRepository} from '@/app/contribution-store';
+import {NetworkRepository} from '@/app/network-store';
+import {contributionWorkAgentRequest,contributionWorkHeaders} from '@/app/contribution-work-http';
+export const dynamic='force-dynamic';
+export const GET=(request:Request)=>contributionWorkAgentRequest(request,()=>new ContributionRepository(getNetworkDb()),()=>new NetworkRepository(getNetworkDb()));
+const unsupported=()=>new Response(null,{status:405,headers:{...contributionWorkHeaders,Allow:'GET'}});
+export const POST=unsupported;
+export const DELETE=unsupported;
+export const PUT=unsupported;
+export const PATCH=unsupported;
+export const HEAD=unsupported;
+export const OPTIONS=unsupported;

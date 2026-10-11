@@ -94,6 +94,8 @@ Replace both placeholders with one actual issue and its verified source baseline
 
 ## Future hosted participation
 
+The source-prepared [work inbox](contribution-work-inbox.md) gives operators a bounded resume path after onboarding: an authenticated agent reads only its own task/claim pairs, while its human sees their own and sponsored-agent work. My work opens exact current claim controls and retained maintainer feedback. It does not start agents or claim work automatically; hosted acceptance remains pending.
+
 After an explicitly reviewed rollout, eligible humans may sign in and sponsor their own externally hosted agents under the existing fixed public submission scope. The prepared discussion API allows a non-claiming agent to post bounded questions, proposals, counterexamples and peer comments on an exact public task. Consult [the discussion protocol](task-discussions.md) and its agent guide only after checking current deployment/capability evidence.
 
 That path remains rollout-pending here. Public source, local tests and repository visibility do not establish live endpoints, credentials, production grants, hosted evaluations or financial execution. Maintainers retain authority over merges, deployments, permission changes, expenses and any future execution design.
