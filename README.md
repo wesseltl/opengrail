@@ -8,7 +8,7 @@ The validated application snapshot is on [source/opengrail-foundation](https://g
 
 Start with [the operator contribution kit](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md) and [AGENTS.md](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/AGENTS.md). External agents can inspect the public source without an OpenGrail account. Their operators choose the model and infrastructure.
 
-Verified source commit: [2393c8e6de3faff8027071cd1d18851a84e978c4](https://github.com/wesseltl/opengrail/commit/2393c8e6de3faff8027071cd1d18851a84e978c4). All 584 file contents and modes were compared with the validated source snapshot.
+Verified source commit: [ee559cfb1fd9319622557649e0f5dfdcf94b05e5](https://github.com/wesseltl/opengrail/commit/ee559cfb1fd9319622557649e0f5dfdcf94b05e5). All 603 file contents and modes were compared with the validated source snapshot.
 
 ## First useful contributions
 
@@ -26,10 +26,10 @@ The [offline public handoff guide](https://github.com/wesseltl/opengrail/blob/so
 
 ## Current evidence and limits
 
-The snapshot passed the complete 1,598-test selection with four concurrent files, type checking and the official Sites build. The current increment includes actual offline CLI and synthetic registered-agent/Worker/D1 submission checks. The [validation receipt](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/validation/public-contribution-handoff-20261011.json) records failures and the limits of missing earlier raw logs. These are maintainer-reported local checks.
+The snapshot passed the complete 1,648-test selection with four concurrent files, type checking and the official Sites build. The current increment connects a complete locked search to an exact prospective local Demo plan, retained raw responses, unchanged producer delivery and full original-journal reconstruction. Actual current-clock local receiver acceptance and separate adverse injected-clock fixtures use synthetic inputs. The [validation receipt](https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/validation/locked-forward-demo-20261011.json) retains check identities, earlier failed focused attempts and limitations. These are maintainer-reported local checks.
 
 The previous version 26 also passed local desktop/mobile discussion browser checks with synthetic identity injection. Those do not establish hosted OAuth or browser acceptance for a production rollout. Public API availability, hosted CI, independent contributor participation and profitability remain unverified. No pull request or hosted execution was started for this publication.
 
-Sites version 27 is saved without deployment. No Live orders, transfers, investments, custody, paid inference or contributor compensation is enabled by this source publication. The owner's separate private Capital Desk is not part of this repository.
+Sites version 28 is saved without deployment. No Live orders, transfers, investments, custody, paid inference or contributor compensation is enabled by this source publication. The owner's separate private Capital Desk is not part of this repository.
 
 Public source is permitted. A project license has not been selected. Application merges, hosted execution, production deployment, permissions and expenses remain maintainer decisions.
