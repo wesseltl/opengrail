@@ -1,0 +1,802 @@
+{
+  "version": 1,
+  "kind": "LOCAL_EXPERIMENT_ATTEMPT",
+  "classification": "AUTHOR_REPORTED",
+  "qualification": "NONE",
+  "independence": "NOT_ESTABLISHED",
+  "ordersEnabled": false,
+  "attemptId": "91000000-0000-4000-8000-000000000050",
+  "startedAt": "2026-10-11T14:00:00.000Z",
+  "finishedAt": "2026-10-11T14:01:00.000Z",
+  "outcomeRequestId": "91000000-0000-4000-8000-000000000051",
+  "outcomeId": "91000000-0000-4000-8000-000000000052",
+  "captured": {
+    "manifest": {
+      "id": "91000000-0000-4000-8000-000000000031",
+      "digest": "35e82570ee24d759d513d4292d962acc0a6facf1b5bc0241014a1e0ac852a7b0",
+      "type": "MANIFEST",
+      "requestId": "91000000-0000-4000-8000-000000000030",
+      "createdAt": "2026-10-11T13:00:00.000Z",
+      "author": {
+        "kind": "HUMAN",
+        "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "strategy": {
+        "id": "91000000-0000-4000-8000-000000000001",
+        "digest": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09"
+      },
+      "manifest": null,
+      "state": "VISIBLE",
+      "reason": null,
+      "suppression": null,
+      "reporting": "UNREPORTED",
+      "outcomeCount": 0,
+      "record": {
+        "version": 1,
+        "id": "91000000-0000-4000-8000-000000000031",
+        "requestId": "91000000-0000-4000-8000-000000000030",
+        "createdAt": "2026-10-11T13:00:00.000Z",
+        "author": {
+          "kind": "HUMAN",
+          "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "type": "MANIFEST",
+        "content": {
+          "name": "Chronological TEST · 91000000-0000-4000-8000-000000000010",
+          "input": {
+            "version": 1,
+            "requestId": "91000000-0000-4000-8000-000000000032",
+            "evaluatorVersion": "opengrail-demo-v1",
+            "strategy": {
+              "record": {
+                "version": 1,
+                "id": "91000000-0000-4000-8000-000000000001",
+                "rootId": "91000000-0000-4000-8000-000000000001",
+                "revision": 1,
+                "requestId": "91000000-0000-4000-8000-000000000002",
+                "createdAt": "2026-10-11T10:00:00.000Z",
+                "author": {
+                  "kind": "HUMAN",
+                  "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                  "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                },
+                "content": {
+                  "name": "INVENTED local chronological DCA source",
+                  "description": "Synthetic ascending training prices followed by declining test prices; no registered participant or real market source.",
+                  "assumptions": "One lifetime DCA entry per independent cold start. Fee 10 basis points and adverse slippage 10 basis points per side are chosen synthetic assumptions, not measured exchange fees or real fills.",
+                  "falsification": "Reject if the later losing partition is hidden, inherited positions leak into it, or either artifact binds to the original full input.",
+                  "sources": [],
+                  "definition": {
+                    "schemaVersion": 1,
+                    "market": {
+                      "symbol": "BTC/USDT",
+                      "timeframe": "1h",
+                      "direction": "LONG"
+                    },
+                    "entry": {
+                      "type": "DCA",
+                      "intervalBars": 1,
+                      "maxEntries": 1
+                    },
+                    "risk": {
+                      "positionPct": 10,
+                      "maxOpenPositions": 1,
+                      "stopLossPct": 20,
+                      "takeProfitPct": 100,
+                      "maxDailyLossPct": 5
+                    },
+                    "costs": {
+                      "feeBps": 10,
+                      "slippageBps": 10
+                    },
+                    "execution": {
+                      "mode": "DEMO",
+                      "leverage": 1,
+                      "ordersEnabled": false
+                    }
+                  },
+                  "relation": null
+                },
+                "policyAccepted": "public-strategy-v1",
+                "verification": "UNTESTED",
+                "executionEnabled": false
+              },
+              "digest": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09"
+            },
+            "dataset": {
+              "version": 1,
+              "id": "91000000-0000-4000-8000-000000000033",
+              "provenance": "SYNTHETIC",
+              "rights": {
+                "permission": "CREATED_SYNTHETIC",
+                "acknowledged": true,
+                "note": "Invented twelve-bar ascending/declining fixture created for local reproducibility only. No real market data, public registration or producer authentication."
+              },
+              "symbol": "BTC/USDT",
+              "timeframe": "1h",
+              "bars": [
+                {
+                  "closedAt": "2026-10-01T07:00:00.000Z",
+                  "open": 100,
+                  "high": 101,
+                  "low": 99,
+                  "close": 100,
+                  "volume": 10
+                },
+                {
+                  "closedAt": "2026-10-01T08:00:00.000Z",
+                  "open": 92,
+                  "high": 93,
+                  "low": 91,
+                  "close": 92,
+                  "volume": 10
+                },
+                {
+                  "closedAt": "2026-10-01T09:00:00.000Z",
+                  "open": 84,
+                  "high": 85,
+                  "low": 83,
+                  "close": 84,
+                  "volume": 10
+                },
+                {
+                  "closedAt": "2026-10-01T10:00:00.000Z",
+                  "open": 76,
+                  "high": 77,
+                  "low": 75,
+                  "close": 76,
+                  "volume": 10
+                },
+                {
+                  "closedAt": "2026-10-01T11:00:00.000Z",
+                  "open": 68,
+                  "high": 69,
+                  "low": 67,
+                  "close": 68,
+                  "volume": 10
+                },
+                {
+                  "closedAt": "2026-10-01T12:00:00.000Z",
+                  "open": 60,
+                  "high": 61,
+                  "low": 59,
+                  "close": 60,
+                  "volume": 10
+                }
+              ]
+            },
+            "signals": [],
+            "initialCapital": 1000,
+            "hypothesis": "A profitable earlier synthetic segment does not prevent a later synthetic loss under the same fixed strategy and independently funded cold starts.",
+            "falsification": "Reject if test loss disappears, future test bars alter training, or the same portfolio is implied across the reset.",
+            "emergencyStopAt": null
+          },
+          "evaluator": {
+            "version": "opengrail-demo-v1",
+            "sourceVersion": "84a1a668ef160bc3c9c4e0596a514b5d15e6dd49",
+            "sourceDigest": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51",
+            "methodDigest": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+          },
+          "baseline": "COST_AWARE_LONG_SAME_ALLOCATION_V1",
+          "disclosures": {
+            "search": {
+              "trialCount": 1,
+              "selection": "FIRST_DECLARED",
+              "logCompleteness": "PARTIAL",
+              "log": "One deliberately constructed rising/falling local fixture from the core regression. This excludes prior development and external research; it is not a complete strategy-search history."
+            },
+            "validation": {
+              "trainEvaluationOverlap": "UNKNOWN",
+              "holdoutDeclared": false,
+              "holdoutPriorAccess": "SEEN",
+              "holdoutReuseCount": 0,
+              "note": "Both segments are invented, supplied and fully visible before planning. No untouched holdout, independent qualification or predictive performance is claimed."
+            },
+            "transformations": [],
+            "seeds": [],
+            "conflicts": {
+              "sharedDependencies": [
+                "Same local author",
+                "Fixed method and JavaScript schemas",
+                "Deliberately constructed synthetic OHLC"
+              ],
+              "other": "Invented public identities, receipt timestamps and visible snapshots are illustrative data, not authenticated server records."
+            },
+            "publication": {
+              "dataRights": true,
+              "publicData": true,
+              "publicArtifact": true
+            }
+          }
+        },
+        "flags": [
+          "SOURCE_EXECUTION_UNVERIFIED",
+          "TIMING_UNVERIFIED",
+          "INCOMPLETE_SEARCH_LOG",
+          "OVERLAP_UNKNOWN",
+          "NO_HOLDOUT",
+          "HOLDOUT_SEEN",
+          "SHARED_DEPENDENCIES"
+        ],
+        "policyAccepted": "public-experiment-v1",
+        "classification": "AUTHOR_REPORTED",
+        "executionEnabled": false
+      },
+      "moderation": []
+    },
+    "source": {
+      "id": "91000000-0000-4000-8000-000000000001",
+      "digest": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09",
+      "rootId": "91000000-0000-4000-8000-000000000001",
+      "revision": 1,
+      "requestId": "91000000-0000-4000-8000-000000000002",
+      "createdAt": "2026-10-11T10:00:00.000Z",
+      "author": {
+        "kind": "HUMAN",
+        "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      },
+      "state": "VISIBLE",
+      "reason": null,
+      "record": {
+        "version": 1,
+        "id": "91000000-0000-4000-8000-000000000001",
+        "rootId": "91000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "requestId": "91000000-0000-4000-8000-000000000002",
+        "createdAt": "2026-10-11T10:00:00.000Z",
+        "author": {
+          "kind": "HUMAN",
+          "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "content": {
+          "name": "INVENTED local chronological DCA source",
+          "description": "Synthetic ascending training prices followed by declining test prices; no registered participant or real market source.",
+          "assumptions": "One lifetime DCA entry per independent cold start. Fee 10 basis points and adverse slippage 10 basis points per side are chosen synthetic assumptions, not measured exchange fees or real fills.",
+          "falsification": "Reject if the later losing partition is hidden, inherited positions leak into it, or either artifact binds to the original full input.",
+          "sources": [],
+          "definition": {
+            "schemaVersion": 1,
+            "market": {
+              "symbol": "BTC/USDT",
+              "timeframe": "1h",
+              "direction": "LONG"
+            },
+            "entry": {
+              "type": "DCA",
+              "intervalBars": 1,
+              "maxEntries": 1
+            },
+            "risk": {
+              "positionPct": 10,
+              "maxOpenPositions": 1,
+              "stopLossPct": 20,
+              "takeProfitPct": 100,
+              "maxDailyLossPct": 5
+            },
+            "costs": {
+              "feeBps": 10,
+              "slippageBps": 10
+            },
+            "execution": {
+              "mode": "DEMO",
+              "leverage": 1,
+              "ordersEnabled": false
+            }
+          },
+          "relation": null
+        },
+        "policyAccepted": "public-strategy-v1",
+        "verification": "UNTESTED",
+        "executionEnabled": false
+      },
+      "moderation": []
+    }
+  },
+  "inputDigest": "988c09805602f1cef216997ecb32cac9a1276cdcf85beaffc022ce982432276b",
+  "implementations": {
+    "primary": {
+      "version": "opengrail-demo-v1",
+      "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51"
+    },
+    "reference": {
+      "version": "opengrail-reference-v1",
+      "sourceSha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0"
+    }
+  },
+  "status": "EVALUATED",
+  "reason": null,
+  "artifact": {
+    "version": 1,
+    "requestId": "91000000-0000-4000-8000-000000000032",
+    "evaluatorVersion": "opengrail-demo-v1",
+    "classification": "AUTHOR_REPORTED",
+    "mode": "SIMULATED",
+    "ordersEnabled": false,
+    "status": "COMPLETED",
+    "reason": null,
+    "input": {
+      "version": 1,
+      "requestId": "91000000-0000-4000-8000-000000000032",
+      "evaluatorVersion": "opengrail-demo-v1",
+      "strategy": {
+        "record": {
+          "version": 1,
+          "id": "91000000-0000-4000-8000-000000000001",
+          "rootId": "91000000-0000-4000-8000-000000000001",
+          "revision": 1,
+          "requestId": "91000000-0000-4000-8000-000000000002",
+          "createdAt": "2026-10-11T10:00:00.000Z",
+          "author": {
+            "kind": "HUMAN",
+            "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+          },
+          "content": {
+            "name": "INVENTED local chronological DCA source",
+            "description": "Synthetic ascending training prices followed by declining test prices; no registered participant or real market source.",
+            "assumptions": "One lifetime DCA entry per independent cold start. Fee 10 basis points and adverse slippage 10 basis points per side are chosen synthetic assumptions, not measured exchange fees or real fills.",
+            "falsification": "Reject if the later losing partition is hidden, inherited positions leak into it, or either artifact binds to the original full input.",
+            "sources": [],
+            "definition": {
+              "schemaVersion": 1,
+              "market": {
+                "symbol": "BTC/USDT",
+                "timeframe": "1h",
+                "direction": "LONG"
+              },
+              "entry": {
+                "type": "DCA",
+                "intervalBars": 1,
+                "maxEntries": 1
+              },
+              "risk": {
+                "positionPct": 10,
+                "maxOpenPositions": 1,
+                "stopLossPct": 20,
+                "takeProfitPct": 100,
+                "maxDailyLossPct": 5
+              },
+              "costs": {
+                "feeBps": 10,
+                "slippageBps": 10
+              },
+              "execution": {
+                "mode": "DEMO",
+                "leverage": 1,
+                "ordersEnabled": false
+              }
+            },
+            "relation": null
+          },
+          "policyAccepted": "public-strategy-v1",
+          "verification": "UNTESTED",
+          "executionEnabled": false
+        },
+        "digest": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09"
+      },
+      "dataset": {
+        "version": 1,
+        "id": "91000000-0000-4000-8000-000000000033",
+        "provenance": "SYNTHETIC",
+        "rights": {
+          "permission": "CREATED_SYNTHETIC",
+          "acknowledged": true,
+          "note": "Invented twelve-bar ascending/declining fixture created for local reproducibility only. No real market data, public registration or producer authentication."
+        },
+        "symbol": "BTC/USDT",
+        "timeframe": "1h",
+        "bars": [
+          {
+            "closedAt": "2026-10-01T07:00:00.000Z",
+            "open": 100,
+            "high": 101,
+            "low": 99,
+            "close": 100,
+            "volume": 10
+          },
+          {
+            "closedAt": "2026-10-01T08:00:00.000Z",
+            "open": 92,
+            "high": 93,
+            "low": 91,
+            "close": 92,
+            "volume": 10
+          },
+          {
+            "closedAt": "2026-10-01T09:00:00.000Z",
+            "open": 84,
+            "high": 85,
+            "low": 83,
+            "close": 84,
+            "volume": 10
+          },
+          {
+            "closedAt": "2026-10-01T10:00:00.000Z",
+            "open": 76,
+            "high": 77,
+            "low": 75,
+            "close": 76,
+            "volume": 10
+          },
+          {
+            "closedAt": "2026-10-01T11:00:00.000Z",
+            "open": 68,
+            "high": 69,
+            "low": 67,
+            "close": 68,
+            "volume": 10
+          },
+          {
+            "closedAt": "2026-10-01T12:00:00.000Z",
+            "open": 60,
+            "high": 61,
+            "low": 59,
+            "close": 60,
+            "volume": 10
+          }
+        ]
+      },
+      "signals": [],
+      "initialCapital": 1000,
+      "hypothesis": "A profitable earlier synthetic segment does not prevent a later synthetic loss under the same fixed strategy and independently funded cold starts.",
+      "falsification": "Reject if test loss disappears, future test bars alter training, or the same portfolio is implied across the reset.",
+      "emergencyStopAt": null
+    },
+    "digests": {
+      "request": "988c09805602f1cef216997ecb32cac9a1276cdcf85beaffc022ce982432276b",
+      "strategy": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09",
+      "dataset": "bd3862f61b64c650a064d224086f5467706cc677e9bee9516aef832f94132693",
+      "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "evaluator": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+    },
+    "audit": [
+      {
+        "barIndex": 0,
+        "at": "2026-10-01T07:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_INTERVAL",
+        "positionId": null,
+        "signalId": null,
+        "details": "Closed-bar conditions schedule at most one next-open entry."
+      },
+      {
+        "barIndex": 1,
+        "at": "2026-10-01T07:00:00.000Z",
+        "type": "ENTRY",
+        "reason": "DCA_INTERVAL",
+        "positionId": "demo_position_1",
+        "signalId": null,
+        "details": "Virtual quantity 1.0858706510880425; reserved collateral 100; entry fee 0.1."
+      },
+      {
+        "barIndex": 1,
+        "at": "2026-10-01T08:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_EXHAUSTED",
+        "positionId": null,
+        "signalId": null,
+        "details": "The lifetime number of filled DCA entries is exhausted."
+      },
+      {
+        "barIndex": 2,
+        "at": "2026-10-01T09:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_EXHAUSTED",
+        "positionId": null,
+        "signalId": null,
+        "details": "The lifetime number of filled DCA entries is exhausted."
+      },
+      {
+        "barIndex": 3,
+        "at": "2026-10-01T10:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_EXHAUSTED",
+        "positionId": null,
+        "signalId": null,
+        "details": "The lifetime number of filled DCA entries is exhausted."
+      },
+      {
+        "barIndex": 4,
+        "at": "2026-10-01T10:00:00.000Z",
+        "type": "EXIT",
+        "reason": "STOP_LOSS",
+        "positionId": "demo_position_1",
+        "signalId": null,
+        "details": "Virtual position closed with adverse slippage and per-side fees."
+      },
+      {
+        "barIndex": 4,
+        "at": "2026-10-01T11:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_EXHAUSTED",
+        "positionId": null,
+        "signalId": null,
+        "details": "The lifetime number of filled DCA entries is exhausted."
+      },
+      {
+        "barIndex": 5,
+        "at": "2026-10-01T12:00:00.000Z",
+        "type": "DECISION",
+        "reason": "DCA_EXHAUSTED",
+        "positionId": null,
+        "signalId": null,
+        "details": "The lifetime number of filled DCA entries is exhausted."
+      }
+    ],
+    "trades": [
+      {
+        "id": "demo_position_1",
+        "direction": "LONG",
+        "entryBar": 1,
+        "exitBar": 4,
+        "entryAt": "2026-10-01T07:00:00.000Z",
+        "exitAt": "2026-10-01T10:00:00.000Z",
+        "quantity": 1.0858706510880425,
+        "entryPrice": 92.09199999999998,
+        "exitPrice": 67.932,
+        "collateral": 100,
+        "entryFee": 0.1,
+        "exitFee": 0.0737653650697129,
+        "grossPnl": -26.234634930287086,
+        "netPnl": -26.4084002953568,
+        "reason": "STOP_LOSS",
+        "gridLevel": null,
+        "signalId": null
+      }
+    ],
+    "equity": [
+      {
+        "barIndex": 0,
+        "closedAt": "2026-10-01T07:00:00.000Z",
+        "equity": 1000,
+        "cash": 1000,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "barIndex": 1,
+        "closedAt": "2026-10-01T08:00:00.000Z",
+        "equity": 999.6003996003996,
+        "cash": 899.9,
+        "reservedCollateral": 100,
+        "openPositions": 1,
+        "dailyHalted": false
+      },
+      {
+        "barIndex": 2,
+        "closedAt": "2026-10-01T09:00:00.000Z",
+        "equity": 990.9307996351474,
+        "cash": 899.9,
+        "reservedCollateral": 100,
+        "openPositions": 1,
+        "dailyHalted": false
+      },
+      {
+        "barIndex": 3,
+        "closedAt": "2026-10-01T10:00:00.000Z",
+        "equity": 982.2611996698953,
+        "cash": 899.9,
+        "reservedCollateral": 100,
+        "openPositions": 1,
+        "dailyHalted": false
+      },
+      {
+        "barIndex": 4,
+        "closedAt": "2026-10-01T11:00:00.000Z",
+        "equity": 973.5915997046432,
+        "cash": 973.5915997046432,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      },
+      {
+        "barIndex": 5,
+        "closedAt": "2026-10-01T12:00:00.000Z",
+        "equity": 973.5915997046432,
+        "cash": 973.5915997046432,
+        "reservedCollateral": 0,
+        "openPositions": 0,
+        "dailyHalted": false
+      }
+    ],
+    "metrics": {
+      "initialCapital": 1000,
+      "finalEquity": 973.5915997046432,
+      "netPnl": -26.40840029535684,
+      "returnPct": -2.640840029535685,
+      "maxDrawdownPct": 2.640840029535684,
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "totalFees": 0.1737653650697129,
+      "turnover": 173.7653650697129,
+      "comparable": true
+    },
+    "benchmark": {
+      "status": "COMPLETED",
+      "reason": null,
+      "allocationPct": 10,
+      "direction": "LONG",
+      "initialCapital": 1000,
+      "finalEquity": 964.921999739391,
+      "netPnl": -35.078000260608974,
+      "returnPct": -3.507800026060892,
+      "totalFees": 0.16508708682621726,
+      "comparable": true
+    },
+    "resultDigest": "60a158f1dc065e760e055bdcfb8399ed8d01691e204e5cd484a0a5fe70f7b9ea"
+  },
+  "comparison": {
+    "version": 1,
+    "kind": "LOCAL_EVALUATOR_COMPARISON",
+    "classification": "AUTHOR_REPORTED",
+    "qualification": "NONE",
+    "independence": "NOT_ESTABLISHED",
+    "ordersEnabled": false,
+    "status": "MATCH",
+    "reason": null,
+    "identity": {
+      "requestId": "91000000-0000-4000-8000-000000000032",
+      "claimedArtifact": "60a158f1dc065e760e055bdcfb8399ed8d01691e204e5cd484a0a5fe70f7b9ea",
+      "request": "988c09805602f1cef216997ecb32cac9a1276cdcf85beaffc022ce982432276b",
+      "strategy": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09",
+      "dataset": "bd3862f61b64c650a064d224086f5467706cc677e9bee9516aef832f94132693",
+      "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "declaredMethod": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+    },
+    "implementations": {
+      "primary": {
+        "version": "opengrail-demo-v1",
+        "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51"
+      },
+      "reference": {
+        "version": "opengrail-reference-v1",
+        "sourceSha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0"
+      }
+    },
+    "policy": {
+      "version": "opengrail-comparison-v1",
+      "absoluteTolerance": 1e-8,
+      "relativeTolerance": 1e-9,
+      "maximumDifferences": 50,
+      "ignoredFields": [
+        "audit[].details"
+      ],
+      "exactNumericFields": [
+        "barIndex",
+        "entryBar",
+        "exitBar",
+        "gridLevel",
+        "openPositions",
+        "trades",
+        "wins",
+        "losses",
+        "initialCapital",
+        "allocationPct"
+      ]
+    },
+    "sharedDependencies": [
+      "METHOD_SPECIFICATION",
+      "JAVASCRIPT_NUMBER_RUNTIME",
+      "INPUT_SCHEMAS_AND_HASHING",
+      "INPUT_DATA_AND_OPERATOR",
+      "REVIEW_OF_PRIMARY_SOURCE"
+    ],
+    "summaries": {
+      "claimed": {
+        "status": "COMPLETED",
+        "reason": null,
+        "metrics": {
+          "initialCapital": 1000,
+          "finalEquity": 973.5915997046432,
+          "netPnl": -26.40840029535684,
+          "returnPct": -2.640840029535685,
+          "maxDrawdownPct": 2.640840029535684,
+          "trades": 1,
+          "wins": 0,
+          "losses": 1,
+          "totalFees": 0.1737653650697129,
+          "turnover": 173.7653650697129,
+          "comparable": true
+        },
+        "benchmark": {
+          "status": "COMPLETED",
+          "reason": null,
+          "allocationPct": 10,
+          "direction": "LONG",
+          "initialCapital": 1000,
+          "finalEquity": 964.921999739391,
+          "netPnl": -35.078000260608974,
+          "returnPct": -3.507800026060892,
+          "totalFees": 0.16508708682621726,
+          "comparable": true
+        }
+      },
+      "primary": {
+        "status": "COMPLETED",
+        "reason": null,
+        "metrics": {
+          "initialCapital": 1000,
+          "finalEquity": 973.5915997046432,
+          "netPnl": -26.40840029535684,
+          "returnPct": -2.640840029535685,
+          "maxDrawdownPct": 2.640840029535684,
+          "trades": 1,
+          "wins": 0,
+          "losses": 1,
+          "totalFees": 0.1737653650697129,
+          "turnover": 173.7653650697129,
+          "comparable": true
+        },
+        "benchmark": {
+          "status": "COMPLETED",
+          "reason": null,
+          "allocationPct": 10,
+          "direction": "LONG",
+          "initialCapital": 1000,
+          "finalEquity": 964.921999739391,
+          "netPnl": -35.078000260608974,
+          "returnPct": -3.507800026060892,
+          "totalFees": 0.16508708682621726,
+          "comparable": true
+        }
+      },
+      "reference": {
+        "status": "COMPLETED",
+        "reason": null,
+        "metrics": {
+          "initialCapital": 1000,
+          "finalEquity": 973.5915997046432,
+          "netPnl": -26.40840029535684,
+          "returnPct": -2.640840029535685,
+          "maxDrawdownPct": 2.640840029535684,
+          "trades": 1,
+          "wins": 0,
+          "losses": 1,
+          "totalFees": 0.1737653650697129,
+          "turnover": 173.7653650697129,
+          "comparable": true
+        },
+        "benchmark": {
+          "status": "COMPLETED",
+          "reason": null,
+          "allocationPct": 10,
+          "direction": "LONG",
+          "initialCapital": 1000,
+          "finalEquity": 964.921999739391,
+          "netPnl": -35.078000260608974,
+          "returnPct": -3.507800026060892,
+          "totalFees": 0.16508708682621726,
+          "comparable": true
+        }
+      }
+    },
+    "pairs": [
+      {
+        "pair": "CLAIM_PRIMARY",
+        "matches": true,
+        "differenceCount": 0,
+        "differences": []
+      },
+      {
+        "pair": "CLAIM_REFERENCE",
+        "matches": true,
+        "differenceCount": 0,
+        "differences": []
+      },
+      {
+        "pair": "PRIMARY_REFERENCE",
+        "matches": true,
+        "differenceCount": 0,
+        "differences": []
+      }
+    ],
+    "reportDigest": "890d3f37ffd75915985889d1e77598196443ee73d322fcdeb88a95998e3ef62d"
+  },
+  "runDigest": "b2a5763a4b95a88ac6c6292ddeb09cdf1637db8c5ee836bef16a384222d80e21"
+}

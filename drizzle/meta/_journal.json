@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791676734909,
+      "tag": "0000_confused_zombie",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791677014410,
+      "tag": "0001_gray_wolfpack",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791678197159,
+      "tag": "0002_sour_puma",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791678440844,
+      "tag": "0003_zippy_unus",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1791679164453,
+      "tag": "0004_slim_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791682398928,
+      "tag": "0005_magenta_starbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791702975801,
+      "tag": "0006_trusted_experiment_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791706390144,
+      "tag": "0007_public_contribution_tasks",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791714395494,
+      "tag": "0008_stale_the_hand",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1791720745435,
+      "tag": "0009_thankful_human_cannonball",
+      "breakpoints": true
+    }
+  ]
+}

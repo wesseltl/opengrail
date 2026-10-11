@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "classification": "INVENTED_SYNTHETIC_LOCAL_EXAMPLE",
+  "publicRegistration": false,
+  "participantAuthentication": false,
+  "providerConnected": false,
+  "ordersEnabled": false,
+  "qualification": "NONE",
+  "unseen": "NOT_ESTABLISHED",
+  "receiptTimes": "INVENTED_NOT_SERVER_RECEIPTS",
+  "sourceSnapshots": "INVENTED_VISIBLE_SHAPES_NOT_PUBLIC_AVAILABILITY",
+  "capitalUnits": "quote units per independently funded partition",
+  "planId": "91000000-0000-4000-8000-000000000010",
+  "planDigest": "c234c466168c62e299eab3973669942985b7f53ed76368b80e02e6eb1289410c",
+  "evaluator": {
+    "version": "opengrail-demo-v1",
+    "methodDigest": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572",
+    "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51",
+    "referenceSourceSha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0"
+  },
+  "cases": [
+    {
+      "partition": "TRAIN",
+      "manifestId": "91000000-0000-4000-8000-000000000021",
+      "manifestDigest": "ae4582f87be83a664a825dc4b06ffafd14866c79ecf9127f5be7c44be34ed43e",
+      "inputDigest": "9c4c4c6b526e4c7c29bf7f6253a0f5077cf53030da8c39b29472170e51ef0eb0",
+      "runDigest": "099d45b815bcbdf88cce3b4094128fb123621b62db3d7ed83ff979bd342d4c5e",
+      "artifactDigest": "5bbfdf43dd58e611d4c23e0e5349341dfc892eaf027dc4c2b54607613d4cd0de",
+      "comparisonDigest": "887e883a6f5939489d04543247f4177296080dd709d84f2b979d77bbb0c1c4e5",
+      "status": "COMPLETED",
+      "netPnl": 18.590951905237603,
+      "returnPct": 1.859095190523763,
+      "closedTrades": 1,
+      "comparison": "MATCH",
+      "qualification": "NONE"
+    },
+    {
+      "partition": "TEST",
+      "manifestId": "91000000-0000-4000-8000-000000000031",
+      "manifestDigest": "35e82570ee24d759d513d4292d962acc0a6facf1b5bc0241014a1e0ac852a7b0",
+      "inputDigest": "988c09805602f1cef216997ecb32cac9a1276cdcf85beaffc022ce982432276b",
+      "runDigest": "b2a5763a4b95a88ac6c6292ddeb09cdf1637db8c5ee836bef16a384222d80e21",
+      "artifactDigest": "60a158f1dc065e760e055bdcfb8399ed8d01691e204e5cd484a0a5fe70f7b9ea",
+      "comparisonDigest": "890d3f37ffd75915985889d1e77598196443ee73d322fcdeb88a95998e3ef62d",
+      "status": "COMPLETED",
+      "netPnl": -26.40840029535684,
+      "returnPct": -2.640840029535685,
+      "closedTrades": 1,
+      "comparison": "MATCH",
+      "qualification": "NONE"
+    }
+  ]
+}

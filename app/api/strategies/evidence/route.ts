@@ -1,0 +1,13 @@
+import {getNetworkDb} from '@/db';
+import {ExperimentRepository} from '@/app/experiment-store';
+import {strategyEvidencePublicRequest,strategyEvidenceHeaders} from '@/app/strategy-evidence-http';
+export const dynamic='force-dynamic';
+const factory=()=>new ExperimentRepository(getNetworkDb());
+export const GET=(request:Request)=>strategyEvidencePublicRequest(request,factory);
+const unsupported=()=>new Response(null,{status:405,headers:{...strategyEvidenceHeaders,Allow:'GET'}});
+export const POST=unsupported;
+export const DELETE=unsupported;
+export const PUT=unsupported;
+export const PATCH=unsupported;
+export const HEAD=unsupported;
+export const OPTIONS=unsupported;

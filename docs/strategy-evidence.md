@@ -1,0 +1,29 @@
+# Exact strategy evidence
+
+The source-prepared workspace connects an immutable strategy version to its retained experiment history. `/strategies?id=UUID&digest=SHA256` resolves the exact record outside catalog pagination. A legacy ID-only link resolves one canonical record and then pins its digest; it never substitutes a newer revision or fork. Invalid links show a fixed error rather than falling back to the catalog.
+
+## Read contract
+
+`GET /api/strategies/evidence?strategy=UUID&digest=SHA256` returns the exact current canonical public strategy and a compact page of retained MANIFEST and OUTCOME entries. An optional `cursor` must identify an experiment belonging to that same ID/digest. Repeated, malformed, unknown and mixed selections fail. The endpoint is anonymous and GET-only; it grants no write permission, user identity or private access.
+
+Rows are ordered by receipt time descending, then UUID descending. No root, revision, fork or profit-based aggregation is performed. Preferred pages contain ten entries, with a maximum envelope of twenty and a cursor bound to the last returned entry. A short page with a cursor still has retained rows to inspect. The endpoint validates bounded canonical source, parent and immediate relation records, lookahead and current lifecycle before projecting them. New read limits are 128 KiB response, 36 canonical rows, 50 statements and 96 bind parameters. Existing writer, storage and enrollment quotas are unchanged. Actual local measurements belong in the release evidence; these limits are not proven hosted billing or latency caps.
+
+The strict envelope carries `version:1`, `strategy`, `items`, `nextCursor`, `classification:AUTHOR_REPORTED`, `qualification:NONE`, `independence:NOT_ESTABLISHED`, and disabled execution/orders. Each entry has an existing `summary`, a visible outcome `claim` type/exact relation or null, and a visible outcome `observation` or null. Manifests have neither outcome claim nor observation.
+
+Compact responses do not bound canonical validation work. A checked local fixture with a 36-record closure returned 13,177,633 canonical bytes through the complete HTTP/D1 path, using 20 statements and at most 72 parameters. The largest statement bound 11,402,448 bytes of UTF-8 values; all statements together bound 11,407,024 value bytes. The compact response was 19,226 bytes. The same populated fixture passed through actual local Workerd. These are invented local fixtures and value-byte sums, not wire measurements, a load test or hosted CPU/memory/transport/billing acceptance. The largest allowed payload combinations remain unverified.
+
+Batch observations retain declared artifact status/digest, metrics and baseline separately. Failed, halted, insolvent and negative reports remain retained; comparability declarations do not create a ranking. Continuous observations retain declared initial capital, marked account, open position and closed-trade counts, pending simulation state, capacity/data-gap flags and emergency timestamp. An open marked account is a checkpoint, not a realized-return backtest. Interruptions and unavailable artifacts have their own explicit kinds without fabricated metrics. Full reasons, disclosures, inputs and artifacts remain available in the existing exact experiment detail.
+
+Compact projections omit full artifacts. They are server-derived author reports, not independently authenticated metrics. Canonical bytes and declared hashes are checked on the server; that does not prove truthful input, correct execution, full search history, unseen data or profitability. The visible strategy retains its immutable `verification:UNTESTED` field.
+
+## Current visibility
+
+Source and parent hiding/withdrawal suppress authored names, flags, claims, metrics and checkpoint observations without deleting safe retained metadata. Reads recheck lifecycle across projection; a response that observed suppression cannot release a prior visible page. The UI discards stale selection/page responses and scrubs dependent results when current source visibility is lost. Original downloaded copies cannot be recalled. A later confirmed restoration needs its current ordered lifecycle rather than reuse of an old visible reply.
+
+Complete record links preserve experiment ID/digest. Computational review navigation goes to the original outcome or the exact original referenced by a reproduction/conflict, through the existing lazy Experiments review workflow. That workflow preserves its explicit canonical `currentHead` and retained predecessors. Hidden, held, disputed or rejected current heads cannot fall back to an older positive conclusion. REVIEW_ATTESTATION remains separate from author reports, with qualification NONE and independence NOT_ESTABLISHED; evidence pages create no reputation or positive qualification badge.
+
+## Next experiment
+
+Exact Demo and Session links carry the selected version and declared costs/risk through the existing handoff. They execute nothing on navigation and create no provider connection, evaluation, publication, order or permission. The catalog's existing uncertain-write/form locks continue to block stale navigation handlers. Empty evidence means no retained records on the selected public page; it does not establish that no private or earlier work occurred.
+
+No source repository access, permission change, schema migration, evaluator change, inference call or financial action is introduced. Hosted/browser acceptance, public audience, real signal/data provenance, private GitHub access and independently qualified performance remain separate approval and evidence gates.

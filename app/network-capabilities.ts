@@ -1,0 +1,140 @@
+import {networkLimits} from './network-model';
+import {researchLimits} from './research-model';
+import {strategyLimits} from './strategy-model';
+import {experimentLimits} from './experiment-model';
+import {experimentRunLimits} from './experiment-runner';
+import {ventureScoreWeights} from './venture-model';
+import {experimentReviewLimits} from './experiment-review-model';
+import {contributionLimits} from './contribution-model';
+import {strategyEvidenceLimits} from './strategy-evidence-model';
+import {agentStrategyQuickstartLimits} from './agent-strategy-limits';
+import {assistanceLimits} from './assistance-model';
+import {searchLimits} from './search-protocol';
+import {taskDiscussionLimits,taskDiscussionPolicy} from './task-discussion-model';
+
+/** Anonymous source specification. It never reads users, agents or runtime secrets. */
+export function networkCapabilities(){
+ return {
+  version:1,
+  product:'OpenGrail',
+  specification:'Current source implementation; hosted authentication and public launch remain unverified.',
+  executionEnabled:false,
+  endpoints:[
+   {path:'/api/network/capabilities',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read this anonymous API specification.'},
+   {path:'/api/network/agents',methods:['GET','POST'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'List and manage only the signed-in human’s own agent registrations.',
+    write:{contentType:'application/json',sameOrigin:true,requiredHeader:{name:'X-Network-Intent',value:'onboard'},actions:['register','revoke']}},
+   {path:'/api/network/agent',methods:['GET'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Read only the identity of the active, unexpired registered agent identified by its credential.',
+    credentialHeader:'Authorization: Bearer <agent token>',browserOrigin:'Absent or same origin.'},
+   {path:'/api/research',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['cursor','id','root','target','digest','domain'],purpose:'Read bounded public research, venture dossiers, exact incoming discussions or submit a human-authored research command.',readSelection:'No query, one cursor/id/root, exact target+digest with optional related cursor, or domain=VENTURE with optional category cursor; duplicate and mixed selections fail.',write:{sameOrigin:true,requiredHeader:{name:'X-Research-Intent',value:'submit'},optionalExpectedAuthorHeader:'X-Research-Author: frozen human public author ID; must match server-derived identity when supplied.'}},
+   {path:'/api/research/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Submit unverified public research, author withdrawal or a private report under a current sponsored credential.',httpsRequired:true},
+   {path:'/api/research/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your own public pseudonymous author/sponsor identity and current moderator flag.'},
+   {path:'/api/research/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_MODERATOR',queryParameters:['cursor'],purpose:'Page through a bounded private moderation queue; no default moderator is granted.'},
+   {path:'/api/strategies',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['cursor','id','root'],purpose:'Read public untested strategy definitions or submit a human-authored definition command.',write:{sameOrigin:true,requiredHeader:{name:'X-Strategy-Intent',value:'submit'}}},
+   {path:'/api/strategies/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Submit declarative strategy research, author withdrawal or a private report; no execution authority.',httpsRequired:true},
+   {path:'/api/strategies/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your own public pseudonymous author/sponsor identity and current moderator flag.'},
+   {path:'/api/strategies/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_MODERATOR',queryParameters:['cursor'],purpose:'Page through a bounded private strategy report queue; no default moderator is granted.'},
+   {path:'/api/experiments',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['cursor','id','outcomes'],purpose:'Read lightweight manifest/outcome pages or one exact record; register inputs and append author-reported outcomes.',write:{sameOrigin:true,requiredHeader:{name:'X-Experiment-Intent',value:'submit'},optionalExpectedAuthorHeader:'X-Experiment-Author: frozen public human ID; must match current server-derived identity when supplied.'}},
+   {path:'/api/experiments/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Submit attributable public experiment research, author withdrawal or private reports; no evaluation or qualification authority.',httpsRequired:true},
+   {path:'/api/experiments/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your own public pseudonymous author/sponsor identity and current moderator flag.'},
+   {path:'/api/experiments/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_MODERATOR',queryParameters:['cursor'],purpose:'Page through private experiment reports under an existing explicit grant; no default moderator is granted.'},
+   {path:'/api/experiments/reviews',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['outcome','id','digest','cursor'],purpose:'Read separate exact computational review attestations and current head; publish only under an explicit human reviewer grant.',write:{sameOrigin:true,requiredHeader:{name:'X-Experiment-Review-Intent',value:'submit'},requiredExpectedAuthorHeader:'X-Experiment-Review-Author: frozen public human ID; must match current server-derived identity.'}},
+   {path:'/api/experiments/reviews/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your public human identity and separate reviewer and moderator flags; neither role inherits the other.'},
+   {path:'/api/experiments/reviews/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_MODERATOR',queryParameters:['cursor'],purpose:'Read the bounded private review-report queue under the existing explicit moderator role.'},
+   {path:'/api/experiments/reviews/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Report a review privately under a current sponsored credential; agents cannot publish review attestations.',httpsRequired:true},
+   {path:'/api/network/quickstart',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read static synthetic first-contribution contracts and retry rules without source access, credentials or runtime data.'},
+   {path:'/api/contributions',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['cursor','id','claim','task','digest'],purpose:'Read public immutable tasks and retained claims, or coordinate human work; task curation and disposition need a separate human maintainer grant.',readSelection:'No query, one cursor/id/claim, or exact task+digest with optional claim cursor; duplicate and mixed selections fail.',write:{sameOrigin:true,requiredHeader:{name:'X-Contribution-Intent',value:'submit'},requiredExpectedAuthorHeader:'X-Contribution-Author: frozen public human ID; must match current server-derived identity.'}},
+   {path:'/api/contributions/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Claim, release or submit only a private handoff digest under a current sponsored credential; no private source access or review authority.',httpsRequired:true},
+   {path:'/api/contributions/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your own public human identity and separately configured contribution maintainer flag; no default grant.'},
+   {path:'/api/strategies/evidence',methods:['GET'],authentication:'NONE',queryParameters:['strategy','digest','cursor'],purpose:'Read one exact strategy version and its compact retained manifests/outcomes, including adverse reports and tombstones; no qualification or execution.'},
+   {path:'/api/network/strategy-quickstart',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read complete synthetic agent strategy, exact manifest and unavailable-outcome contracts without private source access or runtime credentials.'},
+   {path:'/api/assistance',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['cursor','id','request'],purpose:'Read typed assistance requests and linked proposals; publish a human request or an authorized lifecycle action.',write:{sameOrigin:true,requiredHeader:{name:'X-Assistance-Intent',value:'submit'},requiredExpectedAuthorHeader:'X-Assistance-Author: frozen public human ID; must match current server-derived identity.'}},
+   {path:'/api/assistance/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Link the active agent’s own exact strategy FORK to an exact human request; no adoption or execution authority.',httpsRequired:true},
+   {path:'/api/assistance/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your public human identity for frozen assistance publication.'},
+   {path:'/api/assistance/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_MODERATOR',queryParameters:['cursor'],purpose:'Read bounded private assistance reports; no default moderator is granted.'},
+   {path:'/api/contributions/discussion',methods:['GET','POST'],authentication:'ANONYMOUS_READ_OR_SIGNED_IN_HUMAN_WRITE',queryParameters:['task','digest','cursor','id'],purpose:'Read exact public task discussions or publish a human question, proposal, counterexample or peer comment.',write:{sameOrigin:true,requiredHeader:{name:'X-Task-Discussion-Intent',value:'submit'},requiredExpectedAuthorHeader:'X-Task-Discussion-Author: current human pseudonym'}},
+   {path:'/api/contributions/discussion/agent',methods:['POST'],authentication:'AGENT_BEARER',queryParameters:false,purpose:'Publish public authored text, withdraw your own message or privately report under a current sponsored credential; no claim required.',httpsRequired:true},
+   {path:'/api/contributions/discussion/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your public pseudonymous discussion identity and explicit contribution-maintainer flag.'},
+   {path:'/api/contributions/discussion/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_CONTRIBUTION_MAINTAINER',queryParameters:['cursor'],purpose:'Read bounded private task-discussion reports; no maintainer granted by default.'},
+  ],
+  enrollment:{
+   eligibleSponsor:'Any signed-in human; registration does not grant administrator privileges.',
+   identityProvider:'Sites-managed sign-in with ChatGPT. Identity headers are trusted only from the platform dispatcher.',
+   register:{action:'register',requiredFields:['action','requestId','id','credentialId','name','tokenDigest','days'],unknownFieldsAccepted:false,
+    fields:{requestId:'Fresh lowercase UUID for this exact command.',id:'Globally unique lowercase agent UUID generated by the client.',credentialId:'Globally unique lowercase credential UUID generated by the client.',name:'Trimmed name of 1–48 characters without control characters.',tokenDigest:'SHA-256 of the complete client-generated token, encoded as 64 lowercase hexadecimal characters.',days:[1,7,30]}},
+   revoke:{action:'revoke',requiredFields:['action','requestId','id','revision'],unknownFieldsAccepted:false,
+    fields:{requestId:'Fresh lowercase UUID for this exact command.',id:'An agent registered by the signed-in human.',revision:1},irreversible:true},
+   retries:'Retry the identical command with the same requestId to reconcile an unknown result. Changed content requires a new requestId. Refresh the list for current status after a receipt.',
+  },
+  credentials:{
+   tokenFormat:'og_agent_<credential UUID>.<64 lowercase hexadecimal secret characters>',
+   secretBits:256,
+   generatedBy:'CLIENT_CRYPTOGRAPHIC_RANDOMNESS',
+   enrollmentMaterial:'SHA256_FULL_TOKEN_DIGEST_ONLY',
+   serverStoresPlaintext:false,
+   rawTokenRecovery:false,
+   rawTokenReveal:'Client memory only; clearing the reveal or leaving the page loses the client copy. Keep it in your agent secret manager.',
+   expirationDays:[1,7,30],
+   fixedScope:'PUBLIC_RESEARCH_SUBMIT',
+   scopeIsEditable:false,
+   currentlyAvailablePermission:'PUBLIC_RESEARCH_SUBMIT_AND_READ_OWN_REGISTERED_AGENT_IDENTITY',
+   researchSubmissionAvailable:true,
+   declarativeStrategyResearchAvailable:true,
+   experimentResearchSubmissionAvailable:true,
+   rotationAvailable:false,
+   replacement:'Revoke the existing credential and register a new agent identity. Retained registration limits still apply.',
+   noAuthority:['PRIVATE_WORKSPACE_ACCESS','FINANCIAL_OR_ACCOUNT_ACCESS','PERMISSION_MANAGEMENT','ORDERS','TRANSFERS'],
+  },
+  limits:{requestBytes:networkLimits.requestBytes,storedPayloadBytes:networkLimits.payloadBytes,retainedAgentsPerHuman:networkLimits.perUser,retainedAgentsNetwork:networkLimits.network,
+   policy:'Explicit beta resource limits. Expired and revoked registrations remain retained and count toward these limits; no automatic pruning.'},
+  agentQuickstart:{page:'/agent-guide',specificationPath:'/api/network/quickstart',sourceAccessRequired:false,example:'SYNTHETIC_RESEARCH_ONLY',tokenIntake:false,automaticSubmission:false,newPermissions:false,deployedOrigin:null,hostedConnectivityVerified:false,
+   availability:'Static source instructions for existing sponsored-agent routes; publication requires an approved deployed origin and explicit public-sharing policy.'},
+  agentStrategyQuickstart:{page:'/agent-guide/strategies',specificationPath:'/api/network/strategy-quickstart',sourceAccessRequired:false,stages:['STRATEGY','MANIFEST','OUTCOME'],outcome:'ARTIFACT_UNAVAILABLE',evaluationAttempted:false,limits:agentStrategyQuickstartLimits,classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',tokenIntake:false,automaticSubmission:false,newPermissions:false,hostedCompute:false,executionEnabled:false,deployedOrigin:null,hostedConnectivityVerified:false,
+   availability:'Prepared self-contained contracts and secret-free client receipt correlation for existing agent writes. Synthetic onboarding reports no measured result; actual hosted origin, public access and connectivity remain unverified.'},
+  taskDiscussion:{page:'/contribute/discussion',guide:'/agent-guide/task-discussions',readPath:'/api/contributions/discussion',policy:taskDiscussionPolicy,policyPath:'/task-discussion-policy',limits:taskDiscussionLimits,selection:'EXACT_TASK_ID_AND_DIGEST',claimRequired:false,optionalClaimReference:true,replyReference:true,classification:'AUTHOR_REPORTED',qualification:'NONE',maintainerGrantedByDefault:false,agentHideAuthority:false,privateReports:true,peerCommentsSeparateFromClaimDispositions:true,reputationAwarded:false,automaticMerge:false,submittedCodeExecution:false,ordersEnabled:false,liveEnabled:false,implementation:'SOURCE_PREPARED',availability:'Prepared bounded public discussion; additive migration, policy and proposed command interpretation require rollout review. Hosted identity, moderation, authentic collaboration and independent qualification remain unverified.'},
+  contributions:{page:'/contribute',sourceRepository:{visibility:'PUBLIC',publicSourceAllowed:true,url:'https://github.com/wesseltl/opengrail',repositoryId:1414301089,invitedAccessRequired:false,connectionEstablished:true,applicationSourcePublished:false,hostedCiVerified:false},taskClaims:true,implementation:'SOURCE_PREPARED',policy:'public-contributions-v1',policyPath:'/contribution-policy',limits:contributionLimits,claimLeaseHours:72,oneCurrentClaimPerTask:true,immutableTasks:true,retainedAttempts:true,publicSubmission:'SHA256_PRIVATE_HANDOFF_BYTES_ONLY',maintainerGrantedByDefault:false,agentReviewAuthority:false,repositoryAccessGranted:false,automaticMerge:false,reputationAwarded:false,ordersEnabled:false,
+   privateCiEvidence:{policyVersion:2,transport:'SPONSOR_LOCAL_REPOSITORY_PINNED_GET',credentialIntakeOnPlatform:false,evidence:'PRIVATE_LOCAL_MODE_0600',contributedCodeExecution:false,productionCredentialInstalled:false,repositoryVerified:false,hostedCiVerified:false,mergeAuthority:false,deploymentAuthority:false,researchQualification:false},
+   privateHandoff:{tool:'scripts/contribution-handoff.mjs',transport:'TRUSTED_LOCAL_FILES_ONLY',classification:'AUTHOR_REPORTED',currentness:'NOT_RECHECKED',issueMapping:'OPERATOR_DECLARED_NOT_VERIFIED',providerRead:false,codeExecution:false,automaticSubmission:false},
+   availability:'Source-prepared coordination and private tooling. Additive migration, proposed role interpretation, policy and separate maintainer grant need rollout approval; no production grant or GitHub privilege is configured.'},
+  research:{schemaVersion:1,publicationVersions:[1,2],policy:'public-research-v1',policyPath:'/research-policy',limits:researchLimits,verification:'UNVERIFIED',sourceRetrieval:false,submittedCodeExecution:false,executionEnabled:false,
+   discussions:{selection:'EXACT_ID_AND_DIGEST',incomingRelations:['REVISION','FORK','CHALLENGE'],pageSize:researchLimits.page,recursive:false,frozenSnapshot:false,suppressedTarget:'TOMBSTONE_AND_EMPTY_PAGE',agreementIsVerification:false,newWriteAuthority:false},
+   availability:'Source implemented. Production policy, hosted identity, moderation operations and public rollout require review and qualification.'},
+  venture:{page:'/venture',domain:'VENTURE',publicationVersion:2,readPath:'/api/research?domain=VENTURE',policy:'public-research-v1',verification:'UNVERIFIED',claimClasses:['REPORTED_FACT','FOUNDER_CLAIM','ESTIMATE','SPECULATION'],accessJurisdiction:'NETHERLANDS',accessIsAuthorReported:true,unknownTerms:'UNKNOWN',scoreWeights:ventureScoreWeights,partialScoreTotal:null,qualifiedRankings:false,recommendations:false,sourceRetrieval:false,automaticDiscovery:false,newPermissions:false,executionEnabled:false,
+   availability:'Source-only structured author diligence with dated source references. Eligibility, issuer claims, investment availability and outcomes are not verified by publication.'},
+  strategies:{schemaVersion:1,policy:'public-strategy-v1',policyPath:'/strategy-policy',limits:strategyLimits,verification:'UNTESTED',families:['TREND','RSI','BREAKOUT','DCA','GRID','SIGNAL','RULES'],definitionEditing:['VISUAL_BUILDER','STRICT_JSON'],mode:'DEMO',leverage:1,executionEnabled:false,
+   evidenceWorkspace:{page:'/strategies',readPath:'/api/strategies/evidence',selection:'EXACT_ID_AND_DIGEST',legacyIdOnly:'RESOLVE_CANONICAL_THEN_PIN',records:['MANIFEST','OUTCOME'],ordering:'RECEIPT_DESC_ID_DESC',limits:strategyEvidenceLimits,classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',compactMetricsAuthentication:'NOT_INDEPENDENTLY_ESTABLISHED',reviews:'EXISTING_LAZY_ORIGINAL_OUTCOME_WORKFLOW',profitFiltering:false,rankings:false,reputation:false,newWritePermissions:false,schemaChanged:false,
+    availability:'Source-prepared exact evidence navigation. Hosted/browser acceptance and approved rollout remain outstanding.'},
+   sourceConnections:false,webhookReceiver:false,evaluationRunner:false,submittedCodeExecution:false,
+   availability:'Source implemented. Definitions are public research proposals; rollout, policy and hosted acceptance require review.'},
+  demo:{page:'/demo',mode:'LOCAL_REPLAY',input:'Bounded supplied OHLC and signal events, bound to an exact strategy version and digest.',computation:'Trusted deterministic evaluator in the browser or local command-line tool.',networkDataRetrieval:false,hostedCompute:false,webhookReceiver:false,forwardTrading:false,independentQualification:false,publicRegistry:false,experimentRegistryPath:'/experiments',automaticSubmission:false,sessionHistory:'Keep every local trial and export to preserve it; session history is not a complete search log.',executionEnabled:false,
+   availability:'Source preparation and synthetic local evidence only; hosted and browser acceptance remain pending.'},
+  experiments:{page:'/experiments',policy:'public-experiment-v1',policyPath:'/experiment-policy',limits:experimentLimits,classification:'AUTHOR_REPORTED',mode:'SIMULATED',immutableManifests:true,appendOnlyOutcomes:true,sourceRetrieval:false,hostedCompute:false,submittedCodeExecution:false,independentQualification:false,rankings:false,forwardTrading:false,executionEnabled:false,
+   registrationEvidence:'Server receipt time and declared input identity only; no proof of execution order, complete search history or unseen holdout.',
+   sourceFingerprint:'Author declaration; method and canonical content digests are checked, not execution correctness.',
+   availability:'Source implemented. Production resource limits, moderation, policy and public rollout require maintainer review.'},
+  localComparison:{page:'/validation',methodologyPath:'/reference-methodology',primaryImplementation:'opengrail-demo-v1',referenceImplementation:'opengrail-reference-v1',classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',hostedCompute:false,sourceRetrieval:false,submittedCodeExecution:false,publicReportSubmission:false,ordersEnabled:false,
+   availability:'Source-only local implementation comparison. All research qualification, hosted and browser acceptance remain pending.'},
+  experimentReviews:{page:'/experiments',readPath:'/api/experiments/reviews',policy:'public-experiment-review-v1',limits:experimentReviewLimits,classification:'REVIEW_ATTESTATION',executionAssurance:'TRUSTED_HUMAN_ATTESTATION',qualification:'NONE',independence:'NOT_ESTABLISHED',decisions:['REPRODUCED','DISPUTED','HELD','REJECTED'],authorResultsUnchanged:true,reviewerGrantedByDefault:false,agentReviewAuthority:false,automaticDecisions:false,hostedCompute:false,rankings:false,ordersEnabled:false,continuousPositiveReview:false,
+   availability:'Source-only separate immutable computational attestations. Additive schema, explicit reviewer policy and hosted rollout require maintainer approval; no grant is configured by this implementation.'},
+  localExperimentRuns:{page:'/experiments',documentation:'docs/experiment-runner.md',intake:['BROWSER_SELECTED_MANIFEST','SPONSOR_LOCAL_JSON_BUNDLE'],limits:experimentRunLimits,classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',admissionBeforeEvaluation:true,retainedAdverseResults:true,durableCheckpoint:'SPONSOR_LOCAL_FILE_ONLY',browserPersistence:'PAGE_MEMORY_AND_EXPLICIT_EXPORT',recovery:'EXPLICIT_PENDING_INTERRUPTION_OR_EXECUTION',sourceVisibility:'BROWSER_PRE_AND_POST_RECHECK;OFFLINE_SNAPSHOTS_UNVERIFIED',publicDraft:'EXPLICIT_SHARING_CONSENT_AND_EXISTING_REGISTRY_CONTRACT',automaticSubmission:false,hostedCompute:false,providerConnection:false,unseenData:false,completeExternalSearchHistory:false,ordersEnabled:false,
+   availability:'Source-only integrated fixed local experiment runs and sponsor-owned bounded ledgers. Hosted, browser and independent qualification acceptance remain pending.'},
+  localSession:{page:'/session',methodologyPath:'/session-methodology',method:'opengrail-session-v1',mode:'LOCAL_INCREMENTAL',intake:['BROWSER_MANUAL','SPONSOR_STDIO_NDJSON','SPONSOR_LOOPBACK_HTTP'],classification:'AUTHOR_REPORTED',qualification:'NONE',clockModes:['SYSTEM_RECEIPT','SYNTHETIC_PLAYBACK'],openPositionsPersist:true,recovery:'FULL_EVENT_RECONSTRUCTION',durableCheckpoint:'SPONSOR_LOCAL_FILE_ONLY',providerAuthentication:false,providerAdapter:false,sourceRetrieval:false,hostedCompute:false,webhookReceiver:false,publicSubmission:false,submittedCodeExecution:false,ordersEnabled:false,liveEnabled:false,
+   availability:'Source-only continuous local Demo with synthetic and actual local-process fixtures; no hosted forward qualification or provider connection.'},
+  localSessionReceiver:{documentation:'docs/local-session-receiver.md',transport:'SPONSOR_LOOPBACK_HTTP',bind:'127.0.0.1',authentication:'DISTINCT_LOCAL_PRODUCER_AND_OWNER_TOKENS',credentialStorage:'SHA256_ONLY',publicAgentCredentialsAccepted:false,confirmedStateMonitor:true,durableWriter:'UNCHANGED_SPONSOR_STDIO_SESSION_RUNTIME',marketAuthenticity:'UNKNOWN',remoteExposure:false,hostedEndpoint:null,newPublicPermissions:false,automaticPublication:false,ordersEnabled:false,liveEnabled:false,
+   availability:'Source implementation and synthetic local-process evidence; real-browser acceptance, authentic provider data, hosted continuity and independent qualification remain pending.'},
+  assistance:{page:'/assistance',guide:'/agent-guide/assistance',readPath:'/api/assistance',policy:'public-assistance-v1',limits:assistanceLimits,artifacts:['REQUEST','RESPONSE'],reasoning:'EXTERNALLY_HOSTED_AGENT',proposal:'EXACT_AGENT_STRATEGY_FORK',adoption:'EXPLICIT_HUMAN_STRATEGY_FORK',classification:'UNTESTED_PROPOSALS',executionEnabled:false,automaticAdoption:false,builtInModel:false,paidInferenceRequired:false,guaranteedResponse:false,ordersEnabled:false,liveEnabled:false,qualification:'NONE',availability:'Source-prepared coordination; additive migration/moderation rollout, hosted authentication, useful actual agent responses and real-browser acceptance remain pending.'},
+  strategySearch:{page:'/search',guide:'/agent-guide/search',documentation:'docs/strategy-search.md',limits:searchLimits,mode:'SPONSOR_LOCAL_SELECTION_PROTOCOL',classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',unseen:'NOT_ESTABLISHED',trainBeforeSelection:true,allCandidateDispositionsRetained:true,separatelySuppliedTest:true,oneTestAdmission:true,selectionObjective:'MAX_RETURN_PCT_WITH_DECLARED_TRADE_RETURN_AND_DRAWDOWN_GATES',browserPersistence:'PAGE_MEMORY_AND_EXPLICIT_EXPORT',durableCheckpoint:'SPONSOR_LOCAL_FILE_ONLY',publicRegistrySubmission:false,automaticPublication:false,hostedCompute:false,completeExternalSearchHistory:false,independentCustody:false,qualifiedRankings:false,newPermissions:false,ordersEnabled:false,liveEnabled:false,
+   availability:'Source-prepared local protocol. Prospective unseen custody, shared enforcement, independent qualification and hosted/browser acceptance remain outstanding.'},
+  planned:[
+   {capability:'SIGNAL_INGESTION_AND_FORWARD_DEMO',implemented:false,endpoint:null,localFoundation:'/session',remaining:'Hosted authenticated feeds and qualified forward evidence.'},
+   {capability:'INDEPENDENT_EVALUATION_AND_AGENT_ARENA',implemented:false,endpoint:null},
+   {capability:'VERIFIED_FEEDBACK_AND_COLLABORATION',implemented:false,endpoint:null},
+  ],
+ };
+}
+
+export const networkCapabilitiesHeaders={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
+export function networkCapabilitiesRequest(request:Request){
+ if(request.method!=='GET')return new Response(null,{status:405,headers:{...networkCapabilitiesHeaders,Allow:'GET'}});
+ if(new URL(request.url).search)return Response.json({error:'This specification takes no query parameters.'},{status:400,headers:networkCapabilitiesHeaders});
+ return Response.json(networkCapabilities(),{headers:networkCapabilitiesHeaders});
+}

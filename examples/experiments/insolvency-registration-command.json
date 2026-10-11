@@ -1,0 +1,155 @@
+{
+  "action": "register",
+  "requestId": "00000000-0000-4000-8000-000000000070",
+  "id": "00000000-0000-4000-8000-000000000071",
+  "name": "Synthetic retained insolvency experiment",
+  "input": {
+    "version": 1,
+    "requestId": "00000000-0000-4000-8000-000000000060",
+    "evaluatorVersion": "opengrail-demo-v1",
+    "strategy": {
+      "record": {
+        "version": 1,
+        "id": "00000000-0000-4000-8000-000000000064",
+        "rootId": "00000000-0000-4000-8000-000000000064",
+        "revision": 1,
+        "requestId": "00000000-0000-4000-8000-000000000063",
+        "createdAt": "2026-10-11T01:00:00.000Z",
+        "author": {
+          "kind": "HUMAN",
+          "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+          "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+        },
+        "content": {
+          "name": "Synthetic uncapped short-insolvency source",
+          "description": "Invented offline example: supplied signal labels, no registered author, actual provider connection or market observation.",
+          "assumptions": "Friction, fills and data are authored simulation assumptions.",
+          "falsification": "Reject economic claims that cannot be independently reproduced with permitted unseen data.",
+          "sources": [],
+          "definition": {
+            "schemaVersion": 1,
+            "market": {
+              "symbol": "BTC/USDT",
+              "timeframe": "1h",
+              "direction": "SHORT"
+            },
+            "entry": {
+              "type": "SIGNAL",
+              "provider": "CUSTOM",
+              "event": "BEARISH",
+              "maxAgeBars": 1
+            },
+            "risk": {
+              "positionPct": 1,
+              "maxOpenPositions": 1,
+              "stopLossPct": 2,
+              "takeProfitPct": 4,
+              "maxDailyLossPct": 1
+            },
+            "costs": {
+              "feeBps": 0,
+              "slippageBps": 0
+            },
+            "execution": {
+              "mode": "DEMO",
+              "leverage": 1,
+              "ordersEnabled": false
+            }
+          },
+          "relation": null
+        },
+        "policyAccepted": "public-strategy-v1",
+        "verification": "UNTESTED",
+        "executionEnabled": false
+      },
+      "digest": "c37b0df42485978fe9ed320d86eeec760729d8a92dee4d8540a2ffc6b8f078b6"
+    },
+    "dataset": {
+      "version": 1,
+      "id": "00000000-0000-4000-8000-000000000061",
+      "provenance": "SYNTHETIC",
+      "rights": {
+        "permission": "CREATED_SYNTHETIC",
+        "acknowledged": true,
+        "note": "Invented prices for a local accounting counterexample. Public fixture permission only."
+      },
+      "symbol": "BTC/USDT",
+      "timeframe": "1h",
+      "bars": [
+        {
+          "closedAt": "2025-01-01T01:00:00.000Z",
+          "open": 100,
+          "high": 100,
+          "low": 100,
+          "close": 100,
+          "volume": 1
+        },
+        {
+          "closedAt": "2025-01-01T02:00:00.000Z",
+          "open": 100,
+          "high": 100,
+          "low": 100,
+          "close": 100,
+          "volume": 1
+        },
+        {
+          "closedAt": "2025-01-01T03:00:00.000Z",
+          "open": 1000000000,
+          "high": 1000000000,
+          "low": 1000000000,
+          "close": 1000000000,
+          "volume": 1
+        }
+      ]
+    },
+    "signals": [
+      {
+        "id": "00000000-0000-4000-8000-000000000062",
+        "provider": "CUSTOM",
+        "event": "BEARISH",
+        "observedAt": "2025-01-01T01:00:00.000Z",
+        "availableAt": "2025-01-01T01:00:00.000Z"
+      }
+    ],
+    "initialCapital": 1000,
+    "hypothesis": "Test that a synthetic short opening gap retains the full loss rather than clipping collateral.",
+    "falsification": "Reject the accounting if it reports a successful comparable outcome after insolvency.",
+    "emergencyStopAt": null
+  },
+  "evaluator": {
+    "version": "opengrail-demo-v1",
+    "sourceVersion": "84a1a668ef160bc3c9c4e0596a514b5d15e6dd49",
+    "sourceDigest": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51",
+    "methodDigest": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+  },
+  "baseline": "COST_AWARE_LONG_SAME_ALLOCATION_V1",
+  "disclosures": {
+    "search": {
+      "trialCount": 1,
+      "selection": "FIRST_DECLARED",
+      "logCompleteness": "UNAVAILABLE",
+      "log": ""
+    },
+    "validation": {
+      "trainEvaluationOverlap": "UNKNOWN",
+      "holdoutDeclared": false,
+      "holdoutPriorAccess": "UNKNOWN",
+      "holdoutReuseCount": 0,
+      "note": "Synthetic accounting edge case; no unseen-data or provider claim."
+    },
+    "transformations": [],
+    "seeds": [],
+    "conflicts": {
+      "sharedDependencies": [
+        "opengrail-demo-v1"
+      ],
+      "other": ""
+    },
+    "publication": {
+      "dataRights": true,
+      "publicData": true,
+      "publicArtifact": true
+    }
+  },
+  "policyAccepted": "public-experiment-v1"
+}

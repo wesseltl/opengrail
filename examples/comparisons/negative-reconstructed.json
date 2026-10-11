@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "kind": "LOCAL_EVALUATOR_COMPARISON",
+  "classification": "AUTHOR_REPORTED",
+  "qualification": "NONE",
+  "independence": "NOT_ESTABLISHED",
+  "ordersEnabled": false,
+  "status": "MATCH",
+  "reason": null,
+  "identity": {
+    "requestId": "00000000-0000-4000-8000-000000000010",
+    "claimedArtifact": "465942c98bb1e92b0a85d2bd66345aaa2ffce4cec37f08b47ff11cdbb3b1c565",
+    "request": "b9950f0b4752f12965f16b6016d9bd236623061535ee5a50e24299e01d655162",
+    "strategy": "71d1ce3bc54294e6075f7b2f75ae9a3740911b87120d42dde11059725094b265",
+    "dataset": "7591df1ceb7660a723edb044272423e19edceb24bb19f49d19b0cb5674c5c7c7",
+    "signals": "fbb93a5b6fd5607ed3c13053cfd8649f52c8d91912c4393dab143f3d35471c48",
+    "declaredMethod": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+  },
+  "implementations": {
+    "primary": {
+      "version": "opengrail-demo-v1",
+      "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51"
+    },
+    "reference": {
+      "version": "opengrail-reference-v1",
+      "sourceSha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0"
+    }
+  },
+  "policy": {
+    "version": "opengrail-comparison-v1",
+    "absoluteTolerance": 1e-8,
+    "relativeTolerance": 1e-9,
+    "maximumDifferences": 50,
+    "ignoredFields": [
+      "audit[].details"
+    ],
+    "exactNumericFields": [
+      "barIndex",
+      "entryBar",
+      "exitBar",
+      "gridLevel",
+      "openPositions",
+      "trades",
+      "wins",
+      "losses",
+      "initialCapital",
+      "allocationPct"
+    ]
+  },
+  "sharedDependencies": [
+    "METHOD_SPECIFICATION",
+    "JAVASCRIPT_NUMBER_RUNTIME",
+    "INPUT_SCHEMAS_AND_HASHING",
+    "INPUT_DATA_AND_OPERATOR",
+    "REVIEW_OF_PRIMARY_SOURCE"
+  ],
+  "summaries": {
+    "claimed": {
+      "status": "COMPLETED",
+      "reason": null,
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": 999.8198345095169,
+        "netPnl": -0.18016549048309116,
+        "returnPct": -0.018016549048305297,
+        "maxDrawdownPct": 0.09180445784460795,
+        "trades": 6,
+        "wins": 2,
+        "losses": 4,
+        "totalFees": 0.1199787150498203,
+        "turnover": 119.9787150498203,
+        "comparable": true
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 1002.5658458586868,
+        "netPnl": 2.565845858686771,
+        "returnPct": 0.25658458586867994,
+        "totalFees": 0.02258843429297975,
+        "comparable": true
+      }
+    },
+    "primary": {
+      "status": "COMPLETED",
+      "reason": null,
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": 999.8198345095169,
+        "netPnl": -0.18016549048309116,
+        "returnPct": -0.018016549048305297,
+        "maxDrawdownPct": 0.09180445784460795,
+        "trades": 6,
+        "wins": 2,
+        "losses": 4,
+        "totalFees": 0.1199787150498203,
+        "turnover": 119.9787150498203,
+        "comparable": true
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 1002.5658458586868,
+        "netPnl": 2.565845858686771,
+        "returnPct": 0.25658458586867994,
+        "totalFees": 0.02258843429297975,
+        "comparable": true
+      }
+    },
+    "reference": {
+      "status": "COMPLETED",
+      "reason": null,
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": 999.819834509517,
+        "netPnl": -0.18016549048297748,
+        "returnPct": -0.018016549048294195,
+        "maxDrawdownPct": 0.09180445784459658,
+        "trades": 6,
+        "wins": 2,
+        "losses": 4,
+        "totalFees": 0.1199787150498203,
+        "turnover": 119.9787150498203,
+        "comparable": true
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 1002.5658458586868,
+        "netPnl": 2.565845858686771,
+        "returnPct": 0.25658458586867994,
+        "totalFees": 0.02258843429297975,
+        "comparable": true
+      }
+    }
+  },
+  "pairs": [
+    {
+      "pair": "CLAIM_PRIMARY",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    },
+    {
+      "pair": "CLAIM_REFERENCE",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    },
+    {
+      "pair": "PRIMARY_REFERENCE",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    }
+  ],
+  "reportDigest": "8f7358d98ac118b8a04ca86059ae02ffdab87dce068a6ad795c11ceee76d2129"
+}

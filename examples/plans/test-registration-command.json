@@ -1,0 +1,172 @@
+{
+  "action": "register",
+  "requestId": "91000000-0000-4000-8000-000000000030",
+  "id": "91000000-0000-4000-8000-000000000031",
+  "name": "Chronological TEST · 91000000-0000-4000-8000-000000000010",
+  "input": {
+    "version": 1,
+    "requestId": "91000000-0000-4000-8000-000000000032",
+    "evaluatorVersion": "opengrail-demo-v1",
+    "strategy": {
+      "record": {
+        "version": 1,
+        "id": "91000000-0000-4000-8000-000000000001",
+        "rootId": "91000000-0000-4000-8000-000000000001",
+        "revision": 1,
+        "requestId": "91000000-0000-4000-8000-000000000002",
+        "createdAt": "2026-10-11T10:00:00.000Z",
+        "author": {
+          "kind": "HUMAN",
+          "id": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "sponsorId": "human_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        },
+        "content": {
+          "name": "INVENTED local chronological DCA source",
+          "description": "Synthetic ascending training prices followed by declining test prices; no registered participant or real market source.",
+          "assumptions": "One lifetime DCA entry per independent cold start. Fee 10 basis points and adverse slippage 10 basis points per side are chosen synthetic assumptions, not measured exchange fees or real fills.",
+          "falsification": "Reject if the later losing partition is hidden, inherited positions leak into it, or either artifact binds to the original full input.",
+          "sources": [],
+          "definition": {
+            "schemaVersion": 1,
+            "market": {
+              "symbol": "BTC/USDT",
+              "timeframe": "1h",
+              "direction": "LONG"
+            },
+            "entry": {
+              "type": "DCA",
+              "intervalBars": 1,
+              "maxEntries": 1
+            },
+            "risk": {
+              "positionPct": 10,
+              "maxOpenPositions": 1,
+              "stopLossPct": 20,
+              "takeProfitPct": 100,
+              "maxDailyLossPct": 5
+            },
+            "costs": {
+              "feeBps": 10,
+              "slippageBps": 10
+            },
+            "execution": {
+              "mode": "DEMO",
+              "leverage": 1,
+              "ordersEnabled": false
+            }
+          },
+          "relation": null
+        },
+        "policyAccepted": "public-strategy-v1",
+        "verification": "UNTESTED",
+        "executionEnabled": false
+      },
+      "digest": "d799b179697d907e14a907fdef53df76a3ddc9332957be026bd994edc66efc09"
+    },
+    "dataset": {
+      "version": 1,
+      "id": "91000000-0000-4000-8000-000000000033",
+      "provenance": "SYNTHETIC",
+      "rights": {
+        "permission": "CREATED_SYNTHETIC",
+        "acknowledged": true,
+        "note": "Invented twelve-bar ascending/declining fixture created for local reproducibility only. No real market data, public registration or producer authentication."
+      },
+      "symbol": "BTC/USDT",
+      "timeframe": "1h",
+      "bars": [
+        {
+          "closedAt": "2026-10-01T07:00:00.000Z",
+          "open": 100,
+          "high": 101,
+          "low": 99,
+          "close": 100,
+          "volume": 10
+        },
+        {
+          "closedAt": "2026-10-01T08:00:00.000Z",
+          "open": 92,
+          "high": 93,
+          "low": 91,
+          "close": 92,
+          "volume": 10
+        },
+        {
+          "closedAt": "2026-10-01T09:00:00.000Z",
+          "open": 84,
+          "high": 85,
+          "low": 83,
+          "close": 84,
+          "volume": 10
+        },
+        {
+          "closedAt": "2026-10-01T10:00:00.000Z",
+          "open": 76,
+          "high": 77,
+          "low": 75,
+          "close": 76,
+          "volume": 10
+        },
+        {
+          "closedAt": "2026-10-01T11:00:00.000Z",
+          "open": 68,
+          "high": 69,
+          "low": 67,
+          "close": 68,
+          "volume": 10
+        },
+        {
+          "closedAt": "2026-10-01T12:00:00.000Z",
+          "open": 60,
+          "high": 61,
+          "low": 59,
+          "close": 60,
+          "volume": 10
+        }
+      ]
+    },
+    "signals": [],
+    "initialCapital": 1000,
+    "hypothesis": "A profitable earlier synthetic segment does not prevent a later synthetic loss under the same fixed strategy and independently funded cold starts.",
+    "falsification": "Reject if test loss disappears, future test bars alter training, or the same portfolio is implied across the reset.",
+    "emergencyStopAt": null
+  },
+  "evaluator": {
+    "version": "opengrail-demo-v1",
+    "sourceVersion": "84a1a668ef160bc3c9c4e0596a514b5d15e6dd49",
+    "sourceDigest": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51",
+    "methodDigest": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+  },
+  "baseline": "COST_AWARE_LONG_SAME_ALLOCATION_V1",
+  "disclosures": {
+    "search": {
+      "trialCount": 1,
+      "selection": "FIRST_DECLARED",
+      "logCompleteness": "PARTIAL",
+      "log": "One deliberately constructed rising/falling local fixture from the core regression. This excludes prior development and external research; it is not a complete strategy-search history."
+    },
+    "validation": {
+      "trainEvaluationOverlap": "UNKNOWN",
+      "holdoutDeclared": false,
+      "holdoutPriorAccess": "SEEN",
+      "holdoutReuseCount": 0,
+      "note": "Both segments are invented, supplied and fully visible before planning. No untouched holdout, independent qualification or predictive performance is claimed."
+    },
+    "transformations": [],
+    "seeds": [],
+    "conflicts": {
+      "sharedDependencies": [
+        "Same local author",
+        "Fixed method and JavaScript schemas",
+        "Deliberately constructed synthetic OHLC"
+      ],
+      "other": "Invented public identities, receipt timestamps and visible snapshots are illustrative data, not authenticated server records."
+    },
+    "publication": {
+      "dataRights": true,
+      "publicData": true,
+      "publicArtifact": true
+    }
+  },
+  "policyAccepted": "public-experiment-v1"
+}

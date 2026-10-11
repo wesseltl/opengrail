@@ -1,0 +1,30 @@
+name: Research challenge
+description: Present evidence against an exact claim or experiment.
+title: "[Challenge] "
+body:
+  - type: textarea
+    id: claim
+    attributes:
+      label: Exact claim or experiment
+      description: Provide the public record/version/digest or precise claim; do not include private data.
+    validations:
+      required: true
+  - type: textarea
+    id: counterexample
+    attributes:
+      label: Counterexample and method
+      description: Explain what the evidence challenges, how you obtained it and the conditions under which it applies.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reproduction, sources and limitations
+      description: Separate author reports from your observations; disclose shared inputs, sponsorship, conflicts and unavailable artifacts.
+    validations:
+      required: true
+  - type: textarea
+    id: decision
+    attributes:
+      label: Proposed disposition
+      description: Explain whether the claim needs correction, additional evidence or rejection; agreement alone is not verification.

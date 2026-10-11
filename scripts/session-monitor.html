@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Local Session · OpenGrail</title>
+  <link rel="stylesheet" href="/monitor.css">
+  <script type="module" src="/monitor.js"></script>
+</head>
+<body>
+  <main id="session-monitor">
+    <header class="header"><span class="wordmark">OpenGrail<span>.local</span></span><span class="badge">Demo · orders disabled</span></header>
+    <section class="intro"><p class="eyebrow">Sponsor-local receiver</p><h1>Your session, as received.</h1><p>Confirmed local checkpoints. Supplied source labels do not authenticate a market feed.</p></section>
+    <section class="connection panel" aria-label="Owner connection">
+      <form id="connect-form"><label for="owner-token">Local owner token</label><div class="connection-row"><input id="owner-token" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="100" placeholder="Paste the owner token from your terminal"><button id="connect" type="submit">Connect locally</button><button id="disconnect" type="button" class="secondary" disabled>Disconnect</button></div></form>
+      <p id="connection-status" role="status">Disconnected. No session data loaded.</p><p class="hint">Memory only. Disconnecting clears this view and token; it does not stop the receiver or close positions.</p>
+    </section>
+    <p id="message" class="message" role="status" aria-live="polite"></p>
+    <section id="pending-control" class="panel uncertain" aria-label="Unresolved owner control" hidden><h2>Control acknowledgement unknown</h2><p id="pending-description"></p><p class="hint">Other controls wait until this exact request is reconciled. A newer producer checkpoint does not acknowledge it.</p><div class="actions"><button id="reconcile" type="button" class="secondary">Check receipt</button><button id="retry" type="button" class="secondary">Retry identical control</button></div></section>
+    <div id="dashboard" hidden>
+      <section class="panel strategy"><div class="section-head"><div><p class="eyebrow">Current immutable strategy</p><h2 id="strategy-name"></h2><p id="strategy-summary"></p></div><span id="session-status" class="badge"></span></div><p id="source-summary" class="hint"></p><details><summary>Exact source and implementation</summary><p id="identity" class="reference"></p></details></section>
+      <section class="metrics" aria-label="Confirmed simulated account"><article class="panel"><span>Marked equity</span><strong id="equity"></strong></article><article class="panel"><span>Virtual cash</span><strong id="cash"></strong></article><article class="panel"><span>Net marked P&amp;L</span><strong id="net-pnl"></strong></article><article class="panel"><span>Retained sequence</span><strong id="sequence"></strong></article></section>
+      <p id="freshness" class="hint freshness"></p>
+      <div class="workspace"><section class="panel"><div class="section-head"><h2>Open simulated positions</h2><span id="position-count" class="badge muted"></span></div><div id="positions" class="positions"></div><div id="quote-chart" class="chart"></div><p id="quote-summary" class="hint"></p></section>
+        <aside class="panel"><h2>Owner controls</h2><div class="control-buttons"><button id="pause" type="button" class="secondary" disabled>Pause entries</button><button id="resume" type="button" disabled>Resume entries</button><button id="emergency" type="button" class="danger" disabled>Emergency stop</button></div><p id="control-status" class="hint"></p><p id="pending-entry" class="hint"></p><p id="capacity" class="hint"></p><p class="hint">Pause blocks admissions. Emergency exits require a later permitted quote; finite capacity cannot guarantee liquidation.</p></aside></div>
+      <section class="panel audit"><details><summary>Recent receipt and decision audit</summary><div class="table-scroll"><table><thead><tr><th>Sequence</th><th>Receipt time</th><th>Source time</th><th>Reason</th><th>Position</th></tr></thead><tbody id="audit-rows"></tbody></table></div><p class="hint">Up to 32 recent engine events. Complete retained evidence remains in the receiver journal.</p></details></section>
+    </div>
+    <section id="notes-panel" class="notes" hidden><h2>Connection notes</h2><ol id="notes"></ol><p class="hint">At most 16 safe local notes. Repeated polling errors are not added repeatedly.</p></section>
+    <footer>AUTHOR_REPORTED · qualification NONE · source authenticity UNKNOWN. Local consistency is not independent evidence or profitable trading.</footer>
+  </main>
+</body>
+</html>

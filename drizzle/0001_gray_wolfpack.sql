@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `network_agent_id` ON `network_agents` (`id`);

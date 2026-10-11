@@ -1,0 +1,1 @@
+CREATE INDEX `research_publication_feed` ON `research_publications` (`created_at`,`id`);

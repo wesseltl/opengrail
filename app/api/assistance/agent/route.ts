@@ -1,0 +1,13 @@
+import {getNetworkDb} from '@/db';
+import {AssistanceRepository} from '@/app/assistance-store';
+import {NetworkRepository} from '@/app/network-store';
+import {assistanceAgentRequest} from '@/app/assistance-http';
+export const dynamic='force-dynamic';
+const handle=(request:Request)=>assistanceAgentRequest(request,()=>new AssistanceRepository(getNetworkDb()),()=>new NetworkRepository(getNetworkDb()));
+export const GET=handle;
+export const POST=handle;
+export const DELETE=handle;
+export const PUT=handle;
+export const PATCH=handle;
+export const HEAD=handle;
+export const OPTIONS=handle;

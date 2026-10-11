@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "action": "outcome",
+  "requestId": "00000000-0000-4000-8000-000000000040",
+  "item": {
+    "id": "00000000-0000-4000-8000-000000000041",
+    "digest": "983176fd095d194a5659e67d09d3f714c157874882f280dc2bcf3d36a0c61e24",
+    "type": "OUTCOME",
+    "requestId": "00000000-0000-4000-8000-000000000040",
+    "createdAt": "2026-10-11T01:00:00.000Z",
+    "author": {
+      "kind": "HUMAN",
+      "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+      "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+    },
+    "strategy": {
+      "id": "00000000-0000-4000-8000-000000000012",
+      "digest": "71d1ce3bc54294e6075f7b2f75ae9a3740911b87120d42dde11059725094b265"
+    },
+    "manifest": {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "digest": "d1d9de6ee616de31620c56a96af329cb06b681a05c2081e5a21dd55159e2d916"
+    },
+    "state": "VISIBLE",
+    "reason": null,
+    "suppression": null,
+    "reporting": "AUTHOR_REPORTED",
+    "outcomeCount": 0,
+    "record": {
+      "version": 1,
+      "id": "00000000-0000-4000-8000-000000000041",
+      "requestId": "00000000-0000-4000-8000-000000000040",
+      "createdAt": "2026-10-11T01:00:00.000Z",
+      "author": {
+        "kind": "HUMAN",
+        "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+        "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+      },
+      "type": "OUTCOME",
+      "content": {
+        "name": "Synthetic interrupted attempt",
+        "manifest": {
+          "id": "00000000-0000-4000-8000-000000000021",
+          "digest": "d1d9de6ee616de31620c56a96af329cb06b681a05c2081e5a21dd55159e2d916"
+        },
+        "result": {
+          "kind": "INTERRUPTED",
+          "reason": "Demonstration of an interrupted evaluation without invented metrics."
+        },
+        "claim": {
+          "type": "ORIGINAL",
+          "relation": null,
+          "sharedDependencies": [
+            "opengrail-demo-v1"
+          ],
+          "conflicts": "Same author and sponsor; no independence claim."
+        }
+      },
+      "flags": [
+        "SOURCE_EXECUTION_UNVERIFIED",
+        "TIMING_UNVERIFIED",
+        "SAME_AUTHOR",
+        "SAME_SPONSOR",
+        "SHARED_DEPENDENCIES"
+      ],
+      "policyAccepted": "public-experiment-v1",
+      "classification": "AUTHOR_REPORTED",
+      "executionEnabled": false
+    },
+    "moderation": []
+  },
+  "report": null,
+  "executionEnabled": false
+}

@@ -1,0 +1,37 @@
+name: Contribution task
+description: Propose a bounded, reviewable contribution.
+title: "[Task] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem and task reference
+      description: Link the relevant task specification or explain the observed problem; avoid claims that planned features already exist.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Proposed scope
+      description: Describe concrete behavior, affected boundaries and exclusions.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and rejection cases
+      description: Define evidence that would prove the change and counterexamples it must handle.
+    validations:
+      required: true
+  - type: textarea
+    id: resources
+    attributes:
+      label: Permissions, resources and dependencies
+      description: Disclose new dependencies, external compute, data rights, expenses or permission changes. Do not assume any are authorized.
+  - type: checkboxes
+    id: review
+    attributes:
+      label: Review boundary
+      options:
+        - label: Implementation will be proposed through an isolated branch or fork; merge, deployment, permission changes and expenses require maintainer approval.
+          required: true

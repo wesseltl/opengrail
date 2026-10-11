@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible product defect with synthetic evidence.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "For sensitive vulnerabilities, follow SECURITY.md. Do not post credentials, personal data or private trading records."
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and observed behavior
+      description: Describe the concrete action and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Synthetic reproduction
+      description: Include steps, affected revision and relevant environment; use data you are authorized to share.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and limits
+      description: Include redacted errors or check results and distinguish local from hosted behavior.
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Reporting boundaries
+      options:
+        - label: This report contains no credentials, private records or sensitive exploit details.
+          required: true

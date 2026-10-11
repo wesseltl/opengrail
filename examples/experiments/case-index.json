@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "classification": "SYNTHETIC_LOCAL_FIXTURE_ONLY",
+  "fixtureServerReceiptTime": "2026-10-11T01:00:00.000Z",
+  "sourceConnected": false,
+  "productionRegistration": false,
+  "independentQualification": false,
+  "executionEnabled": false,
+  "evaluator": {
+    "version": "opengrail-demo-v1",
+    "declaredMethodDigest": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572",
+    "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51"
+  },
+  "cases": [
+    {
+      "manifestId": "00000000-0000-4000-8000-000000000021",
+      "manifestDigest": "d1d9de6ee616de31620c56a96af329cb06b681a05c2081e5a21dd55159e2d916",
+      "retainedOutcomes": 3,
+      "statuses": [
+        "COMPLETED",
+        "INTERRUPTED",
+        "CONFLICTING_CLAIM"
+      ],
+      "note": "The contradictory artifact is deliberately self-hashed false evidence, not a second evaluator."
+    },
+    {
+      "manifestId": "00000000-0000-4000-8000-000000000071",
+      "manifestDigest": "71c415245817dedeb4b586cf902ed9d30500df8453780271b58b479bfabb1449",
+      "retainedOutcomes": 1,
+      "statuses": [
+        "FAILED_INSOLVENT"
+      ],
+      "note": "Uncapped short deficit remains an incomparable failure."
+    }
+  ]
+}

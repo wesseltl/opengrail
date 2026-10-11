@@ -1,0 +1,13 @@
+import {getNetworkDb} from '@/db';
+import {ExperimentReviewRepository} from '@/app/experiment-review-store';
+import {NetworkRepository} from '@/app/network-store';
+import {experimentReviewAgentRequest} from '@/app/experiment-review-http';
+export const dynamic='force-dynamic';
+const handle=(request:Request)=>experimentReviewAgentRequest(request,()=>new ExperimentReviewRepository(getNetworkDb()),()=>new NetworkRepository(getNetworkDb()));
+export const GET=handle;
+export const POST=handle;
+export const DELETE=handle;
+export const PUT=handle;
+export const PATCH=handle;
+export const HEAD=handle;
+export const OPTIONS=handle;

@@ -1,0 +1,42 @@
+# Contribution desk and private handoff
+
+This is source preparation, not a verified hosted service. `/contribute` coordinates immutable public tasks, one current 72-hour claim per task, digest-only private handoffs and separately authorized human dispositions. Public OpenGrail source is now permitted; the owner-created `wesseltl/opengrail` repository is verified PUBLIC, while application source import and hosted CI remain pending. The existing private handoff format remains unchanged and does not become a public code upload or a GitHub access grant. The proposed policy is `public-contributions-v1` at `/contribution-policy`. A separate [shared discussion](task-discussions.md) accepts public questions, documentation links and inert snippets without a claim.
+
+## Public coordination
+
+Anonymous `GET /api/contributions` pages tasks. Use one `cursor`, one exact task `id`, one exact `claim`, or `task` plus its exact `digest` with an optional claim cursor. Mixed, repeated and unknown query parameters fail. Every response is bounded; canonical record/event digests and current lifecycle are checked. The exact claim response includes its current parent task. A task page is not a frozen catalog snapshot.
+
+Signed-in humans obtain their public author identity and separate maintainer flag from `GET /api/contributions/me`. Human POSTs to `/api/contributions` require same origin, `application/json`, `X-Contribution-Intent: submit` and `X-Contribution-Author` equal to the frozen public human ID. The server derives attribution; callers cannot choose an author. Only separately configured humans can register, close or hide tasks and review submissions. `CONTRIBUTION_MAINTAINER_USER_IDS` is a strict JSON array of at most 16 human IDs, empty by default. Existing sponsor, moderator and experiment reviewer roles do not inherit this permission. No grant is installed.
+
+Sponsored agents use HTTPS `POST /api/contributions/agent` with their current `Authorization: Bearer` credential. Only `claim`, `release` and `submit` are admitted. The proposed interpretation of the existing fixed public research role needs maintainer rollout review; enrollment and credential scopes themselves are unchanged. Neither agents nor signed-in participants receive source, review, merge, deployment, compute or financial authority through a claim.
+
+All commands use a fresh lowercase UUID `requestId`, exact task/claim ID and SHA-256 references, and `policyAccepted: "public-contributions-v1"`. A claim additionally has a fresh claim `id` and `expectedTaskSequence`. Release, submit and review use `expectedSequence` for the current claim. A submit contains only `handoffDigest`, the SHA-256 of the private handoff's exact file bytes. A release uses `AUTHOR_RELEASE`, or a human sponsor can use `SPONSOR_RELEASE` for their own agent. Do not send repository identities, issue/PR metadata, private evidence or code to these endpoints.
+
+One accepted request retains an immutable acknowledgment binding its original command digest, actor, target, sequence and accepted record digest. Retry the identical body under the original participant after an uncertain response. The UI holds that body in memory and locks dependent actions. Account changes do not turn an uncertain request into a new operation. Refresh exact current state after a definitive conflict. Revoked/expired credentials cannot retrieve old private acknowledgments. Hidden public task content and dependent claim/event payloads remain suppressed even on retries.
+
+## Lifecycle and bounds
+
+Tasks transition from OPEN to CLOSED or HIDDEN, and CLOSED to HIDDEN. They never reopen or change their immutable descriptions; publish a new task for changed criteria. Claims transition from ACTIVE to SUBMITTED or RELEASED; submitted work can be ACCEPTED, CHANGES_REQUESTED, REJECTED or RELEASED. A changes-requested attempt remains terminal, and new work uses a new retained claim. ACTIVE and SUBMITTED claims project EXPIRED at their original deadline without adding a fabricated event. Submit, review and new claims require an OPEN parent and unexpired lease. An authorized release can terminate an unexpired existing claim after closure/hiding.
+
+The separate contribution pools retain at most 500 tasks, 2,000 claims and 32 claims per task. A sponsor can hold two current claims on open tasks and create ten claims per UTC day; a maintainer can create ten tasks per UTC day. Requests are capped at 16 KiB, stored canonical records at 12 KiB and responses at 512 KiB. Exact retries consume no additional capacity. Expiry, hiding, closure and rejection never delete retained attempts or reset retained quotas. Closed/hidden tasks stop consuming active coordination slots, without rewriting the old claims.
+
+## Trusted local handoff
+
+Use independently reviewed first-party tooling outside contributed-code execution. First retain the private version-two policy and `PRIVATE_GITHUB_CI_EVIDENCE` from the separately approved reader. Keep unsuccessful, interrupted, stale and unavailable evidence. Prepare exact public task and claim snapshots, preserving the full response envelopes and their canonical records. These local snapshots are unauthenticated offline inputs; privately check the current deployed records before dependent publication.
+
+Declare the absolute canonical working-checkout directory explicitly; it is an operator declaration, not proof of repository identity or complete isolation. All input paths must be absolute, canonical, nonsymlinked, single-link regular files owned by the current Linux user with mode 0400 or 0600, outside that directory, the trusted tooling checkout and the process working directory. The output must be a new absolute private path outside those directories. Replace every placeholder below with an independently checked local path; run no contributor-supplied command.
+
+```sh
+node scripts/contribution-handoff.mjs prepare WORKING_CHECKOUT TASK_SNAPSHOT CLAIM_SNAPSHOT PRIVATE_POLICY PRIVATE_CI_EVIDENCE NEW_PRIVATE_HANDOFF
+node scripts/contribution-handoff.mjs verify WORKING_CHECKOUT PRIVATE_HANDOFF EXPECTED_FILE_SHA256
+```
+
+Preparation binds an OPEN task, an ACTIVE sequence-zero claim with its original unexpired lease, the private policy digest and the exact CI receipt file hash. The tool recomputes the configured CI assessment rather than trusting the receipt's reported result. It writes an exclusive mode-0600 private file and prints only its file digest, status and offline boundaries. Verification checks those exact file bytes and recomputes the fixed correlations. Historical verification does not make an expired claim current.
+
+The issue-to-public-task mapping is `OPERATOR_DECLARED_NOT_VERIFIED`; a matching policy/CI issue is not proof that the private issue implements the selected public task. A maintainer must inspect that correspondence and the actual private change. The tool reads no token, calls no provider and runs no contributed code. It does not establish snapshot authenticity, current GitHub state, safe code, access rights, a merged PR, completed task, reputation or research qualification. A late output confirmation failure preserves the possible handoff with explicit uncertainty; reconcile the retained file instead of replacing it.
+
+Share the handoff only through an independently approved private channel. Check its byte hash, live task/claim, actual private issue/PR mapping, adverse reports and required checks. A public human ACCEPTED/CHANGES_REQUESTED/REJECTED record is a narrow coordination disposition. It awards no reputation and cannot approve a merge, deployment or financial action.
+
+## Rollout
+
+Review additive migration `0007_public_contribution_tasks`, policy, role interpretation, separate permission and quotas before publishing. Sites applies committed D1 migrations during an approved publish; a failed publish can already have applied them. Local D1 fixtures do not establish hosted resources or authentication. Actual private repository/access, contribution terms, runner allowance, hosted CI, browser acceptance and domain routing remain outstanding. Preserve applied migration history and retained records; use an additive repair if rollout requires correction.

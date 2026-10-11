@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "action": "outcome",
+  "requestId": "00000000-0000-4000-8000-000000000080",
+  "item": {
+    "id": "00000000-0000-4000-8000-000000000081",
+    "digest": "3255910f4a9f1939b2943d36bd7b35a040b60bfe1ed0c69b6f0440961cbbae9f",
+    "type": "OUTCOME",
+    "requestId": "00000000-0000-4000-8000-000000000080",
+    "createdAt": "2026-10-11T01:00:00.000Z",
+    "author": {
+      "kind": "HUMAN",
+      "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+      "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+    },
+    "strategy": {
+      "id": "00000000-0000-4000-8000-000000000064",
+      "digest": "c37b0df42485978fe9ed320d86eeec760729d8a92dee4d8540a2ffc6b8f078b6"
+    },
+    "manifest": {
+      "id": "00000000-0000-4000-8000-000000000071",
+      "digest": "71c415245817dedeb4b586cf902ed9d30500df8453780271b58b479bfabb1449"
+    },
+    "state": "VISIBLE",
+    "reason": null,
+    "suppression": null,
+    "reporting": "AUTHOR_REPORTED",
+    "outcomeCount": 0,
+    "record": {
+      "version": 1,
+      "id": "00000000-0000-4000-8000-000000000081",
+      "requestId": "00000000-0000-4000-8000-000000000080",
+      "createdAt": "2026-10-11T01:00:00.000Z",
+      "author": {
+        "kind": "HUMAN",
+        "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+        "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+      },
+      "type": "OUTCOME",
+      "content": {
+        "name": "Synthetic uncapped insolvency retained",
+        "manifest": {
+          "id": "00000000-0000-4000-8000-000000000071",
+          "digest": "71c415245817dedeb4b586cf902ed9d30500df8453780271b58b479bfabb1449"
+        },
+        "result": {
+          "kind": "ARTIFACT",
+          "artifact": {
+            "version": 1,
+            "requestId": "00000000-0000-4000-8000-000000000060",
+            "evaluatorVersion": "opengrail-demo-v1",
+            "classification": "AUTHOR_REPORTED",
+            "mode": "SIMULATED",
+            "ordersEnabled": false,
+            "status": "FAILED",
+            "reason": "INSOLVENT",
+            "input": {
+              "version": 1,
+              "requestId": "00000000-0000-4000-8000-000000000060",
+              "evaluatorVersion": "opengrail-demo-v1",
+              "strategy": {
+                "record": {
+                  "version": 1,
+                  "id": "00000000-0000-4000-8000-000000000064",
+                  "rootId": "00000000-0000-4000-8000-000000000064",
+                  "revision": 1,
+                  "requestId": "00000000-0000-4000-8000-000000000063",
+                  "createdAt": "2026-10-11T01:00:00.000Z",
+                  "author": {
+                    "kind": "HUMAN",
+                    "id": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198",
+                    "sponsorId": "human_515676c05e74564a7e8a79da1d36e8b3f35f2cee1d38fd774305efa3dddde198"
+                  },
+                  "content": {
+                    "name": "Synthetic uncapped short-insolvency source",
+                    "description": "Invented offline example: supplied signal labels, no registered author, actual provider connection or market observation.",
+                    "assumptions": "Friction, fills and data are authored simulation assumptions.",
+                    "falsification": "Reject economic claims that cannot be independently reproduced with permitted unseen data.",
+                    "sources": [],
+                    "definition": {
+                      "schemaVersion": 1,
+                      "market": {
+                        "symbol": "BTC/USDT",
+                        "timeframe": "1h",
+                        "direction": "SHORT"
+                      },
+                      "entry": {
+                        "type": "SIGNAL",
+                        "provider": "CUSTOM",
+                        "event": "BEARISH",
+                        "maxAgeBars": 1
+                      },
+                      "risk": {
+                        "positionPct": 1,
+                        "maxOpenPositions": 1,
+                        "stopLossPct": 2,
+                        "takeProfitPct": 4,
+                        "maxDailyLossPct": 1
+                      },
+                      "costs": {
+                        "feeBps": 0,
+                        "slippageBps": 0
+                      },
+                      "execution": {
+                        "mode": "DEMO",
+                        "leverage": 1,
+                        "ordersEnabled": false
+                      }
+                    },
+                    "relation": null
+                  },
+                  "policyAccepted": "public-strategy-v1",
+                  "verification": "UNTESTED",
+                  "executionEnabled": false
+                },
+                "digest": "c37b0df42485978fe9ed320d86eeec760729d8a92dee4d8540a2ffc6b8f078b6"
+              },
+              "dataset": {
+                "version": 1,
+                "id": "00000000-0000-4000-8000-000000000061",
+                "provenance": "SYNTHETIC",
+                "rights": {
+                  "permission": "CREATED_SYNTHETIC",
+                  "acknowledged": true,
+                  "note": "Invented prices for a local accounting counterexample. Public fixture permission only."
+                },
+                "symbol": "BTC/USDT",
+                "timeframe": "1h",
+                "bars": [
+                  {
+                    "closedAt": "2025-01-01T01:00:00.000Z",
+                    "open": 100,
+                    "high": 100,
+                    "low": 100,
+                    "close": 100,
+                    "volume": 1
+                  },
+                  {
+                    "closedAt": "2025-01-01T02:00:00.000Z",
+                    "open": 100,
+                    "high": 100,
+                    "low": 100,
+                    "close": 100,
+                    "volume": 1
+                  },
+                  {
+                    "closedAt": "2025-01-01T03:00:00.000Z",
+                    "open": 1000000000,
+                    "high": 1000000000,
+                    "low": 1000000000,
+                    "close": 1000000000,
+                    "volume": 1
+                  }
+                ]
+              },
+              "signals": [
+                {
+                  "id": "00000000-0000-4000-8000-000000000062",
+                  "provider": "CUSTOM",
+                  "event": "BEARISH",
+                  "observedAt": "2025-01-01T01:00:00.000Z",
+                  "availableAt": "2025-01-01T01:00:00.000Z"
+                }
+              ],
+              "initialCapital": 1000,
+              "hypothesis": "Test that a synthetic short opening gap retains the full loss rather than clipping collateral.",
+              "falsification": "Reject the accounting if it reports a successful comparable outcome after insolvency.",
+              "emergencyStopAt": null
+            },
+            "digests": {
+              "request": "5ba68d4458230788445338315140578b8f4afe36e1fb802ae924311ab769f9be",
+              "strategy": "c37b0df42485978fe9ed320d86eeec760729d8a92dee4d8540a2ffc6b8f078b6",
+              "dataset": "abcb372e95b63cc21138c95a1a75128a6caa23fd89e386d9685aad04d59f8158",
+              "signals": "82c9dec9f57584ea3b978b470ed5cd224065a4d436d57f058066e681cc2d6161",
+              "evaluator": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+            },
+            "audit": [
+              {
+                "barIndex": 0,
+                "at": "2025-01-01T01:00:00.000Z",
+                "type": "SIGNAL",
+                "reason": "SIGNAL_CONSUMED",
+                "positionId": null,
+                "signalId": "00000000-0000-4000-8000-000000000062",
+                "details": "Matching event consumed once for a next-open decision."
+              },
+              {
+                "barIndex": 1,
+                "at": "2025-01-01T01:00:00.000Z",
+                "type": "ENTRY",
+                "reason": "ENTRY_RULE",
+                "positionId": "demo_position_1",
+                "signalId": "00000000-0000-4000-8000-000000000062",
+                "details": "Virtual quantity 0.1; reserved collateral 10; entry fee 0."
+              },
+              {
+                "barIndex": 1,
+                "at": "2025-01-01T02:00:00.000Z",
+                "type": "DECISION",
+                "reason": "MISSING_SIGNAL",
+                "positionId": null,
+                "signalId": null,
+                "details": "No unused matching event is available at this closed bar."
+              },
+              {
+                "barIndex": 2,
+                "at": "2025-01-01T02:00:00.000Z",
+                "type": "EXIT",
+                "reason": "STOP_LOSS",
+                "positionId": "demo_position_1",
+                "signalId": "00000000-0000-4000-8000-000000000062",
+                "details": "Virtual position closed with adverse slippage and per-side fees."
+              },
+              {
+                "barIndex": 2,
+                "at": "2025-01-01T02:00:00.000Z",
+                "type": "FAILURE",
+                "reason": "INSOLVENT",
+                "positionId": null,
+                "signalId": null,
+                "details": "Replay terminated; uncapped economic losses and completed finite observations are retained. No further entries."
+              }
+            ],
+            "trades": [
+              {
+                "id": "demo_position_1",
+                "direction": "SHORT",
+                "entryBar": 1,
+                "exitBar": 2,
+                "entryAt": "2025-01-01T01:00:00.000Z",
+                "exitAt": "2025-01-01T02:00:00.000Z",
+                "quantity": 0.1,
+                "entryPrice": 100,
+                "exitPrice": 1000000000,
+                "collateral": 10,
+                "entryFee": 0,
+                "exitFee": 0,
+                "grossPnl": -99999990,
+                "netPnl": -99999990,
+                "reason": "STOP_LOSS",
+                "gridLevel": null,
+                "signalId": "00000000-0000-4000-8000-000000000062"
+              }
+            ],
+            "equity": [
+              {
+                "barIndex": 0,
+                "closedAt": "2025-01-01T01:00:00.000Z",
+                "equity": 1000,
+                "cash": 1000,
+                "reservedCollateral": 0,
+                "openPositions": 0,
+                "dailyHalted": false
+              },
+              {
+                "barIndex": 1,
+                "closedAt": "2025-01-01T02:00:00.000Z",
+                "equity": 1000,
+                "cash": 990,
+                "reservedCollateral": 10,
+                "openPositions": 1,
+                "dailyHalted": false
+              },
+              {
+                "barIndex": 2,
+                "closedAt": "2025-01-01T03:00:00.000Z",
+                "equity": -99998990,
+                "cash": -99998990,
+                "reservedCollateral": 0,
+                "openPositions": 0,
+                "dailyHalted": false
+              }
+            ],
+            "metrics": {
+              "initialCapital": 1000,
+              "finalEquity": -99998990,
+              "netPnl": -99999990,
+              "returnPct": -9999999,
+              "maxDrawdownPct": 9999999,
+              "trades": 1,
+              "wins": 0,
+              "losses": 1,
+              "totalFees": 0,
+              "turnover": 100000010,
+              "comparable": false
+            },
+            "benchmark": {
+              "status": "COMPLETED",
+              "reason": null,
+              "allocationPct": 1,
+              "direction": "LONG",
+              "initialCapital": 1000,
+              "finalEquity": 100000990,
+              "netPnl": 99999990,
+              "returnPct": 9999999,
+              "totalFees": 0,
+              "comparable": false
+            },
+            "resultDigest": "5cb8dd31779c40d144708f3172231cbdda0f3a0d78c8084b4f61293942f73856"
+          }
+        },
+        "claim": {
+          "type": "ORIGINAL",
+          "relation": null,
+          "sharedDependencies": [
+            "opengrail-demo-v1"
+          ],
+          "conflicts": "Synthetic local accounting fixture, not independent validation."
+        }
+      },
+      "flags": [
+        "SOURCE_EXECUTION_UNVERIFIED",
+        "TIMING_UNVERIFIED",
+        "SAME_AUTHOR",
+        "SAME_SPONSOR",
+        "SHARED_DEPENDENCIES"
+      ],
+      "policyAccepted": "public-experiment-v1",
+      "classification": "AUTHOR_REPORTED",
+      "executionEnabled": false
+    },
+    "moderation": []
+  },
+  "report": null,
+  "executionEnabled": false
+}

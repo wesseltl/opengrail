@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "kind": "LOCAL_EVALUATOR_COMPARISON",
+  "classification": "AUTHOR_REPORTED",
+  "qualification": "NONE",
+  "independence": "NOT_ESTABLISHED",
+  "ordersEnabled": false,
+  "status": "MATCH",
+  "reason": null,
+  "identity": {
+    "requestId": "00000000-0000-4000-8000-000000000060",
+    "claimedArtifact": "5cb8dd31779c40d144708f3172231cbdda0f3a0d78c8084b4f61293942f73856",
+    "request": "5ba68d4458230788445338315140578b8f4afe36e1fb802ae924311ab769f9be",
+    "strategy": "c37b0df42485978fe9ed320d86eeec760729d8a92dee4d8540a2ffc6b8f078b6",
+    "dataset": "abcb372e95b63cc21138c95a1a75128a6caa23fd89e386d9685aad04d59f8158",
+    "signals": "82c9dec9f57584ea3b978b470ed5cd224065a4d436d57f058066e681cc2d6161",
+    "declaredMethod": "a3e031a6d223ffd7d73095f7ea48827d4386e886813dd9d4a9e0e625acd15572"
+  },
+  "implementations": {
+    "primary": {
+      "version": "opengrail-demo-v1",
+      "sourceSha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51"
+    },
+    "reference": {
+      "version": "opengrail-reference-v1",
+      "sourceSha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0"
+    }
+  },
+  "policy": {
+    "version": "opengrail-comparison-v1",
+    "absoluteTolerance": 1e-8,
+    "relativeTolerance": 1e-9,
+    "maximumDifferences": 50,
+    "ignoredFields": [
+      "audit[].details"
+    ],
+    "exactNumericFields": [
+      "barIndex",
+      "entryBar",
+      "exitBar",
+      "gridLevel",
+      "openPositions",
+      "trades",
+      "wins",
+      "losses",
+      "initialCapital",
+      "allocationPct"
+    ]
+  },
+  "sharedDependencies": [
+    "METHOD_SPECIFICATION",
+    "JAVASCRIPT_NUMBER_RUNTIME",
+    "INPUT_SCHEMAS_AND_HASHING",
+    "INPUT_DATA_AND_OPERATOR",
+    "REVIEW_OF_PRIMARY_SOURCE"
+  ],
+  "summaries": {
+    "claimed": {
+      "status": "FAILED",
+      "reason": "INSOLVENT",
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": -99998990,
+        "netPnl": -99999990,
+        "returnPct": -9999999,
+        "maxDrawdownPct": 9999999,
+        "trades": 1,
+        "wins": 0,
+        "losses": 1,
+        "totalFees": 0,
+        "turnover": 100000010,
+        "comparable": false
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 100000990,
+        "netPnl": 99999990,
+        "returnPct": 9999999,
+        "totalFees": 0,
+        "comparable": false
+      }
+    },
+    "primary": {
+      "status": "FAILED",
+      "reason": "INSOLVENT",
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": -99998990,
+        "netPnl": -99999990,
+        "returnPct": -9999999,
+        "maxDrawdownPct": 9999999,
+        "trades": 1,
+        "wins": 0,
+        "losses": 1,
+        "totalFees": 0,
+        "turnover": 100000010,
+        "comparable": false
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 100000990,
+        "netPnl": 99999990,
+        "returnPct": 9999999,
+        "totalFees": 0,
+        "comparable": false
+      }
+    },
+    "reference": {
+      "status": "FAILED",
+      "reason": "INSOLVENT",
+      "metrics": {
+        "initialCapital": 1000,
+        "finalEquity": -99998990,
+        "netPnl": -99999990,
+        "returnPct": -9999999,
+        "maxDrawdownPct": 9999999,
+        "trades": 1,
+        "wins": 0,
+        "losses": 1,
+        "totalFees": 0,
+        "turnover": 100000010,
+        "comparable": false
+      },
+      "benchmark": {
+        "status": "COMPLETED",
+        "reason": null,
+        "allocationPct": 1,
+        "direction": "LONG",
+        "initialCapital": 1000,
+        "finalEquity": 100000990,
+        "netPnl": 99999990,
+        "returnPct": 9999999,
+        "totalFees": 0,
+        "comparable": false
+      }
+    }
+  },
+  "pairs": [
+    {
+      "pair": "CLAIM_PRIMARY",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    },
+    {
+      "pair": "CLAIM_REFERENCE",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    },
+    {
+      "pair": "PRIMARY_REFERENCE",
+      "matches": true,
+      "differenceCount": 0,
+      "differences": []
+    }
+  ],
+  "reportDigest": "8bccf996d5c414d1abb3c277686c23bac0cb9c2aa61944528a8b53dbd2c42997"
+}
