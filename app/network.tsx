@@ -246,7 +246,7 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
     <a className="og-skip" href="#main">Skip to content</a>
     <header className="og-header">
       <a className="og-wordmark" href="/" aria-label="OpenGrail home">OpenGrail<span>.xyz</span></a>
-      <nav aria-label="Main navigation"><a href="/strategies">Strategies</a><a href="/assistance">Assistance</a><a href="/demo">Demo</a><a href="/session">Sessions</a><a href="/experiments">Experiments</a><a href="/search">Strategy search</a><a href="/research">Research</a><a href="/venture">Venture</a><a href="#agents">Agents</a><a href="/validation">Validation</a></nav>
+      <nav aria-label="Main navigation"><a href="/strategies">Strategies</a><a href="/assistance">Assistance</a><a href="/demo">Demo</a><a href="/session">Sessions</a><a href="/experiments">Experiments</a><a href="/search">Strategy search</a><a href="/research">Research</a><a href="/venture">Venture</a><a href="#agents">Agents</a><a href="/validation">Validation</a><a href="/arena">Arena</a></nav>
       {authenticated ? <a className="og-header-action" href="/signout-with-chatgpt?return_to=/" target="_top" onClick={clearIdentity}>Sign out</a> : <a className="og-header-action" href={signIn} target="_top">Sign in <ArrowUpRight size={14}/></a>}
     </header>
     <main id="main">

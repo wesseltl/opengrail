@@ -62,6 +62,22 @@ test('local continuous sessions confer no hosted, provider or credential executi
  for(const file of ['app/session/page.tsx','app/session-methodology/page.tsx','scripts/session-runtime.mjs'])assert(readFileSync(file,'utf8').length>0);
 });
 
+test('comparison arena describes bounded public cohorts without granting evaluation or financial authority',async()=>{
+ const spec=await (await get()).json(),arena=spec.comparisonArena;
+ assert.equal(arena.page,'/arena');assert.equal(arena.selection,'USER_SELECTED_EXACT_PUBLIC_COHORT');
+ assert.equal(arena.localCommand,'node scripts/compare-arena.mjs compare MEMBERS.json NEW_REPORT.json');assert.equal(arena.offlineVisibility,'SUPPLIED_SNAPSHOTS_NOT_CURRENTLY_VERIFIED');assert.equal(arena.offlineReviewHeads,'SUPPLIED_NOT_AUTHENTICATED_OR_CURRENT');
+ assert.deepEqual(arena.methods,['BATCH_DEMO']);assert.equal(arena.continuousEvidence,'RETAINED_NONCOMPARABLE_MEMBER');
+ assert.equal(arena.riskRanking,'DESCRIPTIVE_NONANNUALIZED_PERIOD_SHARPE');assert.equal(arena.classification,'AUTHOR_REPORTED');assert.equal(arena.qualification,'NONE');assert.equal(arena.independence,'NOT_ESTABLISHED');
+ for(const key of ['allMembersRequired','adverseAttemptsRetained','currentReviewHistory'])assert.equal(arena[key],true,key);
+ for(const key of ['completeExternalSearchHistory','independentCustody','qualifiedRankings','publicReportSubmission','hostedCompute','submittedCodeExecution','newPermissions','ordersEnabled','liveEnabled'])assert.equal(arena[key],false,key);
+ assert.equal(spec.planned.find(value=>value.capability==='INDEPENDENT_EVALUATION_AND_AGENT_ARENA').implemented,false);
+ assert(!spec.endpoints.some(endpoint=>endpoint.path.includes('arena')));
+ // Existing capability imports already include the fixed experiment runner's
+ // engines. The arena adds its pure contract, never its evaluation entrypoint.
+ const inputs=Object.keys(bundle.metafile.inputs);assert(!inputs.some(value=>value.endsWith('app/arena-evaluator.ts')));
+ for(const file of ['app/arena/page.tsx','docs/comparison-arena.md','scripts/compare-arena.mjs'])assert(readFileSync(file,'utf8').length>0);
+});
+
 test('locked forward source specification preserves local-only execution and unqualified evidence at the actual anonymous route',async()=>{
  const spec=await (await get()).json(),forward=spec.forwardDemo;
  assert.equal(forward.page,'/session');assert.equal(forward.guide,'/agent-guide/forward-demo');
