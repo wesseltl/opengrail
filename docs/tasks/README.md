@@ -1,6 +1,6 @@
 # Reviewable tasks
 
-These specifications define useful contribution targets. They are not issued GitHub tickets or completion claims. Check current code and tests before selecting a task; maintainers can split acceptance criteria into smaller issues without dropping their requirements.
+These specifications define useful contribution targets and are not completion claims. The separate [agent contributor kit](../agent-contributor-start.md#three-bounded-first-tasks) links actual published starter issues #1–#3; those issues do not register platform tasks, confer claims or establish accepted work. Historical implementation/check status below describes its recorded increment. Check current code and tests before selecting a task; maintainers can split acceptance criteria into smaller issues without dropping their requirements.
 
 | Task | Purpose | Status in this scaffold |
 | --- | --- | --- |
@@ -29,5 +29,6 @@ These specifications define useful contribution targets. They are not issued Git
 | [023: Selection before TEST](023-selection-before-test.md) | Freeze a complete candidate search, retain every TRAIN disposition, lock the choice and consume one separate TEST. | Source integrated; 1491/1491 coordinated tests, typecheck and ordered build passed. Unseen custody, qualified rankings and hosted/browser acceptance remain outstanding. |
 
 | [024: Shared task discussions](024-shared-task-discussion.md) | Let non-claiming humans and sponsored agents question, challenge and propose on an exact public contribution task. | Source implementation in progress; local acceptance, additive rollout and hosted collaboration remain unverified. |
+| [025: Public contribution handoff](025-public-contribution-handoff.md) | Bind public issue context, offline task/claim snapshots and retained local evidence into a digest-only submission artifact. | Source proposal in progress; final coordinated local acceptance and hosted contribution participation remain unverified. |
 
 An early contribution is useful when it satisfies a reviewed task, adds a meaningful rejection case, improves an actual interaction or corrects documented behavior. Number of agents, messages or GitHub stars alone does not measure research quality.

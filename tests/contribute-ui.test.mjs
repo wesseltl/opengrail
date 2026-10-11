@@ -36,13 +36,21 @@ test('anonymous contributor route gives a real local path without auth, network 
   assert.equal(requests, 0);
   assert.equal(module.exports.metadata.title, 'Contribute · OpenGrail');
   assert(content.includes('AGENTS.md') && content.includes('docs/tasks/README.md'));
-  assert(content.includes('Contribution tooling prepared; hosted verification pending'));
-  assert(content.includes('Public OpenGrail source is permitted'));assert(content.includes('owner-created GitHub project is verified PUBLIC') && content.includes('application source import is pending'));assert(content.includes('hosted CI and public launch remain unverified'));
+  assert(content.includes('Public source available; hosted verification pending'));
+  assert(content.includes('owner-created GitHub project is verified PUBLIC') && content.includes('verified application snapshot'));
+  assert(content.includes('source/opengrail-foundation') && content.includes('main') && content.includes('contains a README directory'));
+  assert(content.includes('Hosted CI and public launch remain unverified'));
+  assert(!content.includes('application source import is pending'));
+  assert(content.includes('An issue does not register a platform task, grant a claim or approve hosted workflow execution'));
+  assert(content.includes('operator-declared issue mapping') && content.includes('Hosted CI can remain absent'));
+  assert(content.includes('does not fetch or validate the artifact'));
   assert(content.includes('OpenGrail account is not required'));
   assert.equal(walk(tree, node => ['button', 'form', 'input', 'script', 'img', 'iframe'].includes(node.type)).length, 0);
   const anchors = walk(tree, node => node.type === 'a');
-  assert.deepEqual(anchors.map(node => node.props.href), ['/', '/agent-guide', '/strategies', '/agent-guide', '/demo', '/session', '/experiments']);
-  assert(anchors.every(node => !node.props.href.includes('github.com') && !node.props.href.includes('validation/')));
+  const publicLinks = ['https://github.com/wesseltl/opengrail/tree/e727f28ad9772abd8f8c165dd016c02c22715fbc', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md', 'https://github.com/wesseltl/opengrail/issues/1', 'https://github.com/wesseltl/opengrail/issues/2', 'https://github.com/wesseltl/opengrail/issues/3', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/public-contribution-handoff.md'];
+  assert.deepEqual(anchors.map(node => node.props.href), ['/', '/agent-guide', '/strategies', publicLinks[0], publicLinks[1], '/agent-guide', ...publicLinks.slice(2,5), '/demo', '/session', '/experiments', publicLinks[5]]);
+  assert.deepEqual(anchors.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href), publicLinks);
+  assert(anchors.every(node => !/og_agent_|token=|authorization|validation\//i.test(node.props.href)));
 });
 
 test('checker instructions bind explicit reviewed commits and retain failed and interrupted local evidence', async () => {
@@ -73,15 +81,15 @@ test('collector instructions distinguish offline verification and current-PR che
 test('private review instructions isolate read credentials and evidence from contributors and public research', async () => {
   const tree = await Contribute(), content = text(tree), blocks = walk(tree, node => node.type === 'pre').map(text);
   assert(blocks.some(block => block.includes('collect-private PRIVATE_POLICY.json NEW_PRIVATE_EVIDENCE.json /absolute/CREDENTIAL_FILE')));
-  for (const phrase of ['no source access', 'inspect and fork it', 'grants no GitHub access', 'independently reviewed trusted tooling', 'separately from contributed code', 'never invokes the checker or npm commands', 'mode-0600', 'safe summary', 'Never attach private evidence', 'Linux file guards']) assert(content.includes(phrase), phrase);
+  for (const phrase of ['no source access', 'Use a branch or fork', 'grants no GitHub write or production access', 'independently reviewed trusted tooling', 'separately from contributed code', 'never invokes the checker or npm commands', 'mode-0600', 'safe summary', 'Never attach private evidence', 'Linux file guards']) assert(content.includes(phrase), phrase);
   assert.equal(requests, 0);
   assert.equal(walk(tree, node => ['form', 'input', 'script', 'iframe'].includes(node.type)).length, 0);
 });
 
-test('server route passes only fail-closed auth boolean and the homepage keeps the unverified repository absent', async () => {
+test('server route passes only fail-closed auth boolean and preserves explicit homepage repository wiring', async () => {
   const [source, home] = await Promise.all([readFile('app/contribute/page.tsx', 'utf8'), readFile('app/page.tsx', 'utf8')]);
   assert(!/fetch\(|useEffect|useState|localStorage|sessionStorage|createObjectURL|clipboard|dangerouslySetInnerHTML/.test(source));
-  assert(home.includes('githubUrl={null}'));
+  assert(home.includes('githubUrl="https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation"'));
   assert(source.includes('getChatGPTUser') && source.includes('force-dynamic') && source.includes('<Contributions authenticated={authenticated}'));
   assert.equal(walk(await Contribute(), node => typeof node.type === 'function' && node.type.name === 'Contributions')[0].props.authenticated, false);
   globalThis.__guideAuthUser = {id: 'synthetic-user', privateField: 'Do not forward'};

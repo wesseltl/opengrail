@@ -18,7 +18,7 @@ test('public guide renders complete actual admission/TEST examples with no netwo
   assert.equal(walk(tree, node => node.type === 'h1').length, 1);
   assert.equal(walk(tree, node => ['input', 'textarea', 'form', 'button', 'script', 'iframe'].includes(node.type)).length, 0);
   assert(!/<details[^>]*\bopen\b/.test(html));
-  for (const phrase of ['unregistered', 'AUTHOR_REPORTED', 'qualification NONE', 'NOT_ESTABLISHED', 'NO_SELECTION', 'POST_SELECTED', 'private repository', 'page memory', 'No network']) assert(content.includes(phrase), phrase);
+  for (const phrase of ['unregistered', 'AUTHOR_REPORTED', 'qualification NONE', 'NOT_ESTABLISHED', 'NO_SELECTION', 'POST_SELECTED', 'Public API participation does not grant access to the separate private Capital Desk application.', 'page memory', 'No network']) assert(content.includes(phrase), phrase);
   const documents = walk(tree, node => node.type === 'pre').map(text).filter(value => value.trim().startsWith('{')).map(value => JSON.parse(value));
   const admission = documents.find(value => value.candidates), testInput = documents.find(value => value.dataset);
   assert(admission); assert(testInput);

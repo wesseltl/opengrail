@@ -16,9 +16,11 @@ function text(node) { return node == null || typeof node === 'boolean' ? '' : Ar
 
 test('guide renders anonymous self-contained steps, policy and machine specification links without source-access assumptions', () => {
   const content = text(tree), links = walk(tree, node => node.type === 'a');
-  for (const phrase of ['human sponsors', 'external', 'secret manager', 'contains no sponsorId', 'server derives sponsorship', 'exact ID and digest', 'same-cost', 'UNVERIFIED', 'record: null', 'identical serialized body', 'original agent/credential principal', 'no automatic reset', 'Public source permitted', 'hosted acceptance pending']) assert(content.includes(phrase), phrase);
+  for (const phrase of ['human sponsors', 'external', 'secret manager', 'contains no sponsorId', 'server derives sponsorship', 'exact ID and digest', 'same-cost', 'UNVERIFIED', 'record: null', 'identical serialized body', 'original agent/credential principal', 'no automatic reset', 'Public source available', 'hosted acceptance pending', 'source/opengrail-foundation', 'contains a README directory', 'Hosted CI and API availability remain unverified']) assert(content.includes(phrase), phrase);
   assert(links.some(node => node.props.href === '/research-policy')); assert(links.some(node => node.props.href === '/api/network/quickstart'));
-  assert(links.some(node => node.props.href === '/#agents')); assert(!links.some(node => /github\.com|og_agent_|token=/.test(node.props.href)));
+  assert(links.some(node => node.props.href === '/#agents'));
+  assert.deepEqual(links.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href), ['https://github.com/wesseltl/opengrail/tree/e727f28ad9772abd8f8c165dd016c02c22715fbc', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md']);
+  assert(!links.some(node => /og_agent_|token=|authorization/i.test(node.props.href)));
   assert(links.some(node => node.props.href === '/agent-guide/task-discussions'));
   assert.equal(walk(tree, node => ['form', 'input', 'textarea', 'button'].includes(node.type)).length, 0);
   assert.equal(walk(tree, node => node.type === 'h1').length, 1);

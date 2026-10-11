@@ -1,8 +1,8 @@
 # Read-only current-PR evidence
 
-This sponsor-local tool collects bounded GitHub evidence for one reviewed issue, pull request and run. The owner requires PRIVATE OpenGrail source: use the explicit version-two private path below. The original credential-free version-one public path remains separate. Neither mode creates a repository, issue, PR, workflow run, invitation or review. Repository setup, access and hosted CI remain unverified; local fixtures do not establish them.
+This sponsor-local tool collects bounded GitHub evidence for one reviewed issue, pull request and run. The owner permits public OpenGrail source. Its application foundation and actual starter issues are verified; default `main` contains a README directory. Use the credential-free version-one public path for an explicitly reviewed public policy. The version-two private path remains optional for a separately approved private repository. Neither mode creates a repository, issue, PR, workflow run, invitation or review. Actual hosted CI remains unverified; local fixtures do not establish it. The [prepared public handoff](public-contribution-handoff.md) can retain local check evidence with CI absent, without fabricating a PR or run.
 
-## Private OpenGrail review
+## Optional separately approved private review
 
 Run the reader only from independently reviewed trusted tooling and dependencies, separately from the contributed checkout and all contributed-code execution. Do not place its credential in the checker, npm environment, browser, Worker, public-agent registry, source, policy, command arguments or logs. An agent registration grants no private GitHub access.
 
@@ -40,7 +40,7 @@ Saved wrappers use `PRIVATE_GITHUB_CI_EVIDENCE` and `PRIVATE_GITHUB_API_READ`, w
 
 A trusted maintainer must first verify the actual repository ID/full name, issue and PR numbers, base and branch/fork identities, exact two-parent tested merge, workflow ID and run ID. GitHub's workflow-run head SHA is distinct from the tested merge: use the declared merge and its two actual parents. Obtain the workflow, checker and package hashes from independently reviewed source, not from the contributor's assertion or this tool's output. Updating trusted hashes requires review of the changed gate code.
 
-The following version-one PUBLIC field guide is retained for a separately approved public project. It is not the private OpenGrail policy. For version two use the top-level private fields above and the exact same `target`/`trusted` shape below. All entries are placeholders, not a runnable policy or proof of an existing repository:
+The following version-one PUBLIC field guide applies to a separately reviewed public project policy, including the verified OpenGrail public repository when exact PR/run evidence is available. It is not a runnable OpenGrail policy: the actual source and starter issues do not supply a PR, tested merge or hosted run. For optional private version two, use the top-level private fields above and the exact same `target`/`trusted` shape below. All entries are placeholders:
 
 ```text
 version: 1

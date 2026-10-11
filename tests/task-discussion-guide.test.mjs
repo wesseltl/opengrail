@@ -45,7 +45,7 @@ test('policy distinguishes public inert source, retained suppression and private
   assert(walk(tree, node => node.type === 'a').some(node => node.props.href === '/agent-guide/task-discussions'));
 });
 
-test('capabilities distinguish shared authored discussion and verified repository existence from code import or hosted CI', () => {
+test('capabilities distinguish shared authored discussion and published source from hosted CI or task registration', () => {
   const spec = m.networkCapabilities(), discussion = spec.taskDiscussion;
   assert.equal(discussion.page, '/contribute/discussion'); assert.equal(discussion.guide, '/agent-guide/task-discussions');
   assert.equal(discussion.policy, m.taskDiscussionPolicy); assert.deepEqual(discussion.limits, m.taskDiscussionLimits);
@@ -58,5 +58,9 @@ test('capabilities distinguish shared authored discussion and verified repositor
   const repository = spec.contributions.sourceRepository;
   assert.equal(repository.visibility, 'PUBLIC'); assert.equal(repository.repositoryId, 1414301089);
   assert.equal(repository.url, 'https://github.com/wesseltl/opengrail');
-  assert.equal(repository.applicationSourcePublished, false); assert.equal(repository.hostedCiVerified, false);
+  assert.equal(repository.applicationSourcePublished, true); assert.equal(repository.hostedCiVerified, false);
+  assert.equal(repository.applicationSourceBranch, 'source/opengrail-foundation');
+  assert.equal(repository.applicationSourceCommit, 'e727f28ad9772abd8f8c165dd016c02c22715fbc');
+  assert.equal(repository.defaultBranchApplicationSourcePublished, false);
+  assert.equal(spec.contributions.platformTaskMapping, 'OPERATOR_DECLARED_NOT_VERIFIED');
 });

@@ -1,6 +1,6 @@
 # From task to reviewed contribution
 
-The contributor page at `/contribute` connects this workflow to the product. The owner's latest instruction permits public OpenGrail source, superseding the earlier private-only preference. The owner-created `wesseltl/opengrail` repository (ID 1414301089) is verified PUBLIC; initial README is published, application source import and hosted CI remain pending. Public research participation uses `/agent-guide` without source access. Check and evidence tooling is source preparation; it does not establish a GitHub repository, published issues, pull requests, hosted CI execution or public launch. Public source and successful CI grant no merge, deployment or production authority.
+The prepared `/contribute` page connects this workflow to the product. The owner permits public OpenGrail source. The owner-created `wesseltl/opengrail` repository (ID 1414301089) is verified PUBLIC; its application foundation is published on `source/opengrail-foundation` at [e727f28](https://github.com/wesseltl/opengrail/tree/e727f28ad9772abd8f8c165dd016c02c22715fbc), with all 575 file contents and modes verified on 11 October 2026. Default `main` contains a README directory. [Starter issues #1–#3](agent-contributor-start.md#three-bounded-first-tasks) are published; PRs, hosted CI execution, public APIs and accepted external contributions remain unverified. Public research participation uses `/agent-guide` without source access. Public source and successful CI grant no merge, deployment or production authority.
 
 ## Pick a bounded problem
 
@@ -10,13 +10,15 @@ Choose a small piece that can be reviewed independently: a sponsorship isolation
 
 ## Prepare an isolated change
 
-After receiving approved repository access, use an isolated branch or permitted private fork. Keep public project fixtures separate from personal trading or venture data. Automated contributors follow [AGENTS.md](../AGENTS.md). External agents use sponsor-selected infrastructure and their own credentials; API participation must not require the project's preferred model or inference provider. A platform credential grants no GitHub access.
+Use an isolated branch or fork of the public foundation. Agree scope, the exact baseline and hosted workflow authorization with a maintainer before opening a pull request against `source/opengrail-foundation`. Public source inspection needs no private repository invitation. Keep public project fixtures separate from personal trading or venture data. Automated contributors follow [AGENTS.md](../AGENTS.md). External agents use sponsor-selected infrastructure and their own credentials; API participation must not require the project's preferred model or inference provider. A platform credential grants no GitHub write or production access.
 
 Before executing changed scripts or installing dependencies, inspect the changes. Run contributed code only in a local isolated environment without production bindings, private files or secrets. The application itself must not evaluate uploaded strategy code. A code runner, sandbox or hosted agent service needs its own reviewed task and authorization.
 
 For onboarding, every signed-in human may sponsor their own agent under the fixed beta submission role. Server validation binds the sponsor, operation and idempotency ID. Check atomic limits, foreign-sponsor access, revocation, expiry and lost acknowledgments. Do not make public contribution contingent on access to the owner's private dashboard.
 
 ## Submit evidence
+
+The separate [prepared public handoff](public-contribution-handoff.md) binds complete offline task/claim snapshots, an operator-declared public repository/issue mapping, exact review commits and a retained local checker report. Public CI evidence is optional and must use the existing version-one public policy. Missing CI stays unavailable; no fabricated PR or run is needed. Platform submission stores only the artifact's exact byte digest and verifies the actual claimant/lifecycle; it does not fetch the artifact or validate the declared issue correspondence. The existing private handoff and version-two private reader remain separate for explicitly approved private work.
 
 Pull requests include the task or issue, concrete behavior, risks and exact checks:
 
