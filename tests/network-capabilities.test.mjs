@@ -17,7 +17,7 @@ test('anonymous actual route returns the current API specification without ident
  assert.deepEqual(spec.endpoints.slice(0,3).map(value=>[value.path,value.methods,value.authentication]),[
   ['/api/network/capabilities',['GET'],'NONE'],['/api/network/agents',['GET','POST'],'SIGNED_IN_HUMAN'],['/api/network/agent',['GET'],'AGENT_BEARER'],
  ]);assert(spec.endpoints.slice(0,3).every(value=>value.queryParameters===false));
- assert.deepEqual(spec.endpoints.slice(3).map(value=>[value.path,value.methods]),[['/api/research',['GET','POST']],['/api/research/agent',['POST']],['/api/research/me',['GET']],['/api/research/reports',['GET']],['/api/strategies',['GET','POST']],['/api/strategies/agent',['POST']],['/api/strategies/me',['GET']],['/api/strategies/reports',['GET']],['/api/experiments',['GET','POST']],['/api/experiments/agent',['POST']],['/api/experiments/me',['GET']],['/api/experiments/reports',['GET']],['/api/experiments/reviews',['GET','POST']],['/api/experiments/reviews/me',['GET']],['/api/experiments/reviews/reports',['GET']],['/api/experiments/reviews/agent',['POST']],['/api/network/quickstart',['GET']],['/api/contributions',['GET','POST']],['/api/contributions/agent',['POST']],['/api/contributions/me',['GET']],['/api/contributions/work',['GET']],['/api/contributions/work/agent',['GET']],['/api/strategies/evidence',['GET']],['/api/network/strategy-quickstart',['GET']],['/api/assistance',['GET','POST']],['/api/assistance/agent',['POST']],['/api/assistance/me',['GET']],['/api/assistance/reports',['GET']],['/api/contributions/discussion',['GET','POST']],['/api/contributions/discussion/agent',['POST']],['/api/contributions/discussion/me',['GET']],['/api/contributions/discussion/reports',['GET']]]);
+ assert.deepEqual(spec.endpoints.slice(3).map(value=>[value.path,value.methods]),[['/api/research',['GET','POST']],['/api/research/agent',['POST']],['/api/research/me',['GET']],['/api/research/reports',['GET']],['/api/strategies',['GET','POST']],['/api/strategies/agent',['POST']],['/api/strategies/me',['GET']],['/api/strategies/reports',['GET']],['/api/experiments',['GET','POST']],['/api/experiments/agent',['POST']],['/api/experiments/me',['GET']],['/api/experiments/reports',['GET']],['/api/experiments/reviews',['GET','POST']],['/api/experiments/reviews/me',['GET']],['/api/experiments/reviews/reports',['GET']],['/api/experiments/reviews/agent',['POST']],['/api/network/quickstart',['GET']],['/api/contributions',['GET','POST']],['/api/contributions/agent',['POST']],['/api/contributions/me',['GET']],['/api/contributions/work',['GET']],['/api/contributions/work/agent',['GET']],['/api/strategies/evidence',['GET']],['/api/network/strategy-quickstart',['GET']],['/api/assistance',['GET','POST']],['/api/assistance/agent',['POST']],['/api/assistance/me',['GET']],['/api/assistance/reports',['GET']],['/api/network/research-assistance-quickstart',['GET']],['/api/contributions/discussion',['GET','POST']],['/api/contributions/discussion/agent',['POST']],['/api/contributions/discussion/me',['GET']],['/api/contributions/discussion/reports',['GET']]]);
  for(const endpoint of spec.endpoints.slice(3))assert(readFileSync('.'+endpoint.path.replace('/api/','/app/api/')+'/route.ts','utf8').length>0);
  const dependencies=Object.keys(bundle.metafile.inputs);assert(dependencies.some(value=>value.endsWith('app/api/network/capabilities/route.ts')));
  for(const forbidden of ['app/network-store.ts','app/network-http.ts','app/chatgpt-auth.ts','db/index.ts'])assert(!dependencies.some(value=>value.endsWith(forbidden)));
@@ -185,5 +185,18 @@ test('assistance specification separates external reasoning, public coordination
  assert.equal(assist.reasoning,'EXTERNALLY_HOSTED_AGENT');assert.equal(assist.adoption,'EXPLICIT_HUMAN_STRATEGY_FORK');assert.equal(assist.qualification,'NONE');
  const endpoint=spec.endpoints.find(item=>item.path===assist.readPath);
  assert(endpoint.write.requiredExpectedAuthorHeader.startsWith('X-Assistance-Author:'));
+ assert.equal(spec.credentials.fixedScope,'PUBLIC_RESEARCH_SUBMIT');
+});
+
+test('research assistance contract retains domain separation, human review and existing authority bounds',async()=>{
+ const spec=await (await get()).json(),assist=spec.researchAssistance;
+ assert.deepEqual(assist.domains,['RESEARCH','VENTURE']);assert.equal(assist.recordVersion,2);
+ assert.equal(assist.maximumObjectives,5);assert.equal(assist.adoption,'EXPLICIT_EDITABLE_HUMAN_RESEARCH_FORK');
+ assert.deepEqual(assist.stances,['SUPPORTS','CONTRADICTS','UNKNOWN']);
+ for(const field of ['automaticAdoption','builtInModel','paidInferenceRequired','guaranteedResponse','newPermissions','ordersEnabled','liveEnabled'])assert.equal(assist[field],false);
+ assert.equal(assist.defaultStrategyFeedUnchanged,true);assert.equal(assist.qualification,'NONE');
+ const endpoint=spec.endpoints.find(item=>item.path===assist.readPath);assert.deepEqual(endpoint.queryParameters,['cursor','id','request','domain']);
+ assert.match(endpoint.readSelection,/No domain preserves the strategy feed/);
+ assert.equal(spec.endpoints.find(item=>item.path===assist.machineGuide).authentication,'NONE');
  assert.equal(spec.credentials.fixedScope,'PUBLIC_RESEARCH_SUBMIT');
 });

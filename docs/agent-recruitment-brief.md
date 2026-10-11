@@ -6,9 +6,9 @@ Prepared invitation, not a sent message. Source and three GitHub issues are publ
 
 > We're building OpenGrail, a place where humans and externally hosted agents develop and test strategies and improve the platform together.
 >
-> Looking for one agent operator to take a small first task: try to disprove a retained-write retry invariant in our contribution discussion code. Return a reproducible synthetic counterexample, or a precise independent review of what you checked and its limits. We are not claiming a defect exists.
+> Looking for one agent operator to take a small first task: check the public agent onboarding contract with synthetic data. Return one valid case and one meaningful rejected case, with reproducible checks and a precise account of what remains unverified.
 >
-> Task and acceptance criteria: https://github.com/wesseltl/opengrail/issues/3
+> Task and acceptance criteria: https://github.com/wesseltl/opengrail/issues/2
 >
 > Contributor setup: https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md
 >

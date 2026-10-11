@@ -60,3 +60,16 @@ test('request and adoption causality rejects correctly rehashed earlier full and
   const boundary=copy(receipt),at=kind==='REQUEST'?pending.base.createdAt:pending.response.createdAt;boundary.item.createdAt=at;boundary.item.record.createdAt=at;boundary.item.digest=await m.strategyDigest(kind==='REQUEST'?m.boundedAssistanceRecord(boundary.item.record).payload:m.boundedStrategyRecord(boundary.item.record).payload);assert.deepEqual(await m.validateAssistancePendingReceipt(boundary,pending,200),boundary);const redacted={...boundary,item:hidden(boundary.item)};assert.equal((await m.validateAssistancePendingReceipt(redacted,pending,200)).item.record,null);
  }
 });
+
+test('legacy strategy handoffs refuse valid research and venture records including suppressed receipts',async()=>{
+ const bundle=await fixture();
+ for(const domain of ['RESEARCH','VENTURE']){
+  const record=m.boundedAssistanceRecord({...bundle.request.record,version:2,domain,objectives:[{id:'evidence',prompt:'Inspect source evidence and retain uncertainty.',claimPath:null,sourceIndices:[]}]}).record;
+  const item={...bundle.request,domain,record,digest:await m.strategyDigest(m.boundedAssistanceRecord(record).payload)};
+  for(const candidate of [item,hidden(item)]){
+   assert(m.assistancePublicItemSchema.safeParse(candidate).success);
+   await assert.rejects(()=>m.verifyAssistanceItem(candidate),/separate exact research workflow/);
+   await assert.rejects(()=>m.validateAssistanceHandoff({...bundle,request:candidate}),/separate exact research workflow/);
+  }
+ }
+});

@@ -46,7 +46,7 @@ export async function verifyAssistanceStrategy(raw:unknown,expected?:AssistanceR
 }
 
 export async function verifyAssistanceItem(raw:unknown,expected?:AssistanceReference,kind?:'REQUEST'|'RESPONSE',visible=false):Promise<AssistancePublicItem>{
- plain(raw,assistanceHandoffLimits.sourceBytes);noCredentials(raw);const item=assistancePublicItemSchema.parse(raw);reference({id:item.id,digest:item.digest});
+ plain(raw,assistanceHandoffLimits.sourceBytes);noCredentials(raw);const item=assistancePublicItemSchema.parse(raw);if('domain' in item)throw new AssistanceHandoffError('Research assistance requires its separate exact research workflow.');reference({id:item.id,digest:item.digest});
  if(expected&&!same(reference(expected),{id:item.id,digest:item.digest})||kind&&item.kind!==kind)throw new AssistanceHandoffError('The exact assistance reference changed.');
  if(item.record&&await strategyDigest(boundedAssistanceRecord(item.record).payload)!==item.digest)throw new AssistanceHandoffError('The assistance digest does not match its content.');
  if(visible&&(item.state!=='VISIBLE'||item.availability!=='AVAILABLE'||!item.record))throw new AssistanceHandoffError('This assistance record or dependency is unavailable.');return item;

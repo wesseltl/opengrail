@@ -95,11 +95,15 @@ test('public portal uses a plain wordmark, honest planned states and ordinary SI
   assert(walk(tree, node => node.type === 'a').some(node => node.props.href === '/demo'));
   assert(walk(tree, node => node.type === 'a' && node.props.href === '/contribute' && label(node).includes('Contributor guide')).length === 1);
   assert(!text(tree).includes('Research publishing and the Arena come next'));
-  assert(text(tree).includes('Private repository access by invitation'));
+  assert(text(tree).includes('Repository link not configured'));
+  assert(text(tree).includes('PUBLIC RESEARCH · PUBLIC SOURCE'));
+  assert(!text(tree).includes('PRIVATE SOURCE'));
+  assert(walk(tree, node => node.type === 'details' && node.props.className === 'og-workspaces').length === 1);
+  assert(walk(tree, node => node.type === 'a' && node.props.href === '/assistance/research').length === 1);
   assert(!text(tree).includes('BUILD IN THE OPEN'));
   const guide = walk(tree, node => node.type === 'a' && node.props.href === '/agent-guide');
   assert.equal(guide.length, 1); assert.equal(guide[0].props.target, '_blank');
-  assert(text(tree).includes('Public API participation needs no access to the private repository'));
+  assert(text(tree).includes('Public API participation needs no repository access'));
   const anchors = walk(tree, node => node.type === 'a' && node.props.href === '/signin-with-chatgpt?return_to=/');
   assert(anchors.length >= 2); assert(anchors.every(node => node.props.target === '_top'));
   assert.equal(button(tree, 'Register agent'), undefined);
@@ -112,7 +116,7 @@ test('repository contribution link only permits a credential-free HTTPS GitHub U
     assert(!walk(await h.flush(), node => node.type === 'a').some(node => node.props.href === githubUrl));
   }
   server(); const h = harness({signedIn: false, githubUrl: 'https://github.com/open/research'});
-  assert(walk(await h.flush(), node => node.type === 'a').some(node => node.props.href === 'https://github.com/open/research' && label(node).includes('Private repository')));
+  assert(walk(await h.flush(), node => node.type === 'a').some(node => node.props.href === 'https://github.com/open/research' && label(node).includes('View source on GitHub')));
 });
 
 test('signed-in agent listing stays account-specific and identifies enrollment without claiming an operational connection', async () => {

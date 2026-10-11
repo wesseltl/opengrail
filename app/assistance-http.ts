@@ -1,7 +1,7 @@
 import {NetworkError} from './network-model';
 import type {NetworkRepository} from './network-store';
 import {readNetworkJson,NetworkBodyLimit} from './network-json';
-import {AssistanceError,assistanceLimits,boundedAssistanceCommand,boundedAssistanceRecord,assistanceListSchema,assistanceGetSchema,assistanceWriteSchema,assistanceReportsSchema,type AssistanceCommand,type AssistancePublicItem} from './assistance-model';
+import {AssistanceError,assistanceLimits,boundedAssistanceCommand,boundedAssistanceRecord,assistanceListSchema,assistanceGetSchema,assistanceWriteSchema,assistanceReportsSchema,assistanceRecordForCommand,assistancePublicItemDomain,type AssistanceDomain,type AssistanceCommand,type AssistancePublicItem} from './assistance-model';
 import {StrategyError,strategyMeSchema,strategyPublicHumanId,strategyDigest,type StrategyAuthorReference} from './strategy-model';
 import type {AssistanceRepository} from './assistance-store';
 
@@ -60,10 +60,10 @@ export async function correlateAssistanceWrite(raw:unknown,sent:AssistanceComman
  if(sent.action==='request'||sent.action==='respond'){
   if(item.requestId!==sent.requestId||item.kind!==(sent.action==='request'?'REQUEST':'RESPONSE')||!equal(item.author,author))throw Error('Assistance publication actor mismatch.');
   {
-   const fullAuthor=author.kind==='AGENT'?{...author,name:agentName}:author;
-   const expected=sent.action==='request'
-    ?{version:1,kind:'REQUEST',id:sent.id,requestId:sent.requestId,createdAt:item.createdAt,author:fullAuthor,base:sent.base,intent:sent.intent,constraints:sent.constraints,falsification:sent.falsification,policyAccepted:sent.policyAccepted,executionEnabled:false}
-    :{version:1,kind:'RESPONSE',id:sent.id,requestId:sent.requestId,createdAt:item.createdAt,author:fullAuthor,request:sent.request,proposal:sent.proposal,rationale:sent.rationale,questions:sent.questions,policyAccepted:sent.policyAccepted,executionEnabled:false};
+   if(author.kind==='AGENT'&&typeof agentName!=='string')throw Error('Assistance agent name is required.');
+   const fullAuthor=author.kind==='AGENT'?{...author,name:agentName as string}:author;
+   if(assistancePublicItemDomain(item)!==('version' in sent&&sent.version===2?sent.domain:'STRATEGY'))throw Error('Assistance receipt domain mismatch.');
+   const expected=assistanceRecordForCommand(sent,fullAuthor,item.createdAt);
    const canonical=boundedAssistanceRecord(expected);
    if(await strategyDigest(canonical.payload)!==item.digest||item.record&&!equal(item.record,canonical.record))throw Error('Assistance full content receipt mismatch.');
   }
@@ -79,16 +79,17 @@ export async function assistancePublicRequest(request:Request,factory:()=>Reposi
  try{
   const url=new URL(request.url);
   if(new TextEncoder().encode(url.search).byteLength>assistanceQueryBytes)throw new NetworkError('Assistance query exceeds its bound.',400);
-  const pairs=[...url.searchParams];
-  if(pairs.length>1||pairs.some(([key,value])=>!['cursor','id','request'].includes(key)||!uuid.test(value)))throw new NetworkError('Invalid assistance selector.',400);
-  const selection=pairs[0],repo=factory();
+  const pairs=[...url.searchParams],selectors=pairs.filter(([key])=>key!=='domain'),domains=pairs.filter(([key])=>key==='domain');
+  if(pairs.length>2||selectors.length>1||domains.length>1||selectors.some(([key,value])=>!['cursor','id','request'].includes(key)||!uuid.test(value))||domains.some(([,value])=>!['STRATEGY','RESEARCH','VENTURE'].includes(value)))throw new NetworkError('Invalid assistance selector.',400);
+  const explicitDomain=domains[0]?.[1] as AssistanceDomain|undefined,domain=explicitDomain??'STRATEGY',selection=selectors[0],repo=factory();
   if(selection?.[0]==='id'){
-   const result=assistanceGetSchema.parse(await repo.get(selection[1]));
-   if(result.item.id!==selection[1])throw Error('Assistance exact identity mismatch.');
+   const result=assistanceGetSchema.parse(await repo.get(selection[1],explicitDomain));
+   if(result.item.id!==selection[1]||explicitDomain&&assistancePublicItemDomain(result.item)!==explicitDomain)throw Error('Assistance exact identity or domain mismatch.');
    await validateAssistancePublicItems([result.item]);return reply(result);
   }
   const filter=selection?.[0]==='request'?selection[1]:null,cursor=selection?.[0]==='cursor'?selection[1]:null;
-  const result=assistanceListSchema.parse(await repo.list(cursor,filter));
+  const result=assistanceListSchema.parse(await (explicitDomain?repo.list(cursor,filter,domain):repo.list(cursor,filter)));
+  if(('domain' in result?result.domain:'STRATEGY')!==domain||result.items.some(item=>assistancePublicItemDomain(item)!==domain))throw Error('Assistance feed domain mismatch.');
   if(filter&&result.request?.id!==filter||!filter&&!cursor&&result.request!==null)throw Error('Assistance feed scope mismatch.');
   if(result.items.some(item=>item.kind!==(result.request?'RESPONSE':'REQUEST')||result.request&&item.record?.kind==='RESPONSE'&&!equal(item.record.request,result.request)))throw Error('Assistance feed selection mismatch.');
   for(let index=1;index<result.items.length;index++){
