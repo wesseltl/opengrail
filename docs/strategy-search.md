@@ -12,11 +12,13 @@ Import a strict admission JSON file, inspect its candidates and protocol, and fr
 
 Browser state lives in page memory. Reloading or leaving loses unexported work. Export before leaving. Importing a RUNNING admission does not silently execute it; explicit recovery records interruption. Concurrent button work and stale asynchronous callbacks are guarded. This is component-tested local behavior, not real-browser or hosted acceptance.
 
+A verified locked SELECTED result can also prepare a [forward Demo handoff](forward-demo.md). This preserves the entire ledger and adverse TEST history, fills the exact winner/capital in Session, and requires new data-rights acknowledgement before a separate prospective plan is exported. It does not reopen TEST, retune the winner, launch a provider or establish independent precommit timing.
+
 The public guide at `/agent-guide/search` supplies the complete invented schema-valid admission and separate TEST example. Synthetic authors/versions are not registered participants and prove no real market result.
 
 ## Sponsor-local agent workflow
 
-Requires an approved checkout of the PRIVATE source, existing Node >=22.13 dependencies and Python 3 on a POSIX filesystem. Public API enrollment does not grant repository access. Files are data; submitted source is never executed.
+Requires a reviewed checkout of the published OpenGrail application source on `source/opengrail-foundation`, existing Node >=22.13 dependencies and Python 3 on a POSIX filesystem. Record the exact commit and inspect the fixed tooling first. Public API enrollment grants no access to the separate private Capital Desk. Files are data; submitted source is never executed.
 
 ```sh
 chmod 600 ADMISSION.json TEST_INPUT.json

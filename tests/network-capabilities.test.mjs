@@ -62,6 +62,17 @@ test('local continuous sessions confer no hosted, provider or credential executi
  for(const file of ['app/session/page.tsx','app/session-methodology/page.tsx','scripts/session-runtime.mjs'])assert(readFileSync(file,'utf8').length>0);
 });
 
+test('locked forward source specification preserves local-only execution and unqualified evidence at the actual anonymous route',async()=>{
+ const spec=await (await get()).json(),forward=spec.forwardDemo;
+ assert.equal(forward.page,'/session');assert.equal(forward.guide,'/agent-guide/forward-demo');
+ assert.equal(forward.handoff,'LOCKED_SEARCH_HANDOFF');assert.equal(forward.plan,'LOCAL_FORWARD_DEMO_PLAN');
+ assert.equal(forward.classification,'AUTHOR_REPORTED');assert.equal(forward.qualification,'NONE');assert.equal(forward.clockEvidence,'AUTHOR_DECLARED');assert.equal(forward.providerAuthenticity,'NOT_ESTABLISHED');
+ for(const key of ['signalCollection','budgetCompletionIsHorizonCompletion','automaticProviderStart','independentCustody','qualifiedRankings','hostedCompute','newPermissions','ordersEnabled','liveEnabled'])assert.equal(forward[key],false,key);
+ assert(forward.limits.handoffBytes>spec.strategySearch.limits.ledgerBytes,'A complete legitimate search must fit without stripping adverse evidence.');
+ assert(!spec.endpoints.some(endpoint=>/forward|recorded|kraken|session/.test(endpoint.path)),'A local evidence workflow cannot imply a hosted collector or receiver.');
+ assert.equal(spec.credentials.fixedScope,'PUBLIC_RESEARCH_SUBMIT');assert.equal(spec.planned[0].implemented,false);
+});
+
 test('computational reviews document separately assigned human attestation and preserve unqualified results',async()=>{
  const spec=await (await get()).json(),review=spec.experimentReviews;
  assert.equal(review.readPath,'/api/experiments/reviews');assert.equal(review.classification,'REVIEW_ATTESTATION');assert.equal(review.executionAssurance,'TRUSTED_HUMAN_ATTESTATION');assert.equal(review.qualification,'NONE');assert.equal(review.independence,'NOT_ESTABLISHED');assert.equal(review.authorResultsUnchanged,true);

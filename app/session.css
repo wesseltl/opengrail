@@ -4,3 +4,17 @@
 @media(max-width:420px){.og-session-form-grid{grid-template-columns:1fr}.og-session-actions .og-button{flex:1}.og-session-position dl{grid-template-columns:1fr 1fr}.og-session-stats dd{font-size:20px}.og-session-chart{padding:9px}.og-session-overview{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.og-session *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 .og-session-local-receiver ol{padding-left:19px;font-size:11px;line-height:1.8;color:#746b72}.og-session-local-receiver li{margin:8px 0}.og-session-local-receiver code{font-size:10px;overflow-wrap:anywhere;white-space:normal}
+
+/* Reviewed locked-search handoff; no provider is launched by this view. */
+.og-session-forward-import,.og-session-forward{margin:0 0 22px;border:1px solid var(--og-line,#dedbdf);border-radius:12px;padding:24px;background:var(--og-surface,#fff)}
+.og-session-forward-import{display:grid;grid-template-columns:1fr minmax(220px,320px);gap:12px 24px;align-items:start}
+.og-session-forward-import h2,.og-session-forward h2{font-size:18px;margin:0 0 10px}
+.og-session-forward-import p,.og-session-forward p{font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+.og-session-forward-import label{display:grid;gap:10px;font-size:13px}
+.og-session-forward-import>p{grid-column:1/-1;margin:0;color:#6d646e}
+.og-session-forward-history{display:grid;gap:12px;margin:18px 0}
+.og-session-forward-history article{border:1px solid #e4e0e5;border-radius:8px;padding:14px}
+.og-session-forward-history article strong{font-size:12px;letter-spacing:.025em}
+.og-session-forward-history article p{margin:8px 0 0;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+.og-session-forward-schedule{max-width:850px;margin:20px 0}
+@media(max-width:650px){.og-session-forward-import{grid-template-columns:1fr}.og-session-forward-import,.og-session-forward{padding:18px}}
