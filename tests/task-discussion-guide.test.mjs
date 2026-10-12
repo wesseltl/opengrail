@@ -60,7 +60,9 @@ test('capabilities distinguish shared authored discussion and published source f
   assert.equal(repository.url, 'https://github.com/wesseltl/opengrail');
   assert.equal(repository.applicationSourcePublished, true); assert.equal(repository.hostedCiVerified, false);
   assert.equal(repository.applicationSourceBranch, 'source/opengrail-foundation');
-  assert.equal(repository.applicationSourceCommit, 'e727f28ad9772abd8f8c165dd016c02c22715fbc');
+  assert.equal(repository.applicationSourceCommit, '19128a1a3422690709250725aad41168b7f9e240');
+  assert.equal(spec.contributions.starterIssueSourceCommit, 'e727f28ad9772abd8f8c165dd016c02c22715fbc');
+  assert.notEqual(spec.contributions.starterIssueSourceCommit, repository.applicationSourceCommit);
   assert.equal(repository.defaultBranchApplicationSourcePublished, false);
   assert.equal(spec.contributions.platformTaskMapping, 'OPERATOR_DECLARED_NOT_VERIFIED');
 });

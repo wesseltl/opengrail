@@ -1,5 +1,7 @@
 # 037 — Declare the future plan before observations
 
+Current evidence (12 October 2026): [the accepted validation receipt](../../validation/prospective-program-commitments-20261012.json) records 2,502/2,502 repository tests, typecheck, official build and the built synthetic declaration-to-adverse-evidence journey. The accepted public source is `19128a1a3422690709250725aad41168b7f9e240`, local/Sites source `0c214f6550453b63c09f42c272b3bd25dc781425`, shared tree `15572f9aa8cc9e3e1f287d5ca3c3abea28400f5a`; saved version 40 is undeployed. The opening identities and criteria below remain historical task context. Local synthetic acceptance is AUTHOR_REPORTED, qualification NONE; independent witnessing, authentic observations, complete forward horizons and hosted rollout remain unverified. Publication remains on hold.
+
 This is an acceptance contract, not evidence that registration is implemented. The opening local/Sites source is `1181d64156aec8ea621d05247948a62264a4c33b`, public review source `dfb8cbb09546e8fd2af73a64271f1d37ab644398`, and shared tree `aee9dcbb92f7b500454fc47695ca52c52b010534`. Task 036 completed 2,445 repository tests and its actual built synthetic journey; Sites version 39 remains undeployed.
 
 ## Connected behavior

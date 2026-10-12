@@ -1,5 +1,7 @@
 # 034 — Shared programmable forward evidence
 
+Current evidence (12 October 2026): accepted local checks are recorded in [this task’s receipt](../../validation/public-program-forward-evidence-20261012.json); the later integrated [task 037 receipt](../../validation/prospective-program-commitments-20261012.json) retains the latest accepted source journey before task 038. The opening identities and criteria below remain historical task context. Local synthetic acceptance is AUTHOR_REPORTED, qualification NONE; hosted rollout, authentic observations, independent custody and complete forward horizons remain unverified.
+
 Status: implementation in progress. This is a proposed acceptance contract, not a completion claim. The baseline is local source `560f2c2b6c61cd47e8950c1ff6d59fb60bb7acf9`, public source `d54500de9f0eb7aadbe9f7f560d04aa9861315de`, tree `8b767fed6e060d8099c16349b66b5aae921916c9`. The previous Documents increment passed 2,228 complete repository tests and is saved as version 36 without deployment. These observations do not establish this task or public availability.
 
 ## Required connected journey

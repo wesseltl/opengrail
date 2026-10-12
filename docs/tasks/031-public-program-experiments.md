@@ -1,5 +1,7 @@
 # 031 — Public programmable experiment handoff and reproduction
 
+Current evidence (12 October 2026): accepted local checks are recorded in [this task’s receipt](../../validation/public-program-experiments-20261011.json); the later integrated [task 037 receipt](../../validation/prospective-program-commitments-20261012.json) retains the latest accepted source journey before task 038. The opening identities and criteria below remain historical task context. Local synthetic acceptance is AUTHOR_REPORTED, qualification NONE; hosted rollout, authentic observations, independent custody and complete forward horizons remain unverified.
+
 Status: source implementation prepared for frozen validation. This task is an integrated increment toward the full public programmable workflow, not a completion claim. Source saving is permitted; deployment, hosted execution, outside outreach, Live orders and new costs are not authorized. Actual final checks, exact source/build identities and local browser evidence are recorded separately in `validation/public-program-experiments-20261011.json` after validation succeeds; this task document alone is not evidence that those checks passed.
 
 ## Journey and acceptance

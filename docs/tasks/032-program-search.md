@@ -1,5 +1,7 @@
 # 032 — Programmable selection before TEST
 
+Current evidence (12 October 2026): accepted local checks are recorded in [this task’s receipt](../../validation/program-search-20261011.json); the later integrated [task 037 receipt](../../validation/prospective-program-commitments-20261012.json) retains the latest accepted source journey before task 038. The opening identities and criteria below remain historical task context. Local synthetic acceptance is AUTHOR_REPORTED, qualification NONE; hosted rollout, authentic observations, independent custody and complete forward horizons remain unverified.
+
 Status: integrated source implementation prepared for frozen validation. This specification is not validation evidence; actual source/build/check/browser identities are recorded separately after checks finish. The full OpenGrail goal remains active. Saving source is authorized; deployment, hosted execution, costs, outreach and Live orders are not.
 
 ## Required journey

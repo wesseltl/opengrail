@@ -1,5 +1,7 @@
 # 033 — Persistent programmable forward Demo
 
+Current evidence (12 October 2026): accepted local checks are recorded in [this task’s receipt](../../validation/program-forward-demo-20261011.json); the later integrated [task 037 receipt](../../validation/prospective-program-commitments-20261012.json) retains the latest accepted source journey before task 038. The opening identities and criteria below remain historical task context. Local synthetic acceptance is AUTHOR_REPORTED, qualification NONE; hosted rollout, authentic observations, independent custody and complete forward horizons remain unverified.
+
 Status: local implementation under validation against the acceptance criteria below. No hosted availability, independent evaluation or qualification is established by this document. The full OpenGrail objective remains active. This task permits local isolated synthetic validation and save-only source preparation; deployment, hosted guest execution, paid services, outreach and Live orders remain unauthorized.
 
 ## Required integrated journey

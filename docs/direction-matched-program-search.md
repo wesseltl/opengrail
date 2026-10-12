@@ -37,7 +37,7 @@ The prospective method uses the unchanged stateful Session interpreter and tradi
 
 Use `scripts/recorded-direction-program-kraken.mjs` for the separately identified V2 recorded collector. Its exact physical graph is distinct from the legacy collector; original collectors and their bound source bytes remain unchanged. It retains raw responses, normalization clocks and durable outbox identities, then correlates outer receipts and actual guest/inner trading evidence. Receiver credentials stay outside evidence and are sent only in authorization headers. Importing a plan starts no provider or receiver.
 
-The complete actual-clock SHORT collector acceptance remains under final validation in [task 035](tasks/035-direction-matched-program-search.md). A synthetic receiver/collector test with injected historical startup clocks, a LONG winner or a standalone SHORT runtime cannot satisfy that acceptance. Recorded synthetic responses must stay marked synthetic even when local startup and receipt clocks are actual.
+The complete actual-clock synthetic SHORT collector acceptance is recorded in [task 035’s receipt](../validation/direction-matched-program-search-20261012.json); both forward horizons remain incomplete. A synthetic receiver/collector test with injected historical startup clocks, a LONG winner or a standalone SHORT runtime cannot satisfy that acceptance. Recorded synthetic responses must stay marked synthetic even when local startup and receipt clocks are actual.
 
 ## Sharing and scope
 
