@@ -28,7 +28,7 @@ async function sources(rawManifest:unknown,rawSource:unknown){
  let manifest:ExperimentPublicItem,source:StrategyPublicItem;
  try{manifest=await validateExperimentItem(rawManifest);source=strategyPublicItemSchema.parse(rawSource);}catch{throw new ExperimentRunError('The captured public records are invalid.');}
  if(manifest.type!=='MANIFEST'||manifest.state!=='VISIBLE'||manifest.record?.type!=='MANIFEST'||source.state!=='VISIBLE'||!source.record)throw new ExperimentRunError('A visible exact manifest and source are required.',409);
- const mr=boundedExperimentRecord(manifest.record).record;if(mr.type!=='MANIFEST')throw new ExperimentRunError('A manifest is required.');
+ const mr=boundedExperimentRecord(manifest.record).record;if(mr.type!=='MANIFEST')throw new ExperimentRunError('A manifest is required.');if(mr.version!==1)throw new ExperimentRunError('This batch runner does not support the selected experiment method. Use its explicitly tagged local reconstruction workflow.',400);
  const sr=boundedStrategyRecord(source.record),input=boundedDemoRequest(mr.content.input);
  if(await experimentDigest(sr.payload)!==source.digest||manifest.strategy.id!==source.id||manifest.strategy.digest!==source.digest||!same(input.input.strategy.record,sr.record)||input.input.strategy.digest!==source.digest)throw new ExperimentRunError('The manifest input must match the exact source record.');
  if(mr.content.evaluator.version!==demoEvaluatorVersion||mr.content.evaluator.methodDigest!==await experimentDigest(JSON.stringify(demoEvaluatorMethod))||mr.content.evaluator.sourceDigest!==evaluatorSourceFingerprints.primary)throw new ExperimentRunError('This manifest declares a different evaluator source or method.',409);

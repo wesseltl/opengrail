@@ -1,8 +1,8 @@
 import {networkAgentSchema} from './network-model';
 import {StrategyRepository} from './strategy-store';
-import {boundedStrategyRecord,type StrategyPublicItem} from './strategy-model';
+import {boundedStrategyRecord,boundedStrategyCommand,strategyPublishCommandForRecord,strategyAuthorReference,type StrategyPublicItem} from './strategy-model';
 import {strategyEvidenceLimits,strategyEvidenceEntryForItem,validateStrategyEvidencePage} from './strategy-evidence-model';
-import {ExperimentError,experimentLimits,experimentDigest,experimentPublicHumanId,experimentAuthorReference,boundedExperimentCommand,boundedExperimentRecord,experimentPublicEventSchema,experimentPrivateReportSchema,experimentListSchema,experimentGetSchema,experimentWriteSchema,experimentReportsSchema,experimentManifestFlags,experimentOutcomeFlags,experimentSummarySchema,experimentOutcomesSchema,experimentInputStrategy,experimentMethodVersion,experimentRecordMethod,experimentRecordStatus,verifyExperimentRecordArtifact,verifyExperimentManifestInput,verifyExperimentArtifact,type ExperimentActor,type ExperimentAuthor,type ExperimentAuthorReference,type ExperimentCommand,type ExperimentRecord,type ExperimentPublicItem,type ExperimentPublicEvent} from './experiment-model';
+import {ExperimentError,experimentLimits,experimentDigest,experimentPublicHumanId,experimentAuthorReference,boundedExperimentCommand,boundedExperimentRecord,experimentPublicEventSchema,experimentPrivateReportSchema,experimentListSchema,experimentGetSchema,experimentWriteSchema,experimentReportsSchema,experimentManifestFlags,experimentOutcomeFlags,experimentSummarySchema,experimentOutcomesSchema,experimentInputStrategy,experimentInputDependencies,experimentMethodVersion,experimentRecordMethod,experimentRecordStatus,verifyExperimentRecordArtifact,verifyExperimentManifestInput,verifyExperimentArtifact,type ExperimentInput,type ExperimentActor,type ExperimentAuthor,type ExperimentAuthorReference,type ExperimentCommand,type ExperimentRecord,type ExperimentPublicItem,type ExperimentPublicEvent} from './experiment-model';
 type PublicationRow={id:string;type:string;manifest_id:string|null;manifest_digest:string|null;strategy_id:string;strategy_digest:string;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type EventRow={record_id:string;sequence:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;state:string;reason:string;created_at:string};
 type ReportRow={author_key:string;request_id:string;sponsor_key:string;record_id:string;record_digest:string;command_digest:string;payload:string|null;digest:string;created_at:string};
@@ -101,15 +101,19 @@ export class ExperimentRepository{
   try{
    const row=await this.db.prepare('SELECT id,digest,CASE WHEN length(CAST(payload AS BLOB))<=28672 THEN payload ELSE NULL END AS payload FROM strategy_publications WHERE id=?').bind(recordId).first<{id:string;digest:string;payload:string|null}>();
    if(!row){if(selection)throw new ExperimentError('Published strategy source not found. Select a currently visible Strategy Hub record.',404);throw Error();}if(!row.payload)throw Error();const checked=boundedStrategyRecord(JSON.parse(row.payload));
-   if(checked.record.version!==expectedVersion)throw new ExperimentError('The selected strategy source version does not match the declared experiment method. Program sources require PROGRAM_DEMO.',400);
+   if(checked.record.version!==expectedVersion)throw new ExperimentError('The selected strategy source version does not match the declared experiment method. Program sources require a program experiment method.',400);
    if(checked.payload!==row.payload||checked.record.id!==row.id||await experimentDigest(row.payload)!==row.digest)throw Error();
    const projected=(await new StrategyRepository(this.db).get(recordId)).item;
    if(projected.digest!==row.digest||projected.record&&JSON.stringify(projected.record)!==row.payload)throw Error();
    return {id:row.id,digest:row.digest,payload:row.payload,visible:projected.state==='VISIBLE'};
   }catch(error){if(selection&&error instanceof ExperimentError&&(error.status===404||error.status===400))throw error;throw inconsistent();}
  }
+ private async dependencies(input:ExperimentInput,selection=false,selected?:Awaited<ReturnType<ExperimentRepository['source']>>){
+  const retained=experimentInputDependencies(input);if(retained.length<1||retained.length>4||new Set(retained.map(value=>value.id)).size!==retained.length)throw inconsistent();
+  return Promise.all(retained.map(async dependency=>{const current=selected?.id===dependency.id?selected:await this.source(dependency.id,selection,dependency.record.version);if(current.digest!==dependency.digest||current.payload!==JSON.stringify(dependency.record)){if(selection)throw new ExperimentError('An exact retained Search source does not match its public publication.',400);throw inconsistent();}return current;}));
+ }
  private async bindings(publication:Checked){
-  const source=await this.source(publication.row.strategy_id,false,publication.record.version===3?2:1);if(source.digest!==publication.row.strategy_digest)throw inconsistent();
+  const source=await this.source(publication.row.strategy_id,false,publication.record.version>=3?2:1);if(source.digest!==publication.row.strategy_digest)throw inconsistent();
   let parent:Checked|null=null;
   if(publication.record.type==='MANIFEST'){
    if(JSON.stringify(experimentInputStrategy(publication.record.content.input).record)!==source.payload)throw inconsistent();
@@ -125,14 +129,16 @@ export class ExperimentRepository{
     if(related.record.type!=='OUTCOME'||related.record.version!==parent.record.version||related.row.digest!==relation.digest||related.row.manifest_id!==parent.record.id||related.row.manifest_digest!==parent.row.digest||related.record.createdAt>publication.record.createdAt)throw inconsistent();
    }
   }
-  return {source,parent};
+  const input=publication.record.type==='MANIFEST'?publication.record.content.input:parent!.record.type==='MANIFEST'?parent!.record.content.input:null;if(!input)throw inconsistent();
+  return {source,parent,dependencies:await this.dependencies(input,false,source)};
  }
  private async project(publication:Checked):Promise<ExperimentPublicItem>{
-  const {events,state:own,reason}=await this.events(publication),record=publication.record,{source,parent}=await this.bindings(publication);
+  const {events,state:own,reason}=await this.events(publication),record=publication.record,{source,parent,dependencies}=await this.bindings(publication);
   const parentState=parent?(await this.events(parent)).state:'VISIBLE';
-  const suppression=!source.visible?'SOURCE_UNAVAILABLE':parentState!=='VISIBLE'?'PARENT_UNAVAILABLE':null;
-  const state=own==='WITHDRAWN'?'WITHDRAWN':own==='HIDDEN'||suppression?'HIDDEN':'VISIBLE';
   const outcomeCount=record.type==='MANIFEST'?(await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(record.id).first<{n:number}>())?.n??0:0;
+  let finalSources=true;if(record.version===4){const values:Values=[],clauses=dependencies.map(value=>this.sourceClause(value,values));const observed=await this.db.prepare(`SELECT CASE WHEN ${clauses.join(' AND ')} THEN 1 ELSE 0 END AS visible`).bind(...values).first<{visible:number}>();if(!observed||observed.visible!==0&&observed.visible!==1)throw inconsistent();finalSources=observed.visible===1;}
+  const suppression=dependencies.some(value=>!value.visible)||!finalSources?'SOURCE_UNAVAILABLE':parentState!=='VISIBLE'?'PARENT_UNAVAILABLE':null;
+  const state=own==='WITHDRAWN'?'WITHDRAWN':own==='HIDDEN'||suppression?'HIDDEN':'VISIBLE';
   return {id:record.id,digest:publication.row.digest,type:record.type,requestId:record.requestId,createdAt:record.createdAt,author:experimentAuthorReference(record.author),strategy:{id:source.id,digest:source.digest},manifest:record.type==='OUTCOME'?record.content.manifest:null,state,reason,suppression,reporting:record.type==='OUTCOME'||outcomeCount>0?'AUTHOR_REPORTED':'UNREPORTED',outcomeCount,record:state==='VISIBLE'?record:null,moderation:events};
  }
  private summary(item:ExperimentPublicItem){const {record,moderation,...metadata}=item;void moderation;const method=record?experimentRecordMethod(record):undefined;return experimentSummarySchema.parse({...metadata,...method?{method}:{},name:record?.content.name??null,status:record?experimentRecordStatus(record):null,flags:record?.flags??[]});}
@@ -186,6 +192,24 @@ export class ExperimentRepository{
   const rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE type='OUTCOME' AND manifest_id=? ${anchor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT ${experimentLimits.page+1}`).bind(manifestId,...anchor?[anchor.record.createdAt,anchor.record.createdAt,anchor.record.id]:[]).all<PublicationRow>()).results;
   const checked=await Promise.all(rows.map(row=>this.checkPublication(row))),page=checked.slice(0,experimentLimits.page),items=await Promise.all(page.map(async item=>this.summary(await this.project(item))));
   return experimentOutcomesSchema.parse({version:1,items,nextCursor:rows.length>experimentLimits.page?page.at(-1)!.record.id:null,executionEnabled:false});
+ }
+ /** Two bounded batched observations cover the extra V4 source closure without
+  * multiplying per-record discovery reads or exposing nested source payloads. */
+ private async observeForwardDependencies(dependencies:ReturnType<typeof experimentInputDependencies>){
+  if(dependencies.length>48||new Set(dependencies.map(value=>value.id)).size!==dependencies.length)throw inconsistent();
+  if(!dependencies.length)return new Map<string,{payload:string;digest:string;state:string;events:ExperimentPublicEvent[]}>();
+  const columns=['id','digest','root_id','revision','request_id','command_digest','created_at','author_key','sponsor_key'].map(name=>'p.'+name).join(',');
+  const rows=(await this.db.prepare(`SELECT ${columns},CASE WHEN length(CAST(p.payload AS BLOB))<=28672 THEN p.payload ELSE NULL END AS payload,(SELECT json_group_array(json_object('record_id',record_id,'sequence',sequence,'author_key',author_key,'sponsor_key',sponsor_key,'request_id',request_id,'command_digest',command_digest,'payload',payload,'digest',digest,'state',state,'reason',reason,'created_at',created_at)) FROM (SELECT ${eventColumns} FROM strategy_moderation WHERE record_id=p.id ORDER BY sequence LIMIT 17)) AS events FROM strategy_publications p WHERE p.id IN (${dependencies.map(()=>'?').join(',')}) LIMIT 49`).bind(...dependencies.map(value=>value.id)).all<{id:string;digest:string;root_id:string;revision:number;request_id:string;command_digest:string;created_at:string;author_key:string;sponsor_key:string;payload:string|null;events:string}>()).results;
+  if(rows.length!==dependencies.length||new Set(rows.map(row=>row.id)).size!==rows.length)throw inconsistent();
+  const observed=new Map<string,{payload:string;digest:string;state:string;events:ExperimentPublicEvent[]}>();
+  for(const row of rows){try{
+   const dependency=dependencies.find(value=>value.id===row.id);if(!dependency||!row.payload||row.payload!==JSON.stringify(dependency.record)||row.digest!==dependency.digest)throw Error();
+   const record=boundedStrategyRecord(JSON.parse(row.payload)).record;if(await experimentDigest(row.payload)!==row.digest||record.id!==row.id||record.rootId!==row.root_id||record.revision!==row.revision||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(strategyAuthorReference(record.author))!==row.author_key||record.author.sponsorId!==row.sponsor_key||await experimentDigest(boundedStrategyCommand(strategyPublishCommandForRecord(record)).payload)!==row.command_digest)throw Error();
+   const history:EventRow[]=JSON.parse(row.events);if(!Array.isArray(history)||history.length>16)throw Error();let state='VISIBLE',time=record.createdAt;const events:ExperimentPublicEvent[]=[];
+   for(const eventRow of history){if(!eventRow.payload||!hash.test(eventRow.digest)||!hash.test(eventRow.command_digest))throw Error();const event=experimentPublicEventSchema.parse(JSON.parse(eventRow.payload));if(JSON.stringify(event)!==eventRow.payload||await experimentDigest(eventRow.payload)!==eventRow.digest||eventRow.record_id!==record.id||event.sequence!==events.length+1||eventRow.sequence!==event.sequence||eventRow.author_key!==authorKey(event.actor)||eventRow.sponsor_key!==event.actor.sponsorId||event.requestId!==eventRow.request_id||event.createdAt!==eventRow.created_at||event.state!==eventRow.state||event.reason!==eventRow.reason||state==='WITHDRAWN'||event.createdAt<time||event.state!=='WITHDRAWN'&&(event.actor.kind!=='HUMAN'||event.sequence>=16))throw Error();const command={action:event.state==='WITHDRAWN'?'withdraw':'moderate',requestId:event.requestId,id:record.id,digest:row.digest,...event.state==='WITHDRAWN'?{}:{state:event.state},reason:event.reason,policyAccepted:'public-strategy-v1'};if(await experimentDigest(boundedStrategyCommand(command).payload)!==eventRow.command_digest)throw Error();events.push(event);state=event.state;time=event.createdAt;}
+   observed.set(row.id,{payload:row.payload,digest:row.digest,state,events});
+  }catch{throw inconsistent();}}
+  return observed;
  }
  /** Exact-version discovery only. Canonical closure and current lifecycle are
   * bounded independently from the small public projection; no evaluator runs. */
@@ -241,6 +265,9 @@ export class ExperimentRepository{
     result.set(recordId,{events,state,reason:events.at(-1)?.reason??null});
    }return result;
   };
+  const forwardManifestDependencies=new Map<string,ReturnType<typeof experimentInputDependencies>>(),forwardDependencies=new Map<string,ReturnType<typeof experimentInputDependencies>[number]>();
+  for(const publication of closure.values())if(publication.record.version===4&&publication.record.type==='MANIFEST'){const dependencies=experimentInputDependencies(publication.record.content.input);forwardManifestDependencies.set(publication.record.id,dependencies);for(const dependency of dependencies){if(dependency.id===strategyId)continue;const previous=forwardDependencies.get(dependency.id);if(previous&&(previous.digest!==dependency.digest||JSON.stringify(previous.record)!==JSON.stringify(dependency.record)))throw inconsistent();forwardDependencies.set(dependency.id,dependency);}}
+  const firstDependencies=await this.observeForwardDependencies([...forwardDependencies.values()]);
   const firstEvents=await readEvents(),manifestIds=[...closure.values()].filter(item=>item.record.type==='MANIFEST').map(item=>item.record.id),counts=new Map<string,number>();
   if(manifestIds.length){const found=(await this.db.prepare(`SELECT manifest_id,COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id IN (${manifestIds.map(()=>'?').join(',')}) GROUP BY manifest_id LIMIT 37`).bind(...manifestIds).all<{manifest_id:string;n:number}>()).results;for(const row of found){if(!manifestIds.includes(row.manifest_id)||counts.has(row.manifest_id)||!Number.isInteger(row.n)||row.n<1||row.n>experimentLimits.outcomesPerManifest)throw inconsistent();counts.set(row.manifest_id,row.n);}}
   const secondEvents=await readEvents();
@@ -259,10 +286,13 @@ export class ExperimentRepository{
   const sourceIdentity=(item:StrategyPublicItem)=>({id:item.id,digest:item.digest,rootId:item.rootId,revision:item.revision,requestId:item.requestId,createdAt:item.createdAt,author:item.author});
   if(JSON.stringify(sourceIdentity(firstSource))!==JSON.stringify(sourceIdentity(lastSource))||lastSource.moderation.length<firstSource.moderation.length||JSON.stringify(lastSource.moderation.slice(0,firstSource.moderation.length))!==JSON.stringify(firstSource.moderation)||lastSource.record&&JSON.stringify(lastSource.record)!==sourcePayload)throw inconsistent();
   const source=firstSource.state!=='VISIBLE'&&lastSource.state==='VISIBLE'?firstSource:lastSource;
+  const lastDependencies=await this.observeForwardDependencies([...forwardDependencies.values()]);
+  for(const [dependencyId,first]of firstDependencies){const last=lastDependencies.get(dependencyId);if(!last||last.payload!==first.payload||last.digest!==first.digest||last.events.length<first.events.length||JSON.stringify(last.events.slice(0,first.events.length))!==JSON.stringify(first.events))throw inconsistent();if(first.state!=='VISIBLE'&&last.state==='VISIBLE')lastDependencies.set(dependencyId,first);}
   for(const [recordId,first]of firstEvents){const second=secondEvents.get(recordId);if(!second||second.events.length<first.events.length||JSON.stringify(second.events.slice(0,first.events.length))!==JSON.stringify(first.events))throw inconsistent();if(first.state!=='VISIBLE'&&second.state==='VISIBLE')secondEvents.set(recordId,first);}
   const items=selected.slice(0,retainedPage).map(publication=>{
    const record=publication.record,own=secondEvents.get(record.id)!;
-   const parentState=record.type==='OUTCOME'?secondEvents.get(record.content.manifest.id)!.state:'VISIBLE',suppression=source.state!=='VISIBLE'?'SOURCE_UNAVAILABLE' as const:parentState!=='VISIBLE'?'PARENT_UNAVAILABLE' as const:null,state=own.state==='WITHDRAWN'?'WITHDRAWN' as const:own.state==='HIDDEN'||suppression?'HIDDEN' as const:'VISIBLE' as const,outcomeCount=record.type==='MANIFEST'?counts.get(record.id)??0:0;
+   const dependencies=forwardManifestDependencies.get(record.type==='MANIFEST'?record.id:record.content.manifest.id)??[],dependencyHidden=dependencies.some(value=>value.id!==strategyId&&lastDependencies.get(value.id)?.state!=='VISIBLE');
+   const parentState=record.type==='OUTCOME'?secondEvents.get(record.content.manifest.id)!.state:'VISIBLE',suppression=source.state!=='VISIBLE'||dependencyHidden?'SOURCE_UNAVAILABLE' as const:parentState!=='VISIBLE'?'PARENT_UNAVAILABLE' as const:null,state=own.state==='WITHDRAWN'?'WITHDRAWN' as const:own.state==='HIDDEN'||suppression?'HIDDEN' as const:'VISIBLE' as const,outcomeCount=record.type==='MANIFEST'?counts.get(record.id)??0:0;
    const item:ExperimentPublicItem={id:record.id,digest:publication.row.digest,type:record.type,requestId:record.requestId,createdAt:record.createdAt,author:experimentAuthorReference(record.author),strategy:{id:strategyId,digest},manifest:record.type==='OUTCOME'?record.content.manifest:null,state,reason:own.reason,suppression,reporting:record.type==='OUTCOME'||outcomeCount>0?'AUTHOR_REPORTED':'UNREPORTED',outcomeCount,record:state==='VISIBLE'?record:null,moderation:own.events};
    return strategyEvidenceEntryForItem(item);
   });
@@ -317,26 +347,27 @@ export class ExperimentRepository{
  }
  private async publish(context:Context,command:Extract<ExperimentCommand,{action:'register'|'outcome'}>,commandDigest:string,at:string,parent?:Checked){
   const type=command.action==='register'?'MANIFEST':'OUTCOME';await this.quota(context,at,type);
-  let source,related:Checked|undefined;
+  let source,dependencies:Awaited<ReturnType<ExperimentRepository['dependencies']>>,related:Checked|undefined;
   if(command.action==='register'){
-   const selected=experimentInputStrategy(command.input);source=await this.source(selected.record.id,true,experimentMethodVersion(command)===3?2:1);
+   const selected=experimentInputStrategy(command.input);source=await this.source(selected.record.id,true,experimentMethodVersion(command)>=3?2:1);
    if(source.digest!==selected.digest||source.payload!==JSON.stringify(selected.record))throw new ExperimentError('The exact published strategy does not match this input.',400);
    if('method'in command&&command.method==='CONTINUOUS_DEMO'&&command.input.config.origin!=='PUBLIC_STRATEGY')throw new ExperimentError('Continuous public evidence requires an exact published Strategy Hub source.',400);
    await verifyExperimentManifestInput(command.input,command.evaluator);
+   dependencies=await this.dependencies(command.input,true,source);
   }else{
    if(!parent||parent.record.type!=='MANIFEST')throw new ExperimentError('Exact manifest not found.',404);
    if(parent.record.version!==experimentMethodVersion(command))throw new ExperimentError('Outcome method must match the exact registered manifest.',400);
-   const projected=await this.project(parent);if(projected.state!=='VISIBLE')throw new ExperimentError('The parent manifest is not visible.');source=(await this.bindings(parent)).source;
+   const projected=await this.project(parent);if(projected.state!=='VISIBLE')throw new ExperimentError('The parent manifest is not visible.');const bound=await this.bindings(parent);source=bound.source;dependencies=bound.dependencies;
    if(command.result.kind==='ARTIFACT'){
     await verifyExperimentArtifact(command.result.artifact,parent.record.content.input);
    }
    if(command.claim.relation){related=await this.publication(command.claim.relation.id);if(related.record.type!=='OUTCOME'||related.row.manifest_id!==parent.record.id||related.row.digest!==command.claim.relation.digest)throw new ExperimentError('Exact related outcome not found.',404);if((await this.project(related)).state!=='VISIBLE')throw new ExperimentError('Related outcome is not visible.');if(at<related.record.createdAt)throw new ExperimentError('Outcome time precedes its related report.');}
    const count=await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(parent.record.id).first<{n:number}>();if(!count||count.n>=experimentLimits.outcomesPerManifest)throw new ExperimentError('This manifest’s retained outcome capacity has been reached.',429);
   }
-  if(!source.visible)throw new ExperimentError('The underlying strategy is not visible.');
+  if(dependencies.some(value=>!value.visible))throw new ExperimentError('A retained strategy dependency is not visible.');
   const raw={version:experimentMethodVersion(command),id:command.id,requestId:command.requestId,createdAt:at,author:context.author,type,content:content(command),flags:command.action==='register'?experimentManifestFlags(command.disclosures):experimentOutcomeFlags(context.reference,experimentAuthorReference(parent!.record.author),command.claim),policyAccepted:command.policyAccepted,classification:'AUTHOR_REPORTED',executionEnabled:false};
   const {record,payload}=boundedExperimentRecord(raw),digest=await experimentDigest(payload),values:Values=[record.id,type,parent?.record.id??'',parent?.row.digest??'',source.id,source.digest,context.key,context.sponsor,command.requestId,commandDigest,payload,digest,at];
-  const clauses=[this.requestClause(context,command.requestId,values),this.credentialClause(context,at,values),this.sourceClause(source,values),...this.quotaClauses(context,at,type,values)];
+  const clauses=[this.requestClause(context,command.requestId,values),this.credentialClause(context,at,values),...dependencies.map(value=>this.sourceClause(value,values)),...this.quotaClauses(context,at,type,values)];
   if(parent)clauses.push(this.targetClause(parent,values),this.visibleClause(parent.record.id,values),`(SELECT COUNT(*) FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?3)<${experimentLimits.outcomesPerManifest}`);
   if(related)clauses.push(this.targetClause(related,values),this.visibleClause(related.record.id,values));
   await this.db.prepare(`INSERT INTO experiment_records(id,type,manifest_id,manifest_digest,strategy_id,strategy_digest,author_key,sponsor_key,request_id,command_digest,payload,digest,created_at) SELECT ?1,?2,NULLIF(?3,''),NULLIF(?4,''),?5,?6,?7,?8,?9,?10,?11,?12,?13 WHERE ${clauses.join(' AND ')} ON CONFLICT DO NOTHING`).bind(...values).run();

@@ -14,6 +14,7 @@ export async function evaluateArena(rawMembers:ArenaMember[],options:{signal?:Ab
  for(const [i,member]of members.entries()){
   await new Promise<void>(resolve=>setTimeout(resolve,0));
   const row=rows[i],o=member.outcome,m=member.manifest,s=member.strategy;
+  if(o.record?.version===4&&m.record?.version===4){row.reason='FORWARD_PROTOCOL_UNSUPPORTED';progress();continue;}
   if(cancelled()){row.status='INTERRUPTED';row.reason='USER_CANCELLED';progress();continue;}
   if(o.state!=='VISIBLE'||m.state!=='VISIBLE'||s.state!=='VISIBLE'||!o.record||!m.record||!s.record){row.reason='PUBLIC_CONTENT_UNAVAILABLE';progress();continue;}
   if(o.record.type!=='OUTCOME'||m.record.type!=='MANIFEST'){row.reason='EVIDENCE_BINDING_UNAVAILABLE';progress();continue;}

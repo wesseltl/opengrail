@@ -1,9 +1,10 @@
 import {z} from 'zod';
 import {comparisonReportSchema,comparisonLimits,verifyComparisonReport,compareComparisonPair,type ComparisonReport} from './comparison-model';
 import {boundedStrategyRecord,strategyDigest,strategyPublicItemSchema,type StrategyPublicItem} from './strategy-model';
-import {experimentReferenceSchema,experimentPublicItemSchema,experimentPublicEventSchema,experimentPrivateReportSchema,experimentReportReceiptSchema,experimentPublicHumanId,validateExperimentItem,verifyExperimentArtifact,experimentManifestFlags,experimentOutcomeFlags,experimentInputStrategy,type ExperimentPublicItem,type ExperimentAuthorReference} from './experiment-model';
+import {experimentReferenceSchema,experimentPublicItemSchema,experimentPublicEventSchema,experimentPrivateReportSchema,experimentReportReceiptSchema,experimentPublicHumanId,validateExperimentItem,verifyExperimentArtifact,experimentManifestFlags,experimentOutcomeFlags,experimentInputStrategy,experimentInputDependencies,type ExperimentPublicItem,type ExperimentAuthorReference} from './experiment-model';
 import {ventureCredentialLike} from './venture-model';
 import {programComparisonReportSchema,programComparisonLimits,verifyProgramComparisonReport,bindProgramComparisonReport,programOutcomesSemanticallyEqual} from './program-comparison-model';
+import {programForwardComparisonReportSchema,verifyProgramForwardComparisonReport,bindProgramForwardComparisonReport,programForwardArtifactsSemanticallyEqual} from './program-forward-comparison-model';
 
 export {experimentPublicHumanId as experimentReviewPublicHumanId,strategyDigest as experimentReviewDigest,experimentPublicEventSchema as experimentReviewPublicEventSchema,experimentPrivateReportSchema as experimentReviewPrivateReportSchema,experimentReportReceiptSchema as experimentReviewReportReceiptSchema};
 export const experimentReviewLimits={requestBytes:393216,recordBytes:327680,maximumDepth:16,page:20,reviewsPerOutcome:32,retained:250,perSponsorDay:10,eventsPerRecord:16,reportsPerSponsorDay:10,reportsStored:250,verificationMemoEntries:128} as const;
@@ -21,7 +22,7 @@ export type ExperimentReviewActor={kind:'HUMAN';userId:string;moderator:boolean;
 export const experimentReviewReasonSchema=z.enum(experimentReviewReasons);
 const reasons=z.array(experimentReviewReasonSchema).min(1).max(16).refine(value=>new Set(value).size===value.length,'Review reasons must be unique.');
 export const experimentReviewTargetSchema=z.object({original:experimentReferenceSchema,reproduction:experimentReferenceSchema,manifest:experimentReferenceSchema,strategy:experimentReferenceSchema}).strict().refine(value=>value.original.id!==value.reproduction.id,'Original and reproduction must be distinct outcomes.');
-export const experimentReviewEvidenceSchema=z.union([z.object({original:comparisonReportSchema,reproduction:comparisonReportSchema}).strict(),z.object({method:z.literal('PROGRAM_DEMO'),original:programComparisonReportSchema,reproduction:programComparisonReportSchema}).strict()]);
+export const experimentReviewEvidenceSchema=z.union([z.object({original:comparisonReportSchema,reproduction:comparisonReportSchema}).strict(),z.object({method:z.literal('PROGRAM_DEMO'),original:programComparisonReportSchema,reproduction:programComparisonReportSchema}).strict(),z.object({method:z.literal('PROGRAM_FORWARD_DEMO'),original:programForwardComparisonReportSchema,reproduction:programForwardComparisonReportSchema}).strict()]);
 export const experimentReviewAttestationsSchema=z.object({fixedCode:z.boolean(),exactInputs:z.boolean(),inspectedDifferences:z.boolean(),separateOriginalAndReproductionProcesses:z.boolean()}).strict();
 const sharedDependencies=z.tuple([z.literal('METHOD_SPECIFICATION'),z.literal('JAVASCRIPT_NUMBER_RUNTIME'),z.literal('INPUT_SCHEMAS_AND_HASHING'),z.literal('INPUT_DATA_AND_OPERATOR'),z.literal('REVIEW_OF_PRIMARY_SOURCE')]);
 const decision=z.enum(['REPRODUCED','DISPUTED','HELD','REJECTED']);
@@ -60,8 +61,8 @@ export const experimentReviewRecordSchema=z.object({version:z.literal(1),id:uuid
 export type ExperimentReviewRecord=z.infer<typeof experimentReviewRecordSchema>;
 export function experimentReviewCommandForRecord(record:ExperimentReviewRecord):ExperimentReviewPublishCommand{return experimentReviewPublishSchema.parse({action:'review',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});}
 const state=z.enum(['VISIBLE','HIDDEN','WITHDRAWN']),safeReason=z.enum(['AUTHOR_REQUEST','SPONSOR_REQUEST','PERSONAL_DATA','CREDENTIAL_EXPOSURE','SPAM','ABUSE','MISLEADING','POLICY','RESTORED']);
-const publicFields={id:uuid,digest:hash,requestId:uuid,createdAt:clock,author:experimentReviewAuthorSchema,sequence:z.number().int().min(1).max(experimentReviewLimits.reviewsPerOutcome),target:experimentReviewTargetSchema,previous:experimentReferenceSchema.nullable(),state,reason:safeReason.nullable(),suppression:z.enum(['SOURCE_UNAVAILABLE','PARENT_UNAVAILABLE','OUTCOME_UNAVAILABLE']).nullable(),decision:decision.nullable()};
-function outerRules(item:z.infer<typeof publicShape>){return (item.sequence===1)===(item.previous===null)&&(!item.suppression||item.state!=='VISIBLE')&&((item.state==='VISIBLE')===(item.decision!==null));}
+const publicFields={id:uuid,digest:hash,requestId:uuid,createdAt:clock,author:experimentReviewAuthorSchema,sequence:z.number().int().min(1).max(experimentReviewLimits.reviewsPerOutcome),target:experimentReviewTargetSchema,previous:experimentReferenceSchema.nullable(),state,reason:safeReason.nullable(),suppression:z.enum(['SOURCE_UNAVAILABLE','PARENT_UNAVAILABLE','OUTCOME_UNAVAILABLE']).nullable(),decision:decision.nullable(),method:z.literal('PROGRAM_FORWARD_DEMO').optional()};
+function outerRules(item:z.infer<typeof publicShape>){return (item.sequence===1)===(item.previous===null)&&(!item.suppression||item.state!=='VISIBLE')&&((item.state==='VISIBLE')===(item.decision!==null))&&(item.state==='VISIBLE'||item.method===undefined);}
 const publicShape=z.object(publicFields).strict();
 export const experimentReviewPublicItemSchema=z.object({...publicFields,record:experimentReviewRecordSchema.nullable(),moderation:z.array(experimentPublicEventSchema).max(experimentReviewLimits.eventsPerRecord)}).strict().superRefine((item,ctx)=>{
  const bad=(message:string)=>ctx.addIssue({code:z.ZodIssueCode.custom,message});
@@ -102,7 +103,7 @@ function plain(value:unknown,n=0){
  }else if(value!==null&&typeof value!=='boolean'&&(typeof value!=='number'||!Number.isFinite(value)))throw new ExperimentReviewError('Review material must be plain JSON data.',400);
 }
 function reportBounds(evidence:z.infer<typeof experimentReviewEvidenceSchema>|null){if(evidence)for(const report of [evidence.original,evidence.reproduction])if(bytes(JSON.stringify(report))>('method'in evidence?programComparisonLimits.reportBytes:comparisonLimits.reportBytes))throw new ExperimentReviewError('Comparison evidence exceeds its bound.',413);}
-async function verifyReviewEvidence(evidence:z.infer<typeof experimentReviewEvidenceSchema>){for(const report of [evidence.original,evidence.reproduction])if('method'in evidence)await verifyProgramComparisonReport(report);else await verifyComparisonReport(report);}
+async function verifyReviewEvidence(evidence:z.infer<typeof experimentReviewEvidenceSchema>){for(const report of [evidence.original,evidence.reproduction])if('method'in evidence){if(evidence.method==='PROGRAM_FORWARD_DEMO')await verifyProgramForwardComparisonReport(report);else await verifyProgramComparisonReport(report);}else await verifyComparisonReport(report);}
 export function boundedExperimentReviewCommand(raw:unknown){plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review command exceeds its bound.',413);const command=experimentReviewCommandSchema.parse(raw),payload=JSON.stringify(command);if(bytes(payload)>experimentReviewLimits.requestBytes)throw new ExperimentReviewError('Review command exceeds its bound.',413);if(command.action==='review')reportBounds(command.evidence);return {command,payload};}
 export function boundedExperimentReviewRecord(raw:unknown){plain(raw);if(bytes(JSON.stringify(raw))>experimentReviewLimits.recordBytes)throw new ExperimentReviewError('Review record exceeds its bound.',413);const record=experimentReviewRecordSchema.parse(raw),payload=JSON.stringify(record);if(bytes(payload)>experimentReviewLimits.recordBytes)throw new ExperimentReviewError('Review record exceeds its bound.',413);boundedExperimentReviewCommand(experimentReviewCommandForRecord(record));return {record,payload};}
 export async function validateExperimentReviewItem(raw:unknown){
@@ -209,12 +210,23 @@ export async function validateExperimentReviewBindings(raw:ExperimentReviewPubli
  for(const result of [first.content.result,second.content.result])if(result.kind==='ARTIFACT')await verified(verificationMemo,'artifact:'+JSON.stringify({artifact:result.artifact,input:parent.content.input}),()=>verifyExperimentArtifact(result.artifact,parent.content.input));
  if(at!==undefined){clock.parse(at);requireBinding([original.createdAt,reproduction.createdAt,manifest.createdAt,projected.createdAt].every(value=>value<=at),'Review time cannot precede its exact evidence.');}
  if(parent.version===2){requireBinding(command.decision==='HELD'&&command.evidence===null&&command.reasons.includes('UNSUPPORTED_METHOD'),'Continuous evidence requires an explicit unsupported-method hold.');return;}
- if(parent.version===3){
+ if(parent.version===4){
+  requireBinding(first.version===4&&second.version===4,'Forward evidence requires forward outcomes.');if(first.version!==4||second.version!==4)return;
+  if(command.evidence){
+   const evidence=command.evidence;requireBinding('method'in evidence&&evidence.method==='PROGRAM_FORWARD_DEMO','Forward reviews require complete forward computational reports.');if(!('method'in evidence)||evidence.method!=='PROGRAM_FORWARD_DEMO')return;
+   requireBinding(first.content.result.kind==='ARTIFACT'&&second.content.result.kind==='ARTIFACT','Forward reports require two whole retained artifacts.');if(first.content.result.kind!=='ARTIFACT'||second.content.result.kind!=='ARTIFACT')return;
+   const a=first.content.result.artifact,b=second.content.result.artifact;
+   requireBinding(same(a.input,b.input)&&a.inputDigest===b.inputDigest,'Forward reports require identical frozen original inputs and clocks.');
+   await Promise.all([verified(verificationMemo,'forward-comparison:'+JSON.stringify({report:evidence.original,artifact:a}),()=>bindProgramForwardComparisonReport(evidence.original,a)),verified(verificationMemo,'forward-comparison:'+JSON.stringify({report:evidence.reproduction,artifact:b}),()=>bindProgramForwardComparisonReport(evidence.reproduction,b))]);
+   requireBinding(same(evidence.original.implementations,parent.content.evaluator.implementations)&&same(evidence.reproduction.implementations,parent.content.evaluator.implementations),'Forward reconstruction pins must match the exact manifest.');
+   if(command.decision==='REPRODUCED'){requireBinding(a.attemptId!==b.attemptId,'Positive forward reproduction requires distinct retained wrapper attempts.');requireBinding(a.journal.pending===null&&b.journal.pending===null,'Unresolved pending forward inputs cannot become completed reproduction evidence.');requireBinding(programForwardArtifactsSemanticallyEqual(a,b),'Positive forward reproduction must retain every output, failure, interruption, fuel and state semantic.');}
+  }
+ }else if(parent.version===3){
   requireBinding(first.version===3&&second.version===3,'Program evidence requires program outcomes.');
   if(first.version!==3||second.version!==3)return;
   if(command.evidence){
    const evidence=command.evidence;requireBinding('method'in evidence&&evidence.method==='PROGRAM_DEMO','Program review requires program generator comparison evidence.');
-   if(!('method'in evidence))return;
+   if(!('method'in evidence)||evidence.method!=='PROGRAM_DEMO')return;
    requireBinding(first.content.result.kind==='ARTIFACT'&&second.content.result.kind==='ARTIFACT','Program comparison reports require two complete retained outcomes.');
    if(first.content.result.kind!=='ARTIFACT'||second.content.result.kind!=='ARTIFACT')return;
    const a=first.content.result.artifact,b=second.content.result.artifact;
@@ -242,7 +254,7 @@ export async function validateExperimentReviewBindings(raw:ExperimentReviewPubli
  }
  if(command.decision==='REPRODUCED'){
   requireBinding(second.content.claim.type==='REPRODUCTION'&&second.content.claim.relation?.type==='SUPPORTS','Positive review requires a supported reproduction lineage.');
-  const sponsors=[original.author.sponsorId,reproduction.author.sponsorId,manifest.author.sponsorId,projected.author.sponsorId];
+  const sponsors=[original.author.sponsorId,reproduction.author.sponsorId,manifest.author.sponsorId,projected.author.sponsorId,...parent.version===4?experimentInputDependencies(parent.content.input).map(value=>value.record.author.sponsorId):[]];
   requireBinding(sponsors.every(sponsor=>sponsor!==author.sponsorId)&&original.author.sponsorId!==reproduction.author.sponsorId,'Positive review requires separate reviewer and outcome sponsors.');
   requireBinding(!parent.flags.some(flag=>(experimentReviewBlockingFlags as readonly string[]).includes(flag)),'Selected, incomplete or leaked validation cannot receive a positive review.');
  }

@@ -168,7 +168,23 @@ test('known hidden task floors scrub inbox rationale and handoff even when a lat
 });
 
 test('visibility suspension invalidates a pending inbox response and requires an explicit fresh request when visible again', async () => {
-  const task = await taskFixture('Suspended inbox source'), claim = await claimFixture(task), wait = deferred(), s = server([{task, claim}], {work: async () => s.pages === 1 ? wait.promise : Response.json(page([{task, claim}]))}), h = harness(); await h.until(() => s.pages === 1); h.visibility(true); wait.resolve(Response.json(page([{task, claim}]))); await h.flush(); assert(!text(panel(h.render())).includes('Suspended inbox source')); h.visibility(false); await h.flush(); assert.equal(s.pages, 1); assert(text(panel(h.render())).includes('Refresh your work')); h.click('Refresh my work'); await h.until(tree => text(panel(tree)).includes('Suspended inbox source')); assert.equal(s.pages, 2);
+  const task = await taskFixture('Suspended inbox source'), claim = await claimFixture(task), wait = deferred(), s = server([{task, claim}], {work: async () => s.pages === 1 ? wait.promise : Response.json(page([{task, claim}]))}), h = harness();
+  await h.until(() => s.pages === 1);
+  h.visibility(true); wait.resolve(Response.json(page([{task, claim}]))); await h.flush();
+  assert(!text(panel(h.render())).includes('Suspended inbox source'));
+  h.visibility(false);
+  // The independent task-catalog load may still be validating its hashes.
+  // Wait for the actual user action to become available, while proving that
+  // restoring visibility does not issue an automatic inbox request.
+  await h.until(tree => {
+    assert.equal(s.pages, 1, 'visibility restoration must not refresh the inbox automatically');
+    assert(!text(panel(tree)).includes('Suspended inbox source'), 'the suspended response must remain absent');
+    const refresh = button(tree, 'Refresh my work');
+    return !!refresh && !refresh.props.disabled;
+  });
+  assert(text(panel(h.render())).includes('Refresh your work'));
+  h.click('Refresh my work'); await h.until(tree => text(panel(tree)).includes('Suspended inbox source'));
+  assert.equal(s.pages, 2); assert.equal(s.writes.length, 0);
 });
 
 test('retained writer uncertainty blocks inbox refresh and stale saved handlers without replacing the original command', async () => {

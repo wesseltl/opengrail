@@ -16,6 +16,8 @@ Batch observations retain declared artifact status/digest, metrics and baseline 
 
 Compact projections omit full artifacts. They are server-derived author reports, not independently authenticated metrics. Canonical bytes and declared hashes are checked on the server; that does not prove truthful input, correct execution, full search history, unseen data or profitability. The visible strategy retains its immutable `verification:UNTESTED` field.
 
+Forward version-four observations use kind `PROGRAM_FORWARD`. They retain declared marked account/open exposure, guest status/failure, trace and receipt counts, consumed fuel and separate outer/trading pending admissions. These are compact author-reported checkpoints, without fabricated closed-horizon returns or ranking. The full exact record retains complete configure history, plan/Search and guest/trading evidence. All planned candidates are source dependencies: hiding any candidate suppresses the observation and dependent body even if the selected strategy remains visible. See [the complete forward workflow](public-program-forward-evidence.md).
+
 ## Current visibility
 
 Source and parent hiding/withdrawal suppress authored names, flags, claims, metrics and checkpoint observations without deleting safe retained metadata. Reads recheck lifecycle across projection; a response that observed suppression cannot release a prior visible page. The UI discards stale selection/page responses and scrubs dependent results when current source visibility is lost. Original downloaded copies cannot be recalled. A later confirmed restoration needs its current ordered lifecycle rather than reuse of an old visible reply.

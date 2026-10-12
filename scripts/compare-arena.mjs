@@ -16,14 +16,14 @@ async function main(){
  const root=fileURLToPath(new URL('../',import.meta.url)),physicalRoot=realpathSync(root);
  assertProgramExecutionFingerprints();
  const pins=[source(physicalRoot,'app/demo-engine.ts'),source(physicalRoot,'app/reference-engine.ts')];
- const buildOptions={stdin:{contents:"export {evaluateArena} from './app/arena-evaluator';export {verifyArenaReport,arenaLimits} from './app/arena-model';export {parseUniqueJson} from './app/unique-json';export {evaluatorSourceFingerprints} from './app/evaluator-fingerprints';",resolveDir:physicalRoot},absWorkingDir:physicalRoot,bundle:true,write:false,metafile:true,format:'esm',platform:'browser',target:'es2022'};
+ const buildOptions={stdin:{contents:"export {evaluateArena} from './app/arena-evaluator';export {verifyArenaReport,arenaLimits,arenaForwardTransportDepth} from './app/arena-model';export {parseUniqueJson} from './app/unique-json';export {evaluatorSourceFingerprints} from './app/evaluator-fingerprints';",resolveDir:physicalRoot},absWorkingDir:physicalRoot,bundle:true,write:false,metafile:true,format:'esm',platform:'browser',target:'es2022'};
  const discovery=await build(buildOptions),paths=Object.keys(discovery.metafile.inputs).filter(path=>path!=='<stdin>').sort(),graph=paths.map(path=>source(physicalRoot,path));unchanged(pins);
  // Discover without executing, then guard every physical dependency around the
  // actual compilation that will be imported. Submitted data chooses no module.
  const compiled=await build(buildOptions);if(JSON.stringify(Object.keys(compiled.metafile.inputs).filter(path=>path!=='<stdin>').sort())!==JSON.stringify(paths))throw Error('Fixed module graph changed.');unchanged(graph);unchanged(pins);
  const fixed=await import('data:text/javascript;base64,'+Buffer.from(compiled.outputFiles[0].text).toString('base64'));
  for(const [n,key]of ['primary','reference'].entries())if(pins[n].digest!==fixed.evaluatorSourceFingerprints[key])throw Error('Stale evaluator identity.');
- const {bytes,inputIdentity,inputDigest}=readInput(input,fixed.arenaLimits.admissionBytes),raw=fixed.parseUniqueJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),fixed.arenaLimits.admissionBytes,fixed.arenaLimits.maximumDepth);
+ const {bytes,inputIdentity,inputDigest}=readInput(input,fixed.arenaLimits.admissionBytes),raw=fixed.parseUniqueJson(new TextDecoder('utf-8',{fatal:true}).decode(bytes),fixed.arenaLimits.admissionBytes,fixed.arenaForwardTransportDepth);
  unchanged(graph);const report=await fixed.verifyArenaReport(await fixed.evaluateArena(raw));unchanged(graph);assertProgramExecutionFingerprints();
  // File paths and source text never become report labels. Supplied review heads
  // and public records are assertions, not current authenticated HTTP responses.

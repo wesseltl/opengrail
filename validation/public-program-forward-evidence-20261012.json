@@ -1,0 +1,356 @@
+{
+  "kind": "PUBLIC_PROGRAM_FORWARD_EVIDENCE_LOCAL_VALIDATION",
+  "date": "2026-10-12",
+  "capturedAt": "2026-10-12T02:12:52.643727+00:00",
+  "task": "034",
+  "baselineLocalCommit": "560f2c2b6c61cd47e8950c1ff6d59fb60bb7acf9",
+  "testedSourceDigestExcludingThisReceipt": "8f38a739afd0753bb1ec07d958abe255cb5f7646959e554431dffaba81696c46",
+  "testedSourceFileCount": 773,
+  "sourceFreeze": {
+    "retainedLocalName": "final-4-freeze.json",
+    "bytes": 194530,
+    "sha256": "2b36b2468d597ad9fdf45a2aa198c739221d1d71c47b34ac8a1e34585ec98420"
+  },
+  "sourceClassification": "AUTHOR_REPORTED",
+  "qualification": "NONE",
+  "independence": "NOT_ESTABLISHED",
+  "providerAuthenticity": "NOT_ESTABLISHED",
+  "unseenCustody": "NOT_ESTABLISHED",
+  "checks": {
+    "tests": {
+      "command": [
+        "taskset",
+        "-c",
+        "0,1,2,3",
+        "npm",
+        "test"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "logSha256": "8706682ce41802faaf02682714ead2be1746d501b5c75c34a5aa41becbb6d352",
+      "receipt": {
+        "retainedLocalName": "final-4-tests-exit.json",
+        "bytes": 489,
+        "sha256": "91778f17881a60184d623675bbcdfeef1ddeba488aa6ad83655d88a9073b23dc"
+      }
+    },
+    "typecheck": {
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "logSha256": "2277e5aae273aa03509a2cff4e2316ffb2a951528bad452d66d30f23a188f655",
+      "receipt": {
+        "retainedLocalName": "final-4-typecheck-exit.json",
+        "bytes": 463,
+        "sha256": "1590cdb4a0413c1c2adc5048d94cfc96dba6352166824b420b1a740f459a6b69"
+      }
+    },
+    "build": {
+      "command": [
+        "node",
+        "/root/.codex/plugins/cache/openai-curated-remote/sites/1.0.0/scripts/build-site.mjs"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "logSha256": "0dd704c761a64b81f4a1198d44300a68527a910113aa18a101a048d7d42b0ca4",
+      "receipt": {
+        "retainedLocalName": "final-4-build-exit.json",
+        "bytes": 526,
+        "sha256": "8723ed5d4536faf133fae46dc1bc677648e488f3140d25950879ac8e0d88238c"
+      }
+    },
+    "diff": {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "sourceUnchanged": true,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "receipt": {
+        "retainedLocalName": "final-4-diff-exit.json",
+        "bytes": 459,
+        "sha256": "9e99aee3bad70718480af8aef5fa282af46ff6026e87d7a3fcbec8422b12a917"
+      }
+    }
+  },
+  "fullSuite": {
+    "tests": 2287,
+    "pass": 2287,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "browser": {
+    "scope": "LOCAL_SYNTHETIC_D1_HTTP_AND_REAL_BROWSER_WORKERS",
+    "authentication": "INVENTED_LOCAL_HEADER_CONTEXT_ONLY",
+    "hostedAuthenticationVerified": false,
+    "independentHumanReviewerVerified": false,
+    "views": 13,
+    "completeDownloads": 6,
+    "localSyntheticHandlerWrites": 3,
+    "errors": 0,
+    "externalRequests": 0,
+    "assertions": {
+      "staticForwardGuide": true,
+      "inertImportAndSharingWithWholeAdverseHistory": true,
+      "separateUiConsentActualV4LocalRegistryPublication": true,
+      "nativeWorkersFullOriginalFreshPairHistory": true,
+      "coherentFalseStateDetectedByNativeWorker": true,
+      "nativePairedDraftExplicitSyntheticReviewerHeldPublication": true,
+      "completeArenaWithCurrentHeldHeadAndNoRank": true
+    },
+    "capture": {
+      "retainedLocalName": "browser/native-final-4-b2-1791770497451/native-browser-capture.json",
+      "bytes": 247588,
+      "sha256": "da634d4ed8e0b03de87c458f03a0fd71876eab2f0abdabadc949a560abeb5b56"
+    },
+    "exitReceipt": {
+      "retainedLocalName": "final-4-b2-browser-exit.json",
+      "bytes": 691,
+      "sha256": "83500ad1bae834d5b31d547200a7ba11f602dc10058dd0432fe09b8ed3013165"
+    },
+    "renderedWorkerAsset": "SAME_LOCAL_HTTP_ORIGIN",
+    "mockWorkerUsed": false
+  },
+  "preservation": {
+    "privateApplicationUnchanged": true,
+    "privateApplicationClean": true,
+    "unchangedPinnedFiles": [
+      ".openai/hosting.json",
+      "app/demo-engine.ts",
+      "app/demo-model.ts",
+      "app/evaluator-fingerprints.ts",
+      "app/program-evidence.ts",
+      "app/program-fingerprints.ts",
+      "app/program-forward-plan.ts",
+      "app/program-forward-planner.tsx",
+      "app/program-run-model.ts",
+      "app/program-run.ts",
+      "app/program-search-protocol.ts",
+      "app/program-session-engine.ts",
+      "app/program-session-journal.ts",
+      "app/program-session-model.ts",
+      "app/program-source-model.ts",
+      "app/program-wasm.ts",
+      "app/program.tsx",
+      "app/program/page.tsx",
+      "app/reference-engine.ts",
+      "app/session-engine.ts",
+      "app/session-fingerprints.ts",
+      "app/session-journal.ts",
+      "app/session-model.ts",
+      "app/strategy-model.ts",
+      "app/unique-json.ts",
+      "package-lock.json",
+      "package.json",
+      "scripts/evaluator-fingerprints.mjs",
+      "scripts/forward-demo-core.mjs",
+      "scripts/kraken-market-data-core.mjs",
+      "scripts/kraken-market-data.mjs",
+      "scripts/program-fingerprint-core.mjs",
+      "scripts/program-fingerprints.mjs",
+      "scripts/program-session-files.mjs",
+      "scripts/program-session-fingerprint-core.mjs",
+      "scripts/program-session-fingerprints.mjs",
+      "scripts/program-session-monitor.css",
+      "scripts/program-session-monitor.html",
+      "scripts/program-session-monitor.mjs",
+      "scripts/program-session-receiver-protocol.mjs",
+      "scripts/program-session-receiver.mjs",
+      "scripts/program-session-runtime.mjs",
+      "scripts/recorded-kraken-market-data-core.mjs",
+      "scripts/recorded-kraken-market-data.mjs",
+      "scripts/recorded-program-kraken-core.mjs",
+      "scripts/recorded-program-kraken.mjs",
+      "scripts/session-evidence.mjs",
+      "scripts/session-file-lock.py",
+      "scripts/session-fingerprints.mjs",
+      "scripts/session-monitor.css",
+      "scripts/session-monitor.html",
+      "scripts/session-monitor.mjs",
+      "scripts/session-receiver-protocol.mjs",
+      "scripts/session-receiver.mjs",
+      "scripts/session-runtime.mjs"
+    ]
+  },
+  "limits": {
+    "inputBytes": 196608,
+    "artifactBytes": 524288,
+    "manifestBytes": 262144,
+    "outcomeBytes": 589824,
+    "transportBytes": 786432,
+    "reviewReportBytes": 131072,
+    "forwardBodyDepth": 40,
+    "legacyBodyDepth": 16
+  },
+  "failedChecksRetained": {
+    "firstFullSuite": {
+      "tests": 2280,
+      "pass": 2279,
+      "fail": 1,
+      "reason": "Capability test retained the obsolete publicRegistration=false expectation; corrected test keeps inert and no-execution authority checks.",
+      "receipt": {
+        "retainedLocalName": "final-1-tests-exit.json",
+        "bytes": 488,
+        "sha256": "ff1c312ce2ce1c825a2b472fc71853c9ea5723fa8a29e4ba48d0b262d8638ee3"
+      }
+    },
+    "firstBrowser": "Required experiment name omitted by the harness; corrected before second attempt.",
+    "secondBrowser": "Packaged Worker used a file URL and failed construction; fixed with the supported worker asset import, with generic failure retention and current-source privacy regressions.",
+    "secondFullSuite": "Eight-worker run: 2283 tests,2279 pass,3 failed and1 cancelled. Confirmed refresh readiness race corrected; other cases exceeded observation deadlines. Full required script rerun with the prior four-worker configuration; unchanged simulation quotas, limits and runtime.",
+    "thirdFullSuite": "2287tests,2286pass,1failure,0cancelled. The2000-bar TRAIN observation exceeded15s; only that observation nowallows30s. Allsource/runtime/publiclimits and complete-export assertions remain unchanged.",
+    "fourthBrowser": "The V4 deadline fix admitted the correct paired draft; the harness edited notes after sharing consent, which correctly reset consent. The next harness confirms consent after final edits.",
+    "fifthBrowser": "Actual trusted HELD review publication passed. Arena refused original and reproduction of the same strategy version as designed. The corrected fixture seeds a real separate unplanned no-output source and retains its full history.",
+    "thirdBrowser": "Real Workers reconstructed the complete matching pair and detected coherent false state; valid draft import exceeded the shared15s reference deadline. Pure binding diagnosis passed; forward-only closure budget now30s with individualHTTP and identity15s unchanged."
+  },
+  "supportingEvidence": [
+    {
+      "retainedLocalName": "evidence/causality-targeted-evidence-receipt.json",
+      "bytes": 22392,
+      "sha256": "44167b03070e685220bfa8a1e86435b3f3a034f906039f0211dc9542c3872b4f"
+    },
+    {
+      "retainedLocalName": "registry/null-evidence-ack-final-affected-tests-receipt.json",
+      "bytes": 7086,
+      "sha256": "b2c1207789905d98581ebaa6da9d9079eeaaa6dd348409fafadd8fb4431da352"
+    },
+    {
+      "retainedLocalName": "product/worker-url-paired-source-handoff.json",
+      "bytes": 1895,
+      "sha256": "0933a94f2aaf7d27b128bd6745c6cad06cf6e1afdbdd6e7af82e0fe430aca113"
+    },
+    {
+      "retainedLocalName": "review-final/read-only-acceptance-review.json",
+      "bytes": 6427,
+      "sha256": "23e808a2d9eed55be6d4100966d305a12868a87c7240a6787bf28a70f6699eba"
+    },
+    {
+      "retainedLocalName": "final-4-documentation-check.json",
+      "bytes": 2293,
+      "sha256": "0bb38a9d89f40be83457faef2c6c9d8204ef721c7320f27b8e8dc4ce0c26d54b"
+    },
+    {
+      "retainedLocalName": "fresh-short-no-selection-receipt.json",
+      "bytes": 4945,
+      "sha256": "c4a0867bb224097b3816b151091f02a694b08bd563eba5712dfb93d2c829655e"
+    },
+    {
+      "retainedLocalName": "final-1-tests-exit.json",
+      "bytes": 488,
+      "sha256": "ff1c312ce2ce1c825a2b472fc71853c9ea5723fa8a29e4ba48d0b262d8638ee3"
+    },
+    {
+      "retainedLocalName": "final-1-browser-exit.json",
+      "bytes": 579,
+      "sha256": "1942d84f7f445ffc7f35b357aa7e0f7a92e6b2afdff30bf5e63d654000a76439"
+    },
+    {
+      "retainedLocalName": "final-1-b2-browser-exit.json",
+      "bytes": 692,
+      "sha256": "88b6fc13f977d32ae6c4593ce42da60b77cad89ff7372d476479188f2d834ab9"
+    },
+    {
+      "retainedLocalName": "final-2-tests-exit.json",
+      "bytes": 497,
+      "sha256": "0751b3e25ddbe6ef0ae9b053fb8ecbad4a163018d19bead80156198a899bebce"
+    },
+    {
+      "retainedLocalName": "final-2-browser-exit.json",
+      "bytes": 686,
+      "sha256": "c7c663fde631000784fb916e80a33cbcacfe330595474ee2f7f88533f73ce7e1"
+    },
+    {
+      "retainedLocalName": "product/review-import-native-diagnostic.receipt.json",
+      "bytes": 3616,
+      "sha256": "7e81c3f493614d7c37e5dc5d5a28640bed1910e502f0ced2c09125c17a659562"
+    },
+    {
+      "retainedLocalName": "product/review-budget-four-controlled.receipt.json",
+      "bytes": 1537,
+      "sha256": "90b70ead7df9b39f5702dbf343d273a7545c0483869a5d9e374c4bd03a175724"
+    },
+    {
+      "retainedLocalName": "product/review-budget-types.receipt.json",
+      "bytes": 1210,
+      "sha256": "e6553e3a3428f5d8b315072dd6cb0bfae3b3e0d62eb13e0f6263aa80709fe7de"
+    },
+    {
+      "retainedLocalName": "product/review-budget-final-handoff.json",
+      "bytes": 1536,
+      "sha256": "77b4478d28a5bc61fec9f257ab675ba4a6d85fd610c50f173c7d7165a4317e66"
+    },
+    {
+      "retainedLocalName": "product/oversized-train-final-handoff.json",
+      "bytes": 1384,
+      "sha256": "e53dc707106a152ecd0019d0cc84d54228126e0f4b0c9e09263202abb45bb40b"
+    },
+    {
+      "retainedLocalName": "final-3-tests-exit.json",
+      "bytes": 489,
+      "sha256": "5cba4c4bde7d869d6174b2d0dc5a684384a3b34ce3f64b93eff6bd86aeecaadb"
+    },
+    {
+      "retainedLocalName": "final-3-browser-exit.json",
+      "bytes": 685,
+      "sha256": "93bf01f6e037a7d2ef233dd3c155cac8cd80135f0605d6302082655de3009fb9"
+    },
+    {
+      "retainedLocalName": "final-3-b2-browser-exit.json",
+      "bytes": 692,
+      "sha256": "7a60f0ae7a1430608e065fe7f9cd1c4dc11e0ee561990164a6e5bba39c2410f6"
+    },
+    {
+      "retainedLocalName": "browser-helper-arena-extension-receipt.json",
+      "bytes": 5556,
+      "sha256": "b342ff6f39f7c1c3647e811c303ae5b945f35cc16c4df7e9215924e53cfe6577"
+    },
+    {
+      "retainedLocalName": "final-4-browser-exit.json",
+      "bytes": 686,
+      "sha256": "26a4c83ef0536c1558268dec3abd4a3c2a9b4a5d0bf52792fec8638c004b0ac0"
+    },
+    {
+      "retainedLocalName": "final-4-browser-crash-owned-teardown.json",
+      "bytes": 311,
+      "sha256": "0c54f0e782658a55fba14842638133c1a81f0d37e1852d70238728c6607557fa"
+    }
+  ],
+  "acceptance": {
+    "completeFittingForwardPublicRegistrySource": "LOCALLY_VALIDATED",
+    "coherentFalseState": "ACTUAL_LOCAL_WORKER_MISMATCH",
+    "fullLossAndInterruptionHistory": "RETAINED",
+    "reviewDisposition": "HELD_POST_SELECTION_AND_SHARED_PROCESS",
+    "forwardArena": "HELD_FORWARD_PROTOCOL_UNSUPPORTED_WHOLE_COHORT_UNRANKED",
+    "allCandidateSourceClosure": "CURRENT_SOURCE_CHECKS_AND_KNOWN_HIDE_SCRUBBING",
+    "originalTask033ShortSearchToCollector": "UNMET",
+    "missingOriginalFailedShortLedger": "NOT_RECOVERED",
+    "freshShortNegative": "NEW_DATED_REPRODUCTION_NO_SELECTION_RETAINED",
+    "publicRawCollectorArchive": "NOT_ESTABLISHED",
+    "hostedPublicApiAndAuthentication": "NOT_ESTABLISHED",
+    "usefulIndependentOperatorsAndRetention": "NOT_ESTABLISHED",
+    "licensedAuthenticForwardObservations": "NOT_ESTABLISHED",
+    "supportedForwardRanking": "NOT_IMPLEMENTED",
+    "fullOpenGrailGoal": "ACTIVE_NOT_COMPLETE"
+  },
+  "publication": {
+    "decision": "WAIT_TO_PUBLISH",
+    "deploymentOrDomainMutationAttempted": false,
+    "savedVersionAndPublicBranchReachability": "VERIFIED_SEPARATELY_AFTER_THIS_SOURCE_RECEIPT"
+  },
+  "execution": {
+    "liveOrders": false,
+    "investments": false,
+    "transfers": false,
+    "billingTokenOrBetting": false,
+    "newExpenses": false,
+    "outreach": false,
+    "prMergeOrHostedCi": false
+  }
+}

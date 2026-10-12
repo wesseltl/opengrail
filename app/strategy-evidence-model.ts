@@ -32,6 +32,7 @@ export const strategyEvidenceObservationSchema=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('BATCH'),status:z.enum(['COMPLETED','NO_TRADES','HALTED','REJECTED','FAILED']),artifactDigest:canonicalHash,metrics:demoMetricsSchema.nullable(),benchmark:demoBenchmarkSchema.nullable()}).strict(),
  z.object({kind:z.literal('CONTINUOUS'),status:z.enum(['ACTIVE','PAUSED','STOPPING','STOPPED','FAILED']),artifactDigest:canonicalHash,initialCapital:finite.min(.01).max(1000000),account:sessionStateSchema.shape.account,openPositions:z.number().int().min(0).max(5),closedTrades:z.number().int().min(0).max(2000),pending:z.boolean(),capacityHalted:z.boolean(),dataGap:z.boolean(),emergencyAt:clock.nullable()}).strict(),
  z.object({kind:z.literal('PROGRAM'),status:z.enum(programRunStatuses),reason:z.enum(programRunReasons),outcomeDigest:canonicalHash,generatedSignals:z.number().int().min(0).max(500),totalFuel:z.number().int().min(0).max(programRunLimits.totalFuel),metrics:demoMetricsSchema.nullable(),benchmark:demoBenchmarkSchema.nullable(),generatorIndependence:z.literal('NOT_ESTABLISHED'),qualification:z.literal('NONE')}).strict(),
+ z.object({kind:z.literal('PROGRAM_FORWARD'),status:z.enum(['ACTIVE','PAUSED','STOPPING','STOPPED','FAILED','INTERRUPTED']),artifactDigest:canonicalHash,initialCapital:finite.min(.01).max(1000000),account:sessionStateSchema.shape.account,openPositions:z.number().int().min(0).max(5),closedTrades:z.number().int().min(0).max(2000),pending:z.boolean(),pendingAdmission:z.boolean(),guestStatus:z.enum(['UNCONFIGURED','READY','FAILED','INTERRUPTED']),guestFailure:z.string().regex(/^[A-Z][A-Z0-9_]{0,63}$/).nullable(),totalFuel:z.number().int().min(0).max(programRunLimits.totalFuel),outerCount:z.number().int().min(0).max(2032),innerCount:z.number().int().min(0).max(2032),traceCount:z.number().int().min(0).max(2000),capacityHalted:z.boolean(),dataGap:z.boolean(),emergencyAt:clock.nullable(),generatorIndependence:z.literal('NOT_ESTABLISHED'),providerAuthenticity:z.literal('NOT_ESTABLISHED'),qualification:z.literal('NONE')}).strict(),
  z.object({kind:z.literal('INTERRUPTED')}).strict(),
  z.object({kind:z.literal('ARTIFACT_UNAVAILABLE')}).strict(),
 ]);
@@ -41,8 +42,8 @@ export const strategyEvidenceEntrySchema=z.object({summary:experimentSummarySche
  if(s.state!=='VISIBLE'||s.type==='MANIFEST'){if(c!==null||o!==null)bad();return;}
  if(!c||!o){bad();return;}
  if(c.relation?.id===s.id)bad();
- if(o.kind==='BATCH'||o.kind==='CONTINUOUS'||o.kind==='PROGRAM'){
-  if(s.status!==o.status||(s.method==='CONTINUOUS_DEMO')!==(o.kind==='CONTINUOUS')||(s.method==='PROGRAM_DEMO')!==(o.kind==='PROGRAM'))bad();
+ if(o.kind==='BATCH'||o.kind==='CONTINUOUS'||o.kind==='PROGRAM'||o.kind==='PROGRAM_FORWARD'){
+  if(s.status!==o.status||(s.method==='CONTINUOUS_DEMO')!==(o.kind==='CONTINUOUS')||(s.method==='PROGRAM_DEMO')!==(o.kind==='PROGRAM')||(s.method==='PROGRAM_FORWARD_DEMO')!==(o.kind==='PROGRAM_FORWARD'))bad();
   if(o.kind==='BATCH'&&(o.status==='REJECTED'&&(o.metrics!==null||o.benchmark!==null)||o.status==='FAILED'&&o.metrics?.comparable))bad();
  }else if(s.status!==o.kind)bad();
 });
@@ -69,7 +70,10 @@ export function strategyEvidenceEntryForItem(item:ExperimentPublicItem):Strategy
   projectedClaim={type:record.content.claim.type,relation:record.content.claim.relation};
   const result=record.content.result;
   if(result.kind!=='ARTIFACT')observation={kind:result.kind};
-  else if(record.version===3){
+  else if(record.version===4){
+   if(record.content.result.kind!=='ARTIFACT')throw Error('Missing forward artifact.');const artifact=record.content.result.artifact,journal=artifact.journal,p=journal.trading.state;
+   observation={kind:'PROGRAM_FORWARD',status:experimentRecordStatus(record) as 'ACTIVE'|'PAUSED'|'STOPPING'|'STOPPED'|'FAILED'|'INTERRUPTED',artifactDigest:artifact.resultDigest,initialCapital:artifact.input.config.initialCapital,account:p.account,openPositions:p.openPositions.length,closedTrades:p.trades.length,pending:p.pending!==null,pendingAdmission:journal.pending!==null,guestStatus:journal.guest.status,guestFailure:journal.guest.failure,totalFuel:journal.guest.totalFuel,outerCount:journal.events.length,innerCount:p.sequence,traceCount:journal.guest.trace.length,capacityHalted:p.capacityHalted,dataGap:p.dataGap,emergencyAt:p.emergencyAt,generatorIndependence:'NOT_ESTABLISHED',providerAuthenticity:'NOT_ESTABLISHED',qualification:'NONE'};
+  }else if(record.version===3){
    const artifact=record.content.result.kind==='ARTIFACT'?record.content.result.artifact:null;
    if(!artifact)throw Error('Missing program outcome.');
    observation={kind:'PROGRAM',status:artifact.status,reason:artifact.reason,outcomeDigest:artifact.outcomeDigest,generatedSignals:artifact.signals.length,totalFuel:artifact.totalFuel,metrics:artifact.artifact?.metrics??null,benchmark:artifact.artifact?.benchmark??null,generatorIndependence:'NOT_ESTABLISHED',qualification:'NONE'};

@@ -6,7 +6,7 @@ import type {ExperimentReviewRepository} from './experiment-review-store';
 import type {NetworkRepository} from './network-store';
 export const experimentReviewHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
 type Human={userId:string}|null;
-type Repository=Pick<ExperimentReviewRepository,'list'|'get'|'write'|'reports'>;
+type Repository=Pick<ExperimentReviewRepository,'list'|'get'|'write'|'reports'> & Partial<Pick<ExperimentReviewRepository,'confirmForward'>>;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
 const same=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 function reply(body:unknown,status=200,headers:Record<string,string>={}){const payload=JSON.stringify(body);if(new TextEncoder().encode(payload).byteLength>experimentReviewLimits.requestBytes)throw Error('Review response exceeds its bound.');return new Response(payload,{status,headers:{...experimentReviewHeaders,'Content-Type':'application/json',...headers}});}
@@ -34,16 +34,17 @@ async function correlate(raw:unknown,sent:ExperimentReviewCommand,author:Experim
  }
  return receipt;
 }
+async function finalForwardReview(factory:()=>Repository,item:ReturnType<typeof experimentReviewGetSchema.parse>['item'],expectedHead?:{id:string;digest:string;sequence:number},forwardPage=false){if(item.method!=='PROGRAM_FORWARD_DEMO'&&!forwardPage)return item;const repo=factory(),current=repo.confirmForward?await repo.confirmForward(item,expectedHead):experimentReviewGetSchema.parse(await repo.get(item.id,item.digest)).item;if(current.id!==item.id||current.digest!==item.digest||current.requestId!==item.requestId||!same(current.author,item.author)||!same(current.target,item.target)||item.record&&current.record&&!same(item.record,current.record))throw Error('Forward review identity changed at final observation.');return current;}
 export async function experimentReviewPublicRequest(request:Request,factory:()=>Repository){
  if(request.method!=='GET')return method('GET');try{
   const pairs=[...new URL(request.url).searchParams],params=new Map(pairs);if(pairs.some(([key])=>!['id','outcome','digest','cursor'].includes(key))||params.size!==pairs.length)throw new NetworkError('Use supported review parameters once.',400);
   const id=params.get('id'),outcome=params.get('outcome'),digest=params.get('digest'),cursor=params.get('cursor');
   if(!digest||!hash.test(digest)||Boolean(id)===Boolean(outcome)||id&&(!uuid.test(id)||pairs.length!==2)||outcome&&(!uuid.test(outcome)||pairs.length!==(cursor===undefined?2:3))||cursor!==undefined&&!uuid.test(cursor))throw new NetworkError('Use an exact review or original outcome identity and digest.',400);
-  const repo=factory();if(id){const value=experimentReviewGetSchema.parse(await repo.get(id,digest));if(value.item.id!==id||value.item.digest!==digest)throw Error('Exact review response mismatch.');await validateExperimentReviewItem(value.item);return reply(value);}
+  const repo=factory();if(id){const value=experimentReviewGetSchema.parse(await repo.get(id,digest));if(value.item.id!==id||value.item.digest!==digest)throw Error('Exact review response mismatch.');await validateExperimentReviewItem(value.item);return reply({...value,item:await finalForwardReview(factory,value.item)});}
   const anchor=cursor?experimentReviewGetSchema.parse(await repo.get(cursor)).item:null;if(anchor){await validateExperimentReviewItem(anchor);if(!same(anchor.target.original,{id:outcome,digest}))throw new ExperimentReviewError('Cursor does not belong to this exact original outcome.',404);}
   const page=experimentReviewListSchema.parse(await repo.list(outcome!,digest,cursor??null));
   if(page.currentHead){
-   const head=experimentReviewGetSchema.parse(await repo.get(page.currentHead.id,page.currentHead.digest)).item;await validateExperimentReviewItem(head);if(head.id!==page.currentHead.id||head.digest!==page.currentHead.digest||head.sequence!==page.currentHead.sequence||!same(head.target.original,page.target))throw Error('Review current head mismatch.');
+   let head=experimentReviewGetSchema.parse(await repo.get(page.currentHead.id,page.currentHead.digest)).item;await validateExperimentReviewItem(head);head=await finalForwardReview(factory,head,page.currentHead,page.items.some(item=>item.method==='PROGRAM_FORWARD_DEMO'));if(head.id!==page.currentHead.id||head.digest!==page.currentHead.digest||head.sequence!==page.currentHead.sequence||!same(head.target.original,page.target))throw Error('Review current head mismatch.');
    const {record,moderation,...metadata}=head;void moderation;const summary=experimentReviewSummarySchema.parse({...metadata,reasons:record?.content.reasons??[]}),listedHead=page.items.find(item=>item.id===head.id);
    if(listedHead&&!same(listedHead,summary))throw Error('Review page current head projection mismatch.');
    // OUTCOME_UNAVAILABLE does not distinguish the shared original from one reproduction.
@@ -58,7 +59,7 @@ export async function experimentReviewHumanRequest(request:Request,actor:Human,f
   const url=new URL(request.url);if(url.search)throw new NetworkError('Review commands take no query parameters.',400);if(request.headers.get('Origin')!==url.origin||request.headers.get('X-Experiment-Review-Intent')!=='submit')throw new NetworkError('Invalid review request origin or intent.',403);
   const authorId=await experimentPublicHumanId(actor.userId);if(request.headers.get('X-Experiment-Review-Author')!==authorId)throw new NetworkError('Review author does not match the signed-in participant.',403);
   const sent=await command(request),isReviewer=reviewer(actor.userId),isModerator=moderator(actor.userId);if(sent.action==='review'&&!isReviewer)throw new NetworkError('Explicit human reviewer authorization is required.',403);if(sent.action==='moderate'&&!isModerator)throw new NetworkError('Explicit moderator authorization is required.',403);
-  const value=await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,reviewer:isReviewer,moderator:isModerator},sent,now()),sent,{kind:'HUMAN',id:authorId,sponsorId:authorId});
+  let value=await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,reviewer:isReviewer,moderator:isModerator},sent,now()),sent,{kind:'HUMAN',id:authorId,sponsorId:authorId});if(value.item)value={...value,item:await finalForwardReview(factory,value.item)};
   if(sent.action==='review'&&!reviewer(actor.userId)||sent.action==='moderate'&&!moderator(actor.userId))throw new NetworkError('Current review authorization is required.',403);return reply(value);
  }catch(error){return failure(error);}
 }

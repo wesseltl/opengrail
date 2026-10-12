@@ -72,6 +72,8 @@ The collector uses the unchanged Kraken normalization method and separately reta
 
 ## Remaining work
 
-Public experiment registration currently distinguishes V1 CONTINUOUS_DEMO and cold PROGRAM_DEMO. A persistent program journal is neither. Do not relabel it to pass those schemas. A reviewed inert public programmable-forward registration and review path remains required, along with authentic licensed observations, independent custody, verified useful contributors, reuse and retention, and approved hosted rollout.
+The additive [shared forward evidence source increment](public-program-forward-evidence.md) distinguishes `PROGRAM_FORWARD_DEMO` version-four records from continuous rule Sessions and cold program runs. Its inert registry, explicit local reconstruction and paired-review path are under local integration validation; source preparation does not establish public availability. Authentic licensed observations, independent custody, verified useful contributors, reuse and retention, and approved hosted rollout remain required.
+
+Task 033's complete SHORT Search-to-collector acceptance remains unmet: the original batch selection policy declares SHORT noncomparable. A LONG winner or separate SHORT runtime is not a substitute. New negative evidence preserves the full failed selection rather than claiming the original missing ledger was recovered. An additive reviewed SHORT selection method remains necessary.
 
 Classification is AUTHOR_REPORTED; qualification NONE; independence and unseen custody NOT_ESTABLISHED. Source saving does not deploy the app, start a provider, create a public execution sandbox or enable Live trading. The separate private Capital Desk and existing program, rule-session and collector identities remain preserved.

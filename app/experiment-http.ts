@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {NetworkError} from './network-model';
 import type {NetworkRepository} from './network-store';
 import {readNetworkJson,NetworkBodyLimit} from './network-json';
-import {ExperimentError,experimentLimits,experimentDigest,experimentPublicHumanId,experimentCommandSchema,experimentListSchema,experimentGetSchema,experimentOutcomesSchema,experimentWriteSchema,experimentMeSchema,experimentReportsSchema,validateExperimentItem,experimentInputStrategy,type ExperimentCommand,type ExperimentAuthorReference} from './experiment-model';
+import {ExperimentError,experimentLimits,experimentTransportDepth,boundedExperimentCommand,experimentDigest,experimentPublicHumanId,experimentCommandSchema,experimentListSchema,experimentGetSchema,experimentOutcomesSchema,experimentWriteSchema,experimentMeSchema,experimentReportsSchema,validateExperimentItem,experimentInputStrategy,type ExperimentCommand,type ExperimentAuthorReference} from './experiment-model';
 import type {ExperimentRepository} from './experiment-store';
 
 export const experimentHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
@@ -32,8 +32,9 @@ function failure(error:unknown,machine=false){
 async function command(request:Request){
  if(request.headers.get('Content-Type')?.split(';')[0]!=='application/json')throw new NetworkError('Use application/json.',415);
  let raw:unknown;
- try{raw=await readNetworkJson(request,experimentLimits.requestBytes,experimentLimits.maximumDepth);}
+ try{raw=await readNetworkJson(request,experimentLimits.requestBytes,experimentTransportDepth);}
  catch(error){throw new NetworkError(error instanceof NetworkBodyLimit?'Request too large.':'Invalid JSON request.',error instanceof NetworkBodyLimit?413:400);}
+ try{boundedExperimentCommand(raw);}catch(error){if(error instanceof ExperimentError)throw error;throw new NetworkError('Invalid public experiment command.',400);}
  const parsed=experimentCommandSchema.safeParse(raw);
  if(!parsed.success)throw new NetworkError('Invalid public experiment command.',400);
  return parsed.data;
@@ -68,6 +69,9 @@ async function correlate(raw:unknown,sent:ExperimentCommand,author:ExperimentAut
  }
  return result;
 }
+/** Heavy identity checks finish before the final V4 repository visibility observation. */
+async function finalForwardItem(factory:()=>Repository,item:ReturnType<typeof experimentGetSchema.parse>['item']){const current=experimentGetSchema.parse(await factory().get(item.id)).item;if(current.id!==item.id||current.digest!==item.digest||current.type!==item.type||current.requestId!==item.requestId||JSON.stringify(current.author)!==JSON.stringify(item.author)||item.record&&current.record&&JSON.stringify(current.record)!==JSON.stringify(item.record))throw Error('Forward evidence identity changed at final observation.');return current;}
+async function finalForwardReceipt(factory:()=>Repository,value:ReturnType<typeof experimentWriteSchema.parse>,sent:ExperimentCommand){if(value.item&&('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO'||value.item.record?.version===4))return {...value,item:await finalForwardItem(factory,value.item)};return value;}
 export async function experimentPublicRequest(request:Request,factory:()=>Repository){
  if(request.method!=='GET')return method('GET');
  try{
@@ -80,6 +84,7 @@ export async function experimentPublicRequest(request:Request,factory:()=>Reposi
    const result=experimentGetSchema.parse(await factory().get(id));
    if(result.item.id!==id)throw Error('Experiment identity response mismatch.');
    await integrity(result.item);
+   if(result.item.record?.version===4)return reply({...result,item:await finalForwardItem(factory,result.item)});
    return reply(result);
   }
   if(manifest){
@@ -104,7 +109,7 @@ export async function experimentHumanRequest(request:Request,actor:Human,factory
   const sent=await command(request),sponsorId=await experimentPublicHumanId(actor.userId);
   const expectedAuthor=request.headers.get('X-Experiment-Author');
   if(expectedAuthor!==null&&expectedAuthor!==sponsorId)throw new NetworkError('Experiment author does not match the signed-in participant.',403);
-  return reply(await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,moderator:moderator(actor.userId)},sent,now()),sent,{kind:'HUMAN',id:sponsorId,sponsorId}));
+  const value=await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,moderator:moderator(actor.userId)},sent,now()),sent,{kind:'HUMAN',id:sponsorId,sponsorId});return reply(await finalForwardReceipt(factory,value,sent));
  }catch(error){return failure(error);}
 }
 export async function experimentAgentRequest(request:Request,factory:()=>Repository,identities:()=>Pick<NetworkRepository,'authenticate'>,now=()=>new Date().toISOString()){
@@ -120,7 +125,7 @@ export async function experimentAgentRequest(request:Request,factory:()=>Reposit
   const sent=await command(request),principal=await identities().authenticate(authorization.slice(7),now());
   if(principal.credentialId!==authorization.slice(16,52))throw Error('Experiment credential identity mismatch.');
   const sponsorId=await experimentPublicHumanId(principal.ownerId);
-  return reply(await correlate(await factory().write({kind:'AGENT',principal},sent,now()),sent,{kind:'AGENT',id:principal.agentId,sponsorId},principal.name));
+  const value=await correlate(await factory().write({kind:'AGENT',principal},sent,now()),sent,{kind:'AGENT',id:principal.agentId,sponsorId},principal.name),final=await finalForwardReceipt(factory,value,sent);if('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO')await identities().authenticate(authorization.slice(7),now());return reply(final);
  }catch(error){return failure(error,true);}
 }
 export async function experimentMeRequest(request:Request,actor:Human,moderator:(userId:string)=>boolean){

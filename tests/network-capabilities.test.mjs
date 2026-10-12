@@ -215,18 +215,24 @@ test('programmable search advertises real local generation and durable admission
  for(const name of ['evaluateProgramSearchAttempt','runProgramReplay','compareProgramOutcome'])assert(!bundle.outputFiles[0].text.includes('function '+name),name);
 });
 
-test('anonymous capability route describes persistent program Demo without loading the execution kernel or gaining public authority',async()=>{
+test('anonymous capability route describes persistent Demo and inert forward registration without loading the execution kernel or granting execution authority',async()=>{
  const spec=await (await get()).json(),forward=spec.programForwardDemo;
  assert.equal(forward.page,'/session');assert.equal(forward.plansPage,'/plans');assert.equal(forward.sourceVersion,2);
  assert.equal(forward.method.version,'opengrail-program-session-v1');assert.equal(forward.handoff,'COMPLETE_LOCKED_PROGRAM_SEARCH_WITH_TERMINAL_TEST');
  assert.equal(forward.signalAvailability,'RECORDED_POST_GUEST_COMPLETION');assert.equal(forward.internalProjection,'DISTINCT_PRIVATE_V1');
  assert.deepEqual(forward.producerInputs,['CLOSED_BAR','QUOTE']);assert.deepEqual(forward.ownerControls,['PAUSE','RESUME','EMERGENCY']);
  for(const field of ['originalSourceRetained','oneRetainedGuest','admissionBeforeGuest','outerAndInnerSequencesSeparate','completeAdverseEvidence'])assert.equal(forward[field],true,field);
- for(const field of ['externalSignals','publicRegistration','hostedCompute','automaticProviderStart','automaticPublication','newPermissions','ordersEnabled','liveEnabled'])assert.equal(forward[field],false,field);
+ for(const field of ['externalSignals','hostedCompute','automaticProviderStart','automaticPublication','newPermissions','ordersEnabled','liveEnabled'])assert.equal(forward[field],false,field);
+ assert.equal(forward.publicRegistration,true);assert.equal(forward.publicMethod,'PROGRAM_FORWARD_DEMO');assert.equal(forward.publicRecordVersion,4);assert.equal(forward.completeFittingPublicEvidenceOnly,true);assert.equal(forward.classification,'AUTHOR_REPORTED');assert.equal(forward.providerAuthentication,'UNKNOWN');assert.match(forward.availability,/Source preparation/);
+ const evidence=spec.programForwardEvidence;
+ assert.equal(evidence.method,'PROGRAM_FORWARD_DEMO');assert.equal(evidence.recordVersion,4);assert.equal(evidence.serverAdmission,'INERT_IDENTITY_AND_CORRELATION_ONLY');assert.equal(evidence.localReconstruction,'EXPLICIT_WORKER_OR_FILE_ONLY_CLI');assert.equal(evidence.publicRawCollectorArchive,'NOT_ESTABLISHED');assert.equal(evidence.guidePage,'/agent-guide/program-forward');
+ assert.deepEqual(evidence.publicLimits,{inputBytes:192*1024,artifactBytes:512*1024,manifestBytes:256*1024,outcomeBytes:576*1024,reviewReportBytes:131072,bodyDepth:40,legacyBodyDepth:16});
+ for(const field of ['automaticPublication','hostedCompute','newPermissions','ordersEnabled','liveEnabled','pendingWorkAutomaticallyExecuted'])assert.equal(evidence[field],false,field);
+ assert.equal(evidence.classification,'AUTHOR_REPORTED');assert.equal(evidence.qualification,'NONE');assert.equal(evidence.independence,'NOT_ESTABLISHED');assert.match(evidence.availability,/public availability.*independently useful operators.*approved rollout/);
  assert.equal(forward.qualification,'NONE');assert.equal(forward.independence,'NOT_ESTABLISHED');assert.equal(forward.browserPersistence,'OWNER_SCOPED_STRICT_INDEXEDDB');
  assert(forward.limits.configBytes>=32768);assert(forward.limits.journalBytes>forward.limits.reservedBytes);assert(forward.limits.totalFuel>forward.limits.perInvocationFuel);
  const inputs=Object.keys(bundle.metafile?.inputs??{});
- for(const name of ['app/session-engine.ts','app/session-journal.ts','app/program-session-engine.ts','app/program-session-journal.ts'])assert(!inputs.some(path=>path.endsWith(name)),name);
+ for(const name of ['app/session-engine.ts','app/session-journal.ts','app/program-session-engine.ts','app/program-session-journal.ts','app/program-forward-evidence.ts','app/program-forward-evidence.worker.ts'])assert(!inputs.some(path=>path.endsWith(name)),name);
  for(const name of ['executeProgramSessionPending','runProgramReplay','invokeProgram'])assert(!bundle.outputFiles[0].text.includes('function '+name),name);
  assert(!spec.endpoints.some(endpoint=>/program-session|program-forward|recorded-program/.test(endpoint.path)));
 });

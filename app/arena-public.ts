@@ -1,5 +1,5 @@
 import {parseUniqueJson} from './unique-json';
-import {experimentGetSchema, experimentReferenceSchema, experimentInputStrategy, experimentManifestFlags, experimentOutcomeFlags, validateExperimentItem, verifyExperimentArtifact, type ExperimentPublicItem} from './experiment-model';
+import {experimentGetSchema, experimentReferenceSchema, experimentInputStrategy, experimentInputDependencies, experimentTransportDepth, experimentManifestFlags, experimentOutcomeFlags, validateExperimentItem, verifyExperimentArtifact, type ExperimentPublicItem} from './experiment-model';
 import {boundedStrategyRecord, strategyDigest, strategyGetSchema, type StrategyPublicItem} from './strategy-model';
 import {experimentReviewCommandForRecord, experimentReviewGetSchema, experimentReviewListSchema, experimentReviewSummarySchema, validateExperimentReviewBindings, validateExperimentReviewItem, type ExperimentReviewPublicItem, type ExperimentReviewSummary, type ExperimentReviewVerificationMemo} from './experiment-review-model';
 import type {ArenaMember} from './arena-model';
@@ -63,7 +63,7 @@ export async function readArenaMember(raw: Reference, signal: AbortSignal): Prom
       }} finally {reader.releaseLock();}
       const bytes = new Uint8Array(size); let offset = 0;
       for (const chunk of chunks) {bytes.set(chunk, offset); offset += chunk.byteLength;}
-      return parseUniqueJson(new TextDecoder('utf-8', {fatal: true}).decode(bytes), maximum, 16);
+      return parseUniqueJson(new TextDecoder('utf-8', {fatal: true}).decode(bytes), maximum, experimentTransportDepth);
     });
   }
   async function experiment(target: Reference, scope: ArenaPublicScope) {
@@ -107,6 +107,11 @@ export async function readArenaMember(raw: Reference, signal: AbortSignal): Prom
     if (outcome.record?.type !== 'OUTCOME' || !outcome.manifest) fail('OUTCOME', reference, 'Arena selection requires an exact outcome.');
     const [manifest, strategy] = await batch([0, 1], async kind => kind === 0 ? experiment(outcome.manifest!, 'MANIFEST') : source(outcome.strategy)) as [ExperimentPublicItem, StrategyPublicItem];
     await bindOutcome(outcome, manifest, strategy, 'OUTCOME');
+    let sourceDependencies:StrategyPublicItem[]|undefined;
+    if(manifest.record?.version===4&&manifest.record.type==='MANIFEST'){
+      const input=manifest.record.content.input,expected=experimentInputDependencies(input);
+      sourceDependencies=await batch(expected,async dependency=>{const reference=ref(dependency),current=dependency.id===strategy.id?strategy:await source(reference);if(!same(current.record,dependency.record))fail('STRATEGY',reference,'A retained forward candidate source differs.');const captured=input.plan?.handoff.ledger.plan.admission.candidates.find(candidate=>candidate.source.id===dependency.id)?.source;if(captured&&(current.moderation.length<captured.moderation.length||!same(current.moderation.slice(0,captured.moderation.length),captured.moderation)))fail('STRATEGY',reference,'Forward source moderation regressed.');return current;});
+    }
     const relation = outcome.record.content.claim.relation;
     const original = relation ? await experiment(ref(relation), 'ORIGINAL') : outcome;
     await bindOutcome(original, manifest, strategy, 'ORIGINAL');
@@ -155,7 +160,7 @@ export async function readArenaMember(raw: Reference, signal: AbortSignal): Prom
     const currentHead = head ? reviews.find(item => same(ref(item), ref(head))) ?? null : null;
     if (head && !currentHead) fail('REVIEWS', target);
     checkedReviews = reviews;
-    return {outcome, manifest, strategy, reviewContext: {original: target, originalItem: original, items, currentHead, dependencies: dependencies.sort((a, b) => a.id.localeCompare(b.id)), lifecycle: reviews.map(item => ({id: item.id, digest: item.digest, state: item.state, moderation: item.moderation}))}};
+    return {outcome, manifest, strategy,...sourceDependencies?{sourceDependencies}:{}, reviewContext: {original: target, originalItem: original, items, currentHead, dependencies: dependencies.sort((a, b) => a.id.localeCompare(b.id)), lifecycle: reviews.map(item => ({id: item.id, digest: item.digest, state: item.state, moderation: item.moderation}))}};
   }
   const first = await pass(), second = await pass(); check();
   if (!sameArenaPublicMember(first, second)) {
@@ -173,6 +178,7 @@ export async function readArenaMember(raw: Reference, signal: AbortSignal): Prom
     {item: second.outcome, scope: 'OUTCOME', strategy: false}, {item: second.manifest, scope: 'MANIFEST', strategy: false}, {item: second.strategy, scope: 'STRATEGY', strategy: true},
     ...second.reviewContext.originalItem.id !== second.outcome.id ? [{item: second.reviewContext.originalItem, scope: 'ORIGINAL' as const, strategy: false}] : [],
     ...second.reviewContext.dependencies.map(item => ({item, scope: 'REVIEWS' as const, strategy: false})),
+    ...(second.sourceDependencies??[]).filter(item=>item.id!==second.strategy.id).map(item=>({item,scope:'STRATEGY' as const,strategy:true})),
   ];
   await batch(sources, async source => guarded(source.scope, ref(source.item), async () => {
     const target = ref(source.item), path = (source.strategy ? '/api/strategies?id=' : '/api/experiments?id=') + target.id;
