@@ -1,6 +1,6 @@
 # Programmable selection before TEST
 
-Choose Programs in `/search`, or use `scripts/program-search.mjs` in a reviewed sponsor-local checkout. This method is separate from Rules Search V1: its bytes, limits, supplied-signal interpretation and existing forward handoff remain unchanged. A program cohort contains two to four exact V2 sources. Mixed rule/program cohorts are explicitly unsupported.
+Choose Programs in `/search`, or use `scripts/program-search.mjs` in a reviewed sponsor-local checkout. This page describes the original method. The separately declared [Direction-matched V2 method](direction-matched-program-search.md) supports within-direction SHORT or LONG selection with whole reference trading evidence; it never upgrades an existing ledger. This method is separate from Rules Search V1: its bytes, limits, supplied-signal interpretation and existing forward handoff remain unchanged. A program cohort contains two to four exact V2 sources. Mixed rule/program cohorts are explicitly unsupported.
 
 Freeze the full candidate set, module/configuration identities, common TRAIN OHLCV, market, costs, risk, capital, hypothesis/falsification and fixed selection thresholds. Freeze all operation IDs and a later TEST dataset ID, interval/count, excluded gap and rights declaration. TRAIN and TEST accept datasets only; no supplied signals can masquerade as generator output. No TEST prices enter the plan. Program and trading implementation identities are part of the frozen method.
 

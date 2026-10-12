@@ -11,7 +11,7 @@ import {sessionEvidenceLimits, verifySessionEvidenceArtifact, verifySessionEvide
 import {reviewSessionEvidence} from './session-evidence';
 import {validateProgramRunOutcome} from './program-evidence';
 import {programRunLimits,type ProgramRunOutcome} from './program-run-model';
-import {programForwardEvidenceLimits,verifyProgramForwardEvidenceArtifact,verifyProgramForwardReconstructionAttempt,type ProgramForwardEvidenceArtifact} from './program-forward-evidence-model';
+import {programForwardEvidenceLimits,programDirectionForwardEvidenceLimits,programForwardEvidenceArtifactLimit,programForwardEvidenceReconstructionReservation,verifyProgramForwardEvidenceArtifact,verifyProgramForwardReconstructionAttempt,type ProgramForwardEvidenceArtifact} from './program-forward-evidence-model';
 import {bindProgramForwardComparisonReport,type ProgramForwardComparisonReport} from './program-forward-comparison-model';
 import {compareProgramForwardInWorker,type ProgramForwardWorkerResult} from './program-forward-worker-client';
 import {readPublicProgramForwardContext,assertPublicProgramForwardContinuation,PublicProgramForwardUnavailable,type PublicProgramForwardContext} from './program-forward-public';
@@ -37,7 +37,9 @@ const continuousArtifact = (artifact: Artifact): artifact is SessionEvidenceArti
 const programArtifact = (artifact: Artifact): artifact is ProgramRunOutcome => 'kind' in artifact && artifact.kind === 'LOCAL_PROGRAM_RUN_OUTCOME';
 const historyBytes = programForwardEvidenceLimits.reconstructionBytes;
 const legacyArtifactBytes=Math.max(comparisonLimits.artifactBytes,programRunLimits.outcomeBytes);
-const artifactBytes = Math.max(legacyArtifactBytes,programForwardEvidenceLimits.artifactBytes);
+const artifactBytes = Math.max(legacyArtifactBytes,programDirectionForwardEvidenceLimits.artifactBytes);
+const directionEvidence=(artifact:ProgramForwardEvidenceArtifact|null|undefined)=>!!artifact&&programForwardEvidenceArtifactLimit(artifact)===programDirectionForwardEvidenceLimits.artifactBytes;
+function validationHistoryLimit(attempts:Attempt[],extra?:Artifact){return attempts.some(attempt=>directionEvidence(attempt.forwardOriginal)||directionEvidence(attempt.forwardReconstruction)||attempt.forwardAttempt?.input.plan?.version===2)||extra&&forwardArtifact(extra)&&directionEvidence(extra)?programDirectionForwardEvidenceLimits.cliResultBytes:historyBytes;}
 async function readArtifact(raw: unknown): Promise<Artifact> { experimentValueDepth(raw); const kind = raw && typeof raw === 'object' && 'kind' in raw ? raw.kind : null; return kind === 'PROGRAM_FORWARD_DEMO_ARTIFACT' ? verifyProgramForwardEvidenceArtifact(raw) : kind === 'LOCAL_PROGRAM_RUN_OUTCOME' ? validateProgramRunOutcome(raw) : kind === 'CONTINUOUS_DEMO_ARTIFACT' ? verifySessionEvidenceArtifact(raw) : verifyDemoArtifact(raw); }
 async function compareArtifact(artifact: Artifact,signal:AbortSignal):Promise<{report:LocalReport;programReconstruction:ProgramRunOutcome|null;forward?:ProgramForwardWorkerResult}>{
  if(forwardArtifact(artifact)){const forward=await compareProgramForwardInWorker(structuredClone(artifact),{signal});return {report:forward.report,programReconstruction:null,forward};}
@@ -106,8 +108,8 @@ function publicArtifact(context: PublicContext): Artifact {
   return record.content.result.artifact;
 }
 function sameContext(a: PublicContext, b: PublicContext) { if(a.forward||b.forward){if(!a.forward||!b.forward)return false;assertPublicProgramForwardContinuation(a.forward,b.forward);}return same(reference(a), reference(b)) && same(a.outcome.record, b.outcome.record) && same(a.manifest.record, b.manifest.record) && same(a.strategy.record, b.strategy.record); }
-function download(value: unknown, name: string) {
-  const payload = JSON.stringify(value); if (new TextEncoder().encode(payload).byteLength > historyBytes) throw Error('Report export exceeds its local bound.');
+function download(value: unknown, name: string, maximum:number=historyBytes) {
+  const payload = JSON.stringify(value); if (new TextEncoder().encode(payload).byteLength > maximum) throw Error('Report export exceeds its local bound.');
   const blob = new Blob([payload], {type: 'application/json'}), url = URL.createObjectURL(blob);
   const anchor = document.createElement('a'); anchor.href = url; anchor.download = name; anchor.click(); URL.revokeObjectURL(url);
 }
@@ -184,7 +186,7 @@ export default function Validation({outcomeId = null, outcomeDigest = null, sele
     invalidate('Import navigation interrupted confirmation.'); clearSelection(); setMessage('');
     const epoch = state.epoch, workId = ++state.workId; state.busy = 'IMPORT'; setBusy('IMPORT');
     try {
-      const fileLimit=forwardOnly?programForwardEvidenceLimits.artifactBytes:legacyArtifactBytes;
+      const fileLimit=forwardOnly?programDirectionForwardEvidenceLimits.artifactBytes:legacyArtifactBytes;
       if (file.size > fileLimit) throw Error('Artifact too large.');
       const bytes = await file.arrayBuffer(); if (bytes.byteLength > fileLimit) throw Error('Artifact too large.');
       const raw = new TextDecoder('utf-8', {fatal: true}).decode(bytes), artifact = await readArtifact(parseUniqueJson(raw, fileLimit, experimentTransportDepth));if(forwardOnly&&!forwardArtifact(artifact))throw Error('Choose complete forward evidence.');
@@ -203,7 +205,7 @@ export default function Validation({outcomeId = null, outcomeDigest = null, sele
     const controller = new AbortController(); state.reads.add(controller);
     try {
       const artifact = await readArtifact(parseUniqueJson(view.json, artifactBytes, experimentTransportDepth)),principal=forwardArtifact(artifact)?await forwardAccount(controller.signal):null;
-      if(forwardArtifact(artifact)&&new TextEncoder().encode(JSON.stringify({attempts:current.current.attempts,original:artifact})).byteLength+3*new TextEncoder().encode(JSON.stringify(artifact)).byteLength+262144>historyBytes)throw Error('Complete forward history capacity reached. Full existing evidence remains retained intact.');
+      if(forwardArtifact(artifact)){const reserved=directionEvidence(artifact)?programForwardEvidenceReconstructionReservation(artifact.input):3*new TextEncoder().encode(JSON.stringify(artifact)).byteLength;if(new TextEncoder().encode(JSON.stringify({attempts:current.current.attempts,original:artifact})).byteLength+reserved+262144>validationHistoryLimit(current.current.attempts,artifact))throw Error('Complete forward history capacity reached. Full existing evidence remains retained intact.');}
       if (programArtifact(artifact) && new TextEncoder().encode(JSON.stringify(current.current.attempts)).byteLength + programRunLimits.outcomeBytes + 262_144 > historyBytes) throw Error('Full program reconstruction history capacity reached. Earlier outcomes remain retained.');
       if (!state.alive || epoch !== state.epoch || state.query!==locationQuery() || state.previousSignedIn!==account.current || workId !== state.workId || state.activeAttempt !== attemptId) return;
       if (selected && !same(artifact, selected.artifact)) throw Error('Selection changed.');
@@ -317,7 +319,7 @@ export default function Validation({outcomeId = null, outcomeDigest = null, sele
       }
       if (!state.alive || epoch !== state.epoch || state.query!==locationQuery() || state.previousSignedIn!==account.current || workId !== state.workId || !captured.every(attempt => current.current.attempts.includes(attempt))) return;
       if(captured.some(retainedForwardEvidence)&&!same(principal,await forwardAccount(controller.signal))){clearSession();return;}
-      download(completeHistory ? {version: 1, kind: 'LOCAL_COMPARISON_SESSION', classification: 'AUTHOR_REPORTED', qualification: 'NONE', independence: 'NOT_ESTABLISHED', ordersEnabled: false, retention: 'EXPORTED_SESSION_SNAPSHOT', attempts: captured} : fullProgram ? captured[0].forwardReconstruction?await verifyProgramForwardEvidenceArtifact(captured[0].forwardReconstruction):await validateProgramRunOutcome(captured[0].programReconstruction) : captured[0].report, filename); setExportError('');
+      download(completeHistory ? {version: 1, kind: 'LOCAL_COMPARISON_SESSION', classification: 'AUTHOR_REPORTED', qualification: 'NONE', independence: 'NOT_ESTABLISHED', ordersEnabled: false, retention: 'EXPORTED_SESSION_SNAPSHOT', attempts: captured} : fullProgram ? captured[0].forwardReconstruction?await verifyProgramForwardEvidenceArtifact(captured[0].forwardReconstruction):await validateProgramRunOutcome(captured[0].programReconstruction) : captured[0].report, filename, validationHistoryLimit(captured)); setExportError('');
     } catch (error) { if (state.alive && epoch === state.epoch && state.query===locationQuery() && state.previousSignedIn===account.current && workId === state.workId) { if (error instanceof PublicUnavailable) { redactPublic(error.scope.outcomeId, error.scope); const context = current.current.selection?.context; if (context && (context.outcome.id === error.scope.outcomeId || context.manifest.id === error.scope.manifestId || context.strategy.id === error.scope.strategyId)) clearSelection(); } setExportError('Export withheld. Exact public references could not be confirmed; known unavailable payloads are cleared.'); } }
     finally { state.reads.delete(controller); if (state.alive && epoch === state.epoch && state.query===locationQuery() && state.previousSignedIn===account.current && workId === state.workId) { state.busy = null; setBusy(null); } }
   }
@@ -327,7 +329,7 @@ export default function Validation({outcomeId = null, outcomeDigest = null, sele
     try { download(attempt.report, `opengrail-comparison-${attempt.id}.json`); setExportError(''); } catch { setExportError('Export failed. The report remains only in this page session.'); }
   }
   function exportProgramReconstruction(attempt:Attempt){
-    if(attempt.forwardReconstruction){if(!available()||attempt.cleared||!current.current.attempts.includes(attempt)||attempt.report?.kind!=='LOCAL_PROGRAM_FORWARD_COMPARISON'||attempt.forwardReconstruction.resultDigest!==attempt.report.reconstructedArtifactDigest)return;if(attempt.publicReference){void confirmPublicExport([attempt],false,`opengrail-complete-forward-reconstruction-${attempt.id}.json`,true);return;}try{download(attempt.forwardReconstruction,`opengrail-complete-forward-reconstruction-${attempt.id}.json`);setExportError('');}catch{setExportError('Complete forward reconstruction export failed; full evidence remains retained.');}return;}
+    if(attempt.forwardReconstruction){if(!available()||attempt.cleared||!current.current.attempts.includes(attempt)||attempt.report?.kind!=='LOCAL_PROGRAM_FORWARD_COMPARISON'||attempt.forwardReconstruction.resultDigest!==attempt.report.reconstructedArtifactDigest)return;if(attempt.publicReference){void confirmPublicExport([attempt],false,`opengrail-complete-forward-reconstruction-${attempt.id}.json`,true);return;}try{download(attempt.forwardReconstruction,`opengrail-complete-forward-reconstruction-${attempt.id}.json`,validationHistoryLimit([attempt]));setExportError('');}catch{setExportError('Complete forward reconstruction export failed; full evidence remains retained.');}return;}
     if(!available()||!attempt.programReconstruction||!current.current.attempts.some(value=>value===attempt&&!value.cleared)||attempt.report?.kind!=='LOCAL_PROGRAM_COMPARISON'||attempt.programReconstruction.outcomeDigest!==attempt.report.reconstructedOutcomeDigest)return;
     if(attempt.publicReference){void confirmPublicExport([attempt],false,`opengrail-complete-program-reconstruction-${attempt.id}.json`,true);return;}
     try{download(attempt.programReconstruction,`opengrail-complete-program-reconstruction-${attempt.id}.json`);setExportError('');}catch{setExportError('Complete reconstruction export failed. The full outcome remains retained in this page history.');}
@@ -335,7 +337,7 @@ export default function Validation({outcomeId = null, outcomeDigest = null, sele
   function exportHistory() {
     if (!available() || !current.current.attempts.length) return;
     if (current.current.attempts.some(publicExportNeedsConfirmation)) { void confirmPublicExport([...current.current.attempts], true, 'opengrail-comparison-session.json'); return; }
-    try { download({version: 1, kind: 'LOCAL_COMPARISON_SESSION', classification: 'AUTHOR_REPORTED', qualification: 'NONE', independence: 'NOT_ESTABLISHED', ordersEnabled: false, retention: 'EXPORTED_SESSION_SNAPSHOT', attempts: current.current.attempts}, 'opengrail-comparison-session.json'); setExportError(''); } catch { setExportError('Export failed. History is held only in this page session.'); }
+    try { download({version: 1, kind: 'LOCAL_COMPARISON_SESSION', classification: 'AUTHOR_REPORTED', qualification: 'NONE', independence: 'NOT_ESTABLISHED', ordersEnabled: false, retention: 'EXPORTED_SESSION_SNAPSHOT', attempts: current.current.attempts}, 'opengrail-comparison-session.json',validationHistoryLimit(current.current.attempts)); setExportError(''); } catch { setExportError('Export failed. History is held only in this page session.'); }
   }
   const visibleAccount=life.current.previousSignedIn===signedIn,context = visibleAccount?selection?.context:null, artifact = visibleAccount?selection?.artifact:null,shownAttempts=visibleAccount?attempts:attempts.map(attempt=>({...attempt,report:null,programReconstruction:null,forwardOriginal:null,forwardReconstruction:null,forwardAttempt:null,cleared:true}));
   const returnTo = context ? validationHref({id: context.outcome.id, digest: context.outcome.digest}) : !selectionError && outcomeId && uuid.test(outcomeId) && (outcomeDigest === null || /^[a-f0-9]{64}$/.test(outcomeDigest)) ? validationHref({id: outcomeId, digest: outcomeDigest}) : '/validation';

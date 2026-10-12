@@ -1,0 +1,30 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {createRequire} from 'node:module';
+
+// Real server route decision code, with only local authentication/component stubs.
+// This does not exercise or claim hosted OAuth, layout or native browser storage.
+const stubs={
+ './search-workspace':'RulesSearch','./program-search-method-workspace':'ProgramsSearch',
+ './program-forward-planner':'LegacyPlanner','./program-direction-forward-planner':'DirectionPlanner',
+ './session':'RulesSession','./program-session-workspace':'LegacySession','./program-direction-session-workspace':'DirectionSession',
+};
+const compiled=await build({stdin:{contents:"export {default as Search} from './app/search/page';export {default as Plans} from './app/plans/page';export {default as Session} from './app/session/page';export * from './app/program-product-method';",resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',platform:'node',target:'es2022',jsx:'automatic',plugins:[{name:'local-method-route-stubs',setup(b){
+ b.onResolve({filter:/^\.\.\//},args=>{const key='./'+args.path.slice(3);if(key==='./chatgpt-auth')return{path:'auth',namespace:'stub'};if(stubs[key])return{path:stubs[key],namespace:'stub'};});
+ b.onLoad({filter:/.*/,namespace:'stub'},args=>({contents:args.path==='auth'?'export const getChatGPTUser=async()=>({id:"synthetic-local-human"});':`export default function ${args.path}(){return null;}`,loader:'js'}));
+}}]});
+const require=createRequire(import.meta.url),module={exports:{}};new Function('require','module','exports',compiled.outputFiles[0].text)(require,module,module.exports);const m=module.exports;
+const route=(page,query)=>m[page]({searchParams:Promise.resolve(query)});
+test('route defaults preserve legacy Rules/Programs choices and explicitly retain the V2 method through all three workspaces',async()=>{
+ assert.equal((await route('Search',{})).type.name,'RulesSearch');
+ let view=await route('Search',{method:'programs'});assert.equal(view.type.name,'ProgramsSearch');assert.equal(view.props.initialMethod,'LEGACY');
+ view=await route('Search',{method:'programs',selection:'direction-matched-v2'});assert.equal(view.type.name,'ProgramsSearch');assert.equal(view.props.initialMethod,'DIRECTION');assert.equal(view.props.signedIn,true);
+ assert.equal((await route('Plans',{})).type.name,'LegacyPlanner');assert.equal((await route('Plans',{selection:'direction-matched-v2'})).type.name,'DirectionPlanner');
+ assert.equal((await route('Session',{})).type.name,'RulesSession');assert.equal((await route('Session',{method:'programs'})).type.name,'LegacySession');assert.equal((await route('Session',{method:'programs',selection:'direction-matched-v2'})).type.name,'DirectionSession');
+});
+test('unknown, repeated or incoherent method choices refuse instead of falling through to a legacy or executable workspace',async()=>{
+ for(const selection of ['v2','legacy-v2','',null,['direction-matched-v2'],['direction-matched-v2','direction-matched-v2']])for(const page of ['Search','Plans','Session'])assert.equal((await route(page,{method:'programs',selection})).type,'main');
+ for(const page of ['Search','Session'])for(const query of [{selection:'direction-matched-v2'},{method:'rules',selection:'direction-matched-v2'},{method:['programs'],selection:'direction-matched-v2'},{method:'unknown'}])assert.equal((await route(page,query)).type,'main');
+ assert.equal(m.programProductMethod(undefined),'LEGACY');assert.equal(m.programProductMethod('direction-matched-v2'),'DIRECTION');
+});

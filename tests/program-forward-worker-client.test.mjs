@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {createRequire} from 'node:module';
 import {programForwardEvidenceFixture} from './program-forward-evidence-fixtures.mjs';
+import {fittingProgramDirectionPublicFixture} from './program-direction-public-fixtures.mjs';
 
 const originalWorker=globalThis.Worker,originalFetch=globalThis.fetch,require=createRequire(import.meta.url);
 const workerAsset="/static/program-forward-evidence-reviewed.js";
@@ -23,6 +24,13 @@ async function refusal(value){response=value;workers=[];await assert.rejects(com
 
 test('client retains the whole independently identified fresh artifact and actual journal for a trusted-valid comparison',async()=>{
  response=valid;workers=[];const result=await compareProgramForwardInWorker(fixture.artifact);assert.deepEqual(result,valid);assert.notEqual(result.reconstructed.attemptId,fixture.artifact.attemptId);assert.equal(result.attempt.journal.journalDigest,result.reconstructed.journal.journalDigest);assert.equal(workers[0].url,workerAsset);assert.equal(workers[0].options.type,'module');assert.equal(workers[0].commands[0].type,'COMPARE');assert(workers[0].terminated);
+});
+test('client preserves a complete nonnull V2 SHORT plan, adverse trials and full fresh Worker result',async()=>{
+ const direction=await fittingProgramDirectionPublicFixture(),fresh=await direction.m.compareProgramForwardEvidence(direction.artifact);
+ assert.equal(fresh.report.status,'MATCH');assert(new TextEncoder().encode(JSON.stringify(fresh)).byteLength<=direction.m.programForwardEvidenceReconstructionReservation(direction.artifact.input));
+ response=fresh;workers=[];const result=await compareProgramForwardInWorker(direction.artifact);
+ assert.deepEqual(result,fresh);assert.deepEqual(result.reconstructed.input.plan,direction.plan);assert.equal(result.reconstructed.input.plan.handoff.ledger.attempts.length,3);assert(result.reconstructed.input.plan.handoff.ledger.attempts.at(-1).outcome.artifact.metrics.netPnl<0);
+ assert.deepEqual(result.attempt.journal,direction.journal);assert.notEqual(result.reconstructed.attemptId,direction.artifact.attemptId);assert.equal(workers[0].url,workerAsset);assert.equal(workers[0].options.type,'module');assert(workers[0].terminated);
 });
 test('client rejects a valid MATCH report with its full reconstructed field removed, null or an extra result field',async()=>{
  const missing=structuredClone(valid);delete missing.reconstructed;await refusal(missing);await refusal({...valid,reconstructed:null});await refusal({...valid,unexpected:'claimed completion'});

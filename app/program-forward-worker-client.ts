@@ -1,4 +1,4 @@
-import {boundedProgramForwardEvidenceValue,programForwardEvidenceLimits,verifyProgramForwardEvidenceArtifact,verifyProgramForwardReconstructionAttempt} from './program-forward-evidence-model';
+import {boundedProgramForwardEvidenceValue,programForwardEvidenceReconstructionLimit,programForwardEvidenceNodeLimit,verifyProgramForwardEvidenceArtifact,verifyProgramForwardReconstructionAttempt} from './program-forward-evidence-model';
 import {bindProgramForwardComparisonReport,compareProgramForwardArtifactValues,programForwardJournalComparisonSummary,verifyProgramForwardComparisonReport} from './program-forward-comparison-model';
 import type {compareProgramForwardEvidence} from './program-forward-evidence';
 import programForwardEvidenceWorkerUrl from './program-forward-evidence.worker.ts?worker&url';
@@ -21,7 +21,7 @@ export async function compareProgramForwardInWorker(raw: unknown, options: {sign
    const message=event.data;if(!message||message.operationId!==operationId)throw Error('Uncorrelated forward Worker response.');
    if(message.type==='ERROR')throw Error('Local forward evidence refused.');
    if(message.type!=='RESULT'||Object.keys(message).sort().join(',')!=='operationId,result,type')throw Error('Invalid forward Worker response.');
-   boundedProgramForwardEvidenceValue(message.result,programForwardEvidenceLimits.reconstructionBytes,42);
+   boundedProgramForwardEvidenceValue(message.result,programForwardEvidenceReconstructionLimit(artifact),42,programForwardEvidenceNodeLimit(artifact));
    if(!message.result||Array.isArray(message.result)||Object.keys(message.result).sort().join(',')!=='attempt,reconstructed,report')throw Error('A complete exact forward Worker result is required.');
    const result=message.result as ProgramForwardWorkerResult,report=await verifyProgramForwardComparisonReport(result.report);await bindProgramForwardComparisonReport(report,artifact);
    const attempt=await verifyProgramForwardReconstructionAttempt(result.attempt);

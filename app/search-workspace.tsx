@@ -11,7 +11,7 @@ import {verifyStrategyHandoff} from './strategy-handoff';
 import {createLockedSearchHandoff, forwardDemoLimits, type LockedSearchHandoff} from './forward-demo-model';
 import './network.css';
 import './search.css';
-import ProgramSearchWorkspace from './program-search-workspace';
+import ProgramSearchWorkspace from './program-search-method-workspace';
 
 type TestInput={dataset:DemoDataset;signals:DemoSignal[]};
 type Busy='ADMISSION'|'IMPORT'|'TRAIN'|'LOCK'|'TEST_INPUT'|'TEST'|'EXPORT'|'VERIFY'|'RECOVER'|'FORWARD'|null;

@@ -14,7 +14,7 @@ globalThis.__searchHooks={
 };
 const component=await build({entryPoints:['app/search-workspace.tsx'],bundle:true,format:'cjs',platform:'node',write:false,target:'es2022',jsx:'automatic',loader:{'.css':'empty'},plugins:[{name:'search-hooks',setup(b){
  b.onResolve({filter:/^react$/},a=>a.importer.endsWith('/app/search-workspace.tsx')?{path:a.path,namespace:'hooks'}:undefined);
- b.onResolve({filter:/^\.\/program-search\.worker\.ts\?worker&url$/},()=>({path:'program-search-worker',namespace:'worker-url'}));
+ b.onResolve({filter:/^\.\/program-(?:direction-)?search\.worker\.ts\?worker&url$/},()=>({path:'program-search-worker',namespace:'worker-url'}));
  b.onLoad({filter:/.*/,namespace:'worker-url'},()=>({contents:'export default "/static/program-search.worker.js";',loader:'js'}));
  b.onLoad({filter:/.*/,namespace:'hooks'},()=>({contents:'export const {useState,useRef,useEffect}=globalThis.__searchHooks;',loader:'js'}));
  b.onResolve({filter:/^\.\/search-protocol$/},a=>a.importer.endsWith('/app/search-workspace.tsx')?{path:a.path,namespace:'instrument'}:undefined);
