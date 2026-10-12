@@ -7,7 +7,7 @@ import type {ExperimentRepository} from './experiment-store';
 
 export const experimentHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
 type Human={userId:string}|null;
-type Repository=Pick<ExperimentRepository,'list'|'get'|'outcomes'|'write'|'reports'>;
+type Repository=Pick<ExperimentRepository,'list'|'get'|'outcomes'|'write'|'reports'>&Partial<Pick<ExperimentRepository,'confirmCommitmentAgentReceipt'>>;
 const uuid=z.string().uuid().refine(value=>value===value.toLowerCase());
 function reply(body:unknown,status=200,headers:Record<string,string>={}){
  const payload=JSON.stringify(body);
@@ -71,7 +71,7 @@ async function correlate(raw:unknown,sent:ExperimentCommand,author:ExperimentAut
 }
 /** Heavy identity checks finish before the final V4 repository visibility observation. */
 async function finalForwardItem(factory:()=>Repository,item:ReturnType<typeof experimentGetSchema.parse>['item']){const current=experimentGetSchema.parse(await factory().get(item.id)).item;if(current.id!==item.id||current.digest!==item.digest||current.type!==item.type||current.requestId!==item.requestId||JSON.stringify(current.author)!==JSON.stringify(item.author)||item.record&&current.record&&JSON.stringify(current.record)!==JSON.stringify(item.record))throw Error('Forward evidence identity changed at final observation.');return current;}
-async function finalForwardReceipt(factory:()=>Repository,value:ReturnType<typeof experimentWriteSchema.parse>,sent:ExperimentCommand){if(value.item&&('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO'||value.item.record?.version===4))return {...value,item:await finalForwardItem(factory,value.item)};return value;}
+async function finalForwardReceipt(factory:()=>Repository,value:ReturnType<typeof experimentWriteSchema.parse>,sent:ExperimentCommand){if(value.item&&('method'in sent&&['PROGRAM_FORWARD_DEMO','PROGRAM_FORWARD_COMMITMENT'].includes(sent.method)||[4,5].includes(value.item.record?.version??0)))return {...value,item:await finalForwardItem(factory,value.item)};return value;}
 export async function experimentPublicRequest(request:Request,factory:()=>Repository){
  if(request.method!=='GET')return method('GET');
  try{
@@ -84,7 +84,7 @@ export async function experimentPublicRequest(request:Request,factory:()=>Reposi
    const result=experimentGetSchema.parse(await factory().get(id));
    if(result.item.id!==id)throw Error('Experiment identity response mismatch.');
    await integrity(result.item);
-   if(result.item.record?.version===4)return reply({...result,item:await finalForwardItem(factory,result.item)});
+   if([4,5].includes(result.item.record?.version??0))return reply({...result,item:await finalForwardItem(factory,result.item)});
    return reply(result);
   }
   if(manifest){
@@ -109,7 +109,7 @@ export async function experimentHumanRequest(request:Request,actor:Human,factory
   const sent=await command(request),sponsorId=await experimentPublicHumanId(actor.userId);
   const expectedAuthor=request.headers.get('X-Experiment-Author');
   if(expectedAuthor!==null&&expectedAuthor!==sponsorId)throw new NetworkError('Experiment author does not match the signed-in participant.',403);
-  const value=await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,moderator:moderator(actor.userId)},sent,now()),sent,{kind:'HUMAN',id:sponsorId,sponsorId});return reply(await finalForwardReceipt(factory,value,sent));
+  const value=await correlate(await factory().write({kind:'HUMAN',userId:actor.userId,moderator:moderator(actor.userId)},sent,now(),now),sent,{kind:'HUMAN',id:sponsorId,sponsorId});return reply(await finalForwardReceipt(factory,value,sent));
  }catch(error){return failure(error);}
 }
 export async function experimentAgentRequest(request:Request,factory:()=>Repository,identities:()=>Pick<NetworkRepository,'authenticate'>,now=()=>new Date().toISOString()){
@@ -125,7 +125,16 @@ export async function experimentAgentRequest(request:Request,factory:()=>Reposit
   const sent=await command(request),principal=await identities().authenticate(authorization.slice(7),now());
   if(principal.credentialId!==authorization.slice(16,52))throw Error('Experiment credential identity mismatch.');
   const sponsorId=await experimentPublicHumanId(principal.ownerId);
-  const value=await correlate(await factory().write({kind:'AGENT',principal},sent,now()),sent,{kind:'AGENT',id:principal.agentId,sponsorId},principal.name),final=await finalForwardReceipt(factory,value,sent);if('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO')await identities().authenticate(authorization.slice(7),now());return reply(final);
+  const repo=factory(),value=await correlate(await repo.write({kind:'AGENT',principal},sent,now(),now),sent,{kind:'AGENT',id:principal.agentId,sponsorId},principal.name);
+  if('method'in sent&&sent.method==='PROGRAM_FORWARD_COMMITMENT'){
+   if(!value.item||!repo.confirmCommitmentAgentReceipt)throw Error('Commitment acknowledgment completion is unavailable.');
+   const raw=await repo.get(value.item.id),current=experimentGetSchema.parse(raw).item,item=value.item;
+   if(current.id!==item.id||current.digest!==item.digest||current.type!==item.type||current.requestId!==item.requestId||JSON.stringify(current.author)!==JSON.stringify(item.author)||item.record&&current.record&&JSON.stringify(current.record)!==JSON.stringify(item.record))throw Error('Commitment evidence identity changed at final observation.');
+   const final={...value,item:current},last=await identities().authenticate(authorization.slice(7),now());
+   if(JSON.stringify(last)!==JSON.stringify(principal))throw Error('Commitment credential identity changed at final authentication.');
+   await repo.confirmCommitmentAgentReceipt(raw,last,now());return reply(final);
+  }
+  const final=await finalForwardReceipt(factory,value,sent);if('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO')await identities().authenticate(authorization.slice(7),now());return reply(final);
  }catch(error){return failure(error,true);}
 }
 export async function experimentMeRequest(request:Request,actor:Human,moderator:(userId:string)=>boolean){

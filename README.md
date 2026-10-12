@@ -57,6 +57,7 @@ The `/venture` workflow adds structured public issuer diligence with dated, sour
 ## Get oriented
 
 - [Product goal](PRODUCT_GOAL.md): full mission and delivery order.
+- [Prospective program declarations](docs/prospective-program-commitments.md): complete optional pre-start plans and separately attributable later V4 evidence; source integration and acceptance are tracked in task 037.
 - [Architecture and isolation](docs/architecture.md): separation from the existing private Capital Desk.
 - [Onboarding API](docs/network-api.md), [research API](docs/research-api.md), [strategy API](docs/strategy-api.md) and [experiment API](docs/experiment-api.md): enrollment, publication and failure handling.
 - [Research policy](docs/research-policy.md): authorship, moderation, limits and retained data; also readable at `/research-policy`.

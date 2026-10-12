@@ -35,6 +35,7 @@ export const strategyEvidenceObservationSchema=z.discriminatedUnion('kind',[
  z.object({kind:z.literal('PROGRAM_FORWARD'),status:z.enum(['ACTIVE','PAUSED','STOPPING','STOPPED','FAILED','INTERRUPTED']),artifactDigest:canonicalHash,initialCapital:finite.min(.01).max(1000000),account:sessionStateSchema.shape.account,openPositions:z.number().int().min(0).max(5),closedTrades:z.number().int().min(0).max(2000),pending:z.boolean(),pendingAdmission:z.boolean(),guestStatus:z.enum(['UNCONFIGURED','READY','FAILED','INTERRUPTED']),guestFailure:z.string().regex(/^[A-Z][A-Z0-9_]{0,63}$/).nullable(),totalFuel:z.number().int().min(0).max(programRunLimits.totalFuel),outerCount:z.number().int().min(0).max(2032),innerCount:z.number().int().min(0).max(2032),traceCount:z.number().int().min(0).max(2000),capacityHalted:z.boolean(),dataGap:z.boolean(),emergencyAt:clock.nullable(),generatorIndependence:z.literal('NOT_ESTABLISHED'),providerAuthenticity:z.literal('NOT_ESTABLISHED'),qualification:z.literal('NONE')}).strict(),
  z.object({kind:z.literal('INTERRUPTED')}).strict(),
  z.object({kind:z.literal('ARTIFACT_UNAVAILABLE')}).strict(),
+ z.object({kind:z.literal('FORWARD_EVIDENCE_LINK'),manifest:z.object({id:canonicalId,digest:canonicalHash}).strict(),outcome:z.object({id:canonicalId,digest:canonicalHash}).strict(),qualification:z.literal('NONE'),inheritedResults:z.literal(false)}).strict(),
 ]);
 export const strategyEvidenceEntrySchema=z.object({summary:experimentSummarySchema,claim:claim.nullable(),observation:strategyEvidenceObservationSchema.nullable()}).strict().superRefine((entry,ctx)=>{
  const {summary:s,claim:c,observation:o}=entry,bad=()=>ctx.addIssue({code:z.ZodIssueCode.custom,message:'Evidence projection must follow its retained record.'});
@@ -45,7 +46,7 @@ export const strategyEvidenceEntrySchema=z.object({summary:experimentSummarySche
  if(o.kind==='BATCH'||o.kind==='CONTINUOUS'||o.kind==='PROGRAM'||o.kind==='PROGRAM_FORWARD'){
   if(s.status!==o.status||(s.method==='CONTINUOUS_DEMO')!==(o.kind==='CONTINUOUS')||(s.method==='PROGRAM_DEMO')!==(o.kind==='PROGRAM')||(s.method==='PROGRAM_FORWARD_DEMO')!==(o.kind==='PROGRAM_FORWARD'))bad();
   if(o.kind==='BATCH'&&(o.status==='REJECTED'&&(o.metrics!==null||o.benchmark!==null)||o.status==='FAILED'&&o.metrics?.comparable))bad();
- }else if(s.status!==o.kind)bad();
+ }else if(s.status!==o.kind||o.kind==='FORWARD_EVIDENCE_LINK'&&s.method!=='PROGRAM_FORWARD_COMMITMENT')bad();
 });
 export type StrategyEvidenceEntry=z.infer<typeof strategyEvidenceEntrySchema>;
 export const strategyEvidencePageSchema=z.object({version:z.literal(1),strategy:strategyPublicItemSchema,items:z.array(strategyEvidenceEntrySchema).max(strategyEvidenceLimits.page),nextCursor:canonicalId.nullable(),classification:z.literal('AUTHOR_REPORTED'),qualification:z.literal('NONE'),independence:z.literal('NOT_ESTABLISHED'),executionEnabled:z.literal(false),ordersEnabled:z.literal(false)}).strict().superRefine((page,ctx)=>{
@@ -69,7 +70,8 @@ export function strategyEvidenceEntryForItem(item:ExperimentPublicItem):Strategy
  if(record?.type==='OUTCOME'){
   projectedClaim={type:record.content.claim.type,relation:record.content.claim.relation};
   const result=record.content.result;
-  if(result.kind!=='ARTIFACT')observation={kind:result.kind};
+  if(result.kind==='FORWARD_EVIDENCE_LINK')observation={kind:result.kind,manifest:result.manifest,outcome:result.outcome,qualification:'NONE',inheritedResults:false};
+  else if(result.kind!=='ARTIFACT')observation={kind:result.kind};
   else if(record.version===4){
    if(record.content.result.kind!=='ARTIFACT')throw Error('Missing forward artifact.');const artifact=record.content.result.artifact,journal=artifact.journal,p=journal.trading.state;
    observation={kind:'PROGRAM_FORWARD',status:experimentRecordStatus(record) as 'ACTIVE'|'PAUSED'|'STOPPING'|'STOPPED'|'FAILED'|'INTERRUPTED',artifactDigest:artifact.resultDigest,initialCapital:artifact.input.config.initialCapital,account:p.account,openPositions:p.openPositions.length,closedTrades:p.trades.length,pending:p.pending!==null,pendingAdmission:journal.pending!==null,guestStatus:journal.guest.status,guestFailure:journal.guest.failure,totalFuel:journal.guest.totalFuel,outerCount:journal.events.length,innerCount:p.sequence,traceCount:journal.guest.trace.length,capacityHalted:p.capacityHalted,dataGap:p.dataGap,emergencyAt:p.emergencyAt,generatorIndependence:'NOT_ESTABLISHED',providerAuthenticity:'NOT_ESTABLISHED',qualification:'NONE'};

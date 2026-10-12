@@ -4,7 +4,7 @@ import {strategyEvidenceLimits,validateStrategyEvidencePage} from './strategy-ev
 import type {ExperimentRepository} from './experiment-store';
 
 export const strategyEvidenceHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
-type Repository=Pick<ExperimentRepository,'forStrategy'|'get'>;
+type Repository=Pick<ExperimentRepository,'forStrategy'|'get'>&Partial<Pick<ExperimentRepository,'confirmCommitmentEvidencePage'>>;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
 function reply(body:unknown,status=200){const payload=JSON.stringify(body);if(new TextEncoder().encode(payload).byteLength>strategyEvidenceLimits.responseBytes)throw Error('Evidence response exceeds its bound.');return new Response(payload,{status,headers:{...strategyEvidenceHeaders,'Content-Type':'application/json'}});}
 function failure(error:unknown){
@@ -25,6 +25,7 @@ export async function strategyEvidencePublicRequest(request:Request,factory:()=>
   try{page=await validateStrategyEvidencePage(raw);}catch{throw Error('Evidence response integrity failure.');}
   if(page.strategy.id!==strategy||page.strategy.digest!==digest||anchor&&(page.nextCursor===cursor||page.items.some(({summary:item})=>item.id===cursor||item.createdAt>anchor!.createdAt||item.createdAt===anchor!.createdAt&&item.id>=anchor!.id)))throw Error('Evidence response exact query or anchor mismatch.');
   if(anchor?.suppression==='SOURCE_UNAVAILABLE'&&page.strategy.state==='VISIBLE'||anchor?.suppression==='PARENT_UNAVAILABLE'&&page.items.some(({summary:item})=>item.state==='VISIBLE'&&(item.id===anchor!.manifest?.id||item.manifest?.id===anchor!.manifest?.id&&item.manifest?.digest===anchor!.manifest?.digest)))throw Error('Evidence dependencies changed after observed cursor suppression.');
+  if(repo.confirmCommitmentEvidencePage)await repo.confirmCommitmentEvidencePage(raw);
   return reply(page);
  }catch(error){return failure(error);}
 }

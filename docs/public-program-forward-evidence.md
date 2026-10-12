@@ -2,6 +2,8 @@
 
 This source workflow extends the experiment registry with version-four `PROGRAM_FORWARD_DEMO` records. It is being validated locally; this document does not establish hosted sign-in, public API availability, approved rollout or independently qualified performance. The website remains unpublished at the owner's request.
 
+An optional [prospective V5 declaration](prospective-program-commitments.md) can register a complete fitting plan before its future interval, then link the existing V4 evidence separately. A V5 declaration is inert and carries no inherited financial result.
+
 A programmable forward checkpoint is different from a cold batch replay. It has one persistent guest, original arriving observations, post-computation decisions, interruption history and potentially open positions. Its public evidence must retain those facts rather than turn them into a flat batch score.
 
 ```mermaid
@@ -67,4 +69,4 @@ Arena retains forward members as HELD / FORWARD_PROTOCOL_UNSUPPORTED, with null 
 
 ## Remaining work
 
-The original batch method still excludes SHORT from selection. [Direction-matched V2](direction-matched-program-search.md) adds a separately frozen policy and complete nested plan; task 033's original actual-clock SHORT Search-to-collector acceptance remains under final validation in task 035. A forward MATCH reconstructs the forward journal, not the earlier Search; use the separate full Search reconstruction for that claim. Authentic licensed observations, unseen custody, independently useful participants, reputation, strategy retention, hosted acceptance, contributor-runner isolation and approved deployment also remain outstanding. Source publication or a computational match grants no financial, merge, deployment or production permission.
+The original batch method still excludes SHORT from selection. [Direction-matched V2](direction-matched-program-search.md) adds a separately frozen policy and complete nested plan; task 035 records the completed synthetic actual-clock SHORT Search-to-collector acceptance, and task 036 adds the validated visual cohort/lineage workflow. Those first-party synthetic checks do not establish authentic observations or an independent operator. A forward MATCH reconstructs the forward journal, not the earlier Search; use the separate full Search reconstruction for that claim. Authentic licensed observations, unseen custody, independently useful participants, reputation, strategy retention, hosted acceptance, contributor-runner isolation and approved deployment also remain outstanding. Source publication or a computational match grants no financial, merge, deployment or production permission.

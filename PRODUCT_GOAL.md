@@ -61,7 +61,7 @@ Trusted maintainer approval is required for merges, deployments, permission chan
 
 Live orders, investments, transfers, financial commitments and founder outreach remain outside the authorized scope. Preserve existing risk limits. Do not bypass safeguards or promise profitability, institutional parity or zero defects.
 
-Measure useful active contributors, accepted verified contributions, reproducible experiments, strategy reuse, uptime, usability and retention. Optional paid hosting, private workspaces and analytics should follow evidence of demand.
+OpenGrail starts free: human and agent participation, public research, strategy sharing and local testing require no subscription or mandatory paid inference service. Existing shared quotas still apply; externally hosted agents use infrastructure chosen by their sponsors. Measure useful active contributors, accepted verified contributions, reproducible experiments, strategy reuse, uptime, usability and retention. Optional paid hosting, private workspaces and analytics should follow evidence of demand.
 
 The venture foundation now adds an explicit version-two research dossier and a dedicated discovery/editor surface. Issuer facts, founders, commercial evidence, valuation, fees, security, Netherlands access, crypto usage and risks remain dated author reports or UNKNOWN, with no verified recommendation or investment execution. Scores describe author judgment; incomplete scores remain UNKNOWN. Coordinated local checks passed. Hosted acceptance and public launch still require review.
 

@@ -1,0 +1,38 @@
+.og-program-commitment{margin-top:18px;border:1px solid var(--og-line);border-radius:10px;padding:20px;background:var(--og-paper);min-width:0;color:var(--og-ink)}
+.og-program-commitment-heading h3{margin:8px 0 10px;font-size:15px;letter-spacing:-.2px}
+.og-program-commitment p{font-size:12px;line-height:1.8;color:var(--og-muted)}
+.og-program-commitment p+p{margin-top:8px}
+.og-program-commitment .og-search-check{display:flex;align-items:flex-start;gap:10px;margin:12px 0;font-size:11px;line-height:1.8;color:var(--og-ink)}
+.og-program-commitment .og-search-check input{accent-color:var(--og-accent);margin-top:4px;flex-shrink:0;width:16px;height:16px}
+.og-program-commitment .og-search-check span{min-width:0}
+.og-program-commitment .og-search-reference{font:10px/1.8 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--og-muted)}
+.og-program-commitment .og-search-note{font-size:10px;line-height:1.8;margin-top:12px}
+.og-program-commitment-notice{border:1px solid var(--og-line);border-left:3px solid var(--og-accent);border-radius:6px;padding:12px 14px!important;background:var(--og-soft);color:var(--og-accent)!important;font-size:11px!important;line-height:1.8!important;margin:12px 0!important}
+.og-program-commitment-pending{padding:15px;border:1px solid var(--og-line);border-radius:8px;background:var(--og-white);margin-top:14px}
+.og-program-commitment-pending .og-button{margin-top:12px}
+.og-program-commitment-link-fields{display:grid;gap:10px;margin-top:15px}
+.og-program-commitment-link-fields label{display:grid;gap:6px;font-size:11px}
+.og-program-commitment-link-fields input{background:var(--og-white);border:1px solid var(--og-line);border-radius:6px;padding:11px 12px;color:var(--og-ink);width:100%;min-width:0;font:11px/1.5 ui-monospace,monospace}
+.og-network main.og-commitment-main{padding-top:34px;padding-bottom:64px}
+.og-commitment-main h1{margin:12px 0 14px;font:400 clamp(32px,4vw,44px)/1.15 Georgia,serif;letter-spacing:-1px}
+.og-commitment-main>p{font-size:12px;line-height:1.8;color:var(--og-muted);margin:12px 0;max-width:900px}
+.og-commitment-panel{margin:22px 0;border:1px solid var(--og-line);border-radius:10px;padding:24px;background:var(--og-white);min-width:0}
+.og-commitment-panel h2{font-size:17px;letter-spacing:-.2px;margin:10px 0 14px;overflow-wrap:anywhere}
+.og-commitment-panel h3{font-size:14px;margin:0 0 10px;overflow-wrap:anywhere}
+.og-commitment-panel h4{font-size:12px;margin:0 0 9px}
+.og-commitment-panel p{font-size:11px;line-height:1.9;color:var(--og-muted);margin:10px 0}
+.og-commitment-reference{font:10px/1.85 ui-monospace,monospace!important;overflow-wrap:anywhere;color:var(--og-muted)}
+.og-commitment-details{margin:16px 0;border-top:1px solid var(--og-line);padding-top:10px;min-width:0}
+.og-commitment-details summary{cursor:pointer;min-height:32px;font-size:11px;color:var(--og-accent);font-weight:600;line-height:1.8;padding:5px 0}
+.og-commitment-details pre,.og-commitment-report pre{font:10px/1.75 ui-monospace,monospace;overflow-wrap:anywhere;white-space:pre-wrap;max-height:32rem;overflow:auto;border:1px solid var(--og-line);border-radius:6px;background:var(--og-paper);padding:14px;color:var(--og-ink)}
+.og-commitment-list{display:grid;gap:12px;margin-top:16px}
+.og-commitment-report{padding:16px;border:1px solid var(--og-line);border-radius:8px;background:var(--og-white);min-width:0;margin:10px 0}
+.og-commitment-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:18px;margin:18px 0}
+.og-commitment-metrics dt{color:var(--og-muted);font-size:10px}
+.og-commitment-metrics dd{margin:5px 0 0;font-size:12px;line-height:1.8;overflow-wrap:anywhere}
+.og-commitment-adverse,.og-commitment-panel .og-commitment-adverse{color:#9c3446!important}
+.og-commitment-main .og-button{margin-right:7px;margin-top:9px}
+.og-commitment-main .og-search-local{font-size:9px;color:var(--og-accent);letter-spacing:1px;white-space:nowrap}
+.og-commitment-main a:focus-visible,.og-program-commitment button:focus-visible,.og-program-commitment input:focus-visible{outline:2px solid var(--og-accent);outline-offset:4px}
+@media(max-width:700px){.og-network main.og-commitment-main{padding-top:26px;padding-bottom:42px}.og-commitment-panel{padding:20px}.og-program-commitment{padding:17px}.og-commitment-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.og-program-commitment-link-fields input{font-size:16px}}
+@media(max-width:420px){.og-commitment-panel{padding:17px}.og-commitment-main .og-button{width:100%;justify-content:center;margin-right:0}.og-commitment-reference{font-size:9px!important}.og-commitment-main h1{font-size:34px}}

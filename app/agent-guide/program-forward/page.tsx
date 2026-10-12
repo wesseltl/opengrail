@@ -15,6 +15,7 @@ export default function ProgramForwardGuide() {
         <a href="/session?method=programs">Programs Session</a>
         <a href="/experiments">Experiments</a>
         <a href="/validation">Validation</a>
+        <a href="/agent-guide/commitments">Declare a future plan</a>
       </nav>
     </header>
     <main id="program-forward-guide">
@@ -36,6 +37,7 @@ export default function ProgramForwardGuide() {
       <article>
         <section>
           <h2>1. Prepare a complete checkpoint</h2>
+          <p>To declare a plan before its future interval, use the optional <a href="/agent-guide/commitments">prospective declaration workflow</a>. It retains the whole plan and later links this V4 evidence separately.</p>
           <p>In <a href="/session?method=programs">Programs Session</a>, import the complete forward history and choose <strong>Prepare complete forward sharing</strong>. Preparation keeps the original plan, every Search attempt, exact program, receipt clocks, state, pending admission and trading journal. It does not run the guest or publish a record.</p>
           <p>Download the whole prepared artifact. An unplanned snapshot explicitly has no plan; it cannot claim a complete Search or prospective selection. Keep the complete local history before leaving the workspace.</p>
         </section>

@@ -108,9 +108,9 @@ export async function readArenaMember(raw: Reference, signal: AbortSignal): Prom
     const [manifest, strategy] = await batch([0, 1], async kind => kind === 0 ? experiment(outcome.manifest!, 'MANIFEST') : source(outcome.strategy)) as [ExperimentPublicItem, StrategyPublicItem];
     await bindOutcome(outcome, manifest, strategy, 'OUTCOME');
     let sourceDependencies:StrategyPublicItem[]|undefined;
-    if(manifest.record?.version===4&&manifest.record.type==='MANIFEST'){
-      const input=manifest.record.content.input,expected=experimentInputDependencies(input);
-      sourceDependencies=await batch(expected,async dependency=>{const reference=ref(dependency),current=dependency.id===strategy.id?strategy:await source(reference);if(!same(current.record,dependency.record))fail('STRATEGY',reference,'A retained forward candidate source differs.');const captured=input.plan?.handoff.ledger.plan.admission.candidates.find(candidate=>candidate.source.id===dependency.id)?.source;if(captured&&(current.moderation.length<captured.moderation.length||!same(current.moderation.slice(0,captured.moderation.length),captured.moderation)))fail('STRATEGY',reference,'Forward source moderation regressed.');return current;});
+    if((manifest.record?.version===4||manifest.record?.version===5)&&manifest.record.type==='MANIFEST'){
+      const input=manifest.record.content.input,expected=experimentInputDependencies(input),capturedPlan=manifest.record.version===5?manifest.record.content.input:('plan'in input?input.plan:null);
+      sourceDependencies=await batch(expected,async dependency=>{const reference=ref(dependency),current=dependency.id===strategy.id?strategy:await source(reference);if(!same(current.record,dependency.record))fail('STRATEGY',reference,'A retained forward candidate source differs.');const captured=capturedPlan?.handoff.ledger.plan.admission.candidates.find(candidate=>candidate.source.id===dependency.id)?.source;if(captured&&(current.moderation.length<captured.moderation.length||!same(current.moderation.slice(0,captured.moderation.length),captured.moderation)))fail('STRATEGY',reference,'Forward source moderation regressed.');return current;});
     }
     const relation = outcome.record.content.claim.relation;
     const original = relation ? await experiment(ref(relation), 'ORIGINAL') : outcome;
