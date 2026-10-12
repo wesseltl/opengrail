@@ -28,3 +28,9 @@ test('unknown, repeated or incoherent method choices refuse instead of falling t
  for(const page of ['Search','Session'])for(const query of [{selection:'direction-matched-v2'},{method:'rules',selection:'direction-matched-v2'},{method:['programs'],selection:'direction-matched-v2'},{method:'unknown'}])assert.equal((await route(page,query)).type,'main');
  assert.equal(m.programProductMethod(undefined),'LEGACY');assert.equal(m.programProductMethod('direction-matched-v2'),'DIRECTION');
 });
+test('exact published cohort links reach only the V2 Programs draft, with no sources, data or execution authority in the route',async()=>{
+ const source={id:'036a0000-0000-4000-8000-000000000001',digest:'a'.repeat(64)},query={method:'programs',selection:'direction-matched-v2',strategy:source.id,digest:source.digest};
+ const view=await route('Search',query);assert.equal(view.type.name,'ProgramsSearch');assert.equal(view.props.initialMethod,'DIRECTION');assert.deepEqual(view.props.initialStrategy,source);
+ for(const bad of [{...query,strategy:[source.id,source.id]},{...query,digest:[source.digest]},{...query,digest:undefined},{...query,strategy:source.id.toUpperCase()},{...query,digest:'A'.repeat(64)},{...query,selection:undefined},{...query,method:undefined},{...query,method:'rules'},{...query,extra:'unrelated'},{...query,dataset:'caller-data'},{...query,permission:'AUTHORIZED_USE'}])assert.equal((await route('Search',bad)).type,'main');
+ assert.equal((await route('Search',{})).type.name,'RulesSearch');assert.equal((await route('Search',{method:'programs'})).props.initialStrategy,undefined);
+});

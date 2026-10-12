@@ -418,3 +418,18 @@ test('captured evidence links cannot bypass open strategy forms or uncertain wri
   assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
   h.unmount(); prevented = false; anchor.props.onClick({preventDefault() { prevented = true; }}); assert(prevented);
 });
+
+test('lineage navigation retains exact visible and tombstone references and respects pending writes', async () => {
+  const visible = await item(), hidden = tombstone(await item(), 'HIDDEN'), withdrawn = tombstone(await item());
+  const {requests} = server([visible, hidden, withdrawn], () => new Response(null, {status: 503})), h = harness(); await ready(h);
+  for (const target of [visible, hidden, withdrawn]) {
+    const link = field(h.card(target.id), 'Lineage strategy ' + target.id); assert(link);
+    assert.equal(link.props.href, '/strategies/lineage?strategy=' + target.id + '&digest=' + target.digest);
+  }
+  const retained = field(h.card(visible.id), 'Lineage strategy ' + visible.id);
+  h.click('Create strategy'); await h.flush(); let prevented = false;
+  retained.props.onClick({preventDefault() {prevented = true;}}); assert(prevented);
+  await fill(h); h.submit(); await h.until('Outcome unknown'); prevented = false;
+  retained.props.onClick({preventDefault() {prevented = true;}}); assert(prevented);
+  assert.equal(requests.filter(request => request.init.method === 'POST').length, 1);
+});

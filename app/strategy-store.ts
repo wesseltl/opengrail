@@ -1,4 +1,5 @@
 import {networkAgentSchema} from './network-model';
+import {strategyLineageLimits,strategyLineageReferenceSchema,validateStrategyLineagePage,verifyStrategyLineageRelation,type StrategyLineagePage,type StrategyLineageNode} from './strategy-lineage-model';
 import {StrategyError,strategyLimits,strategyDigest,strategyPublicHumanId,strategyAuthorReference,boundedStrategyCommand,boundedStrategyRecord,verifyStrategyProgram,strategyPublishCommandForRecord,strategyAuthorReferenceSchema,strategyPublicEventSchema,strategyPrivateReportSchema,strategyListSchema,strategyGetSchema,strategyHistorySchema,strategyWriteSchema,strategyReportsSchema,type StrategyActor,type StrategyAuthor,type StrategyAuthorReference,type StrategyCommand,type StrategyRecord,type StrategyPublicItem,type StrategyPublicEvent} from './strategy-model';
 type PublicationRow={id:string;root_id:string;revision:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type EventRow={record_id:string;sequence:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;state:string;reason:string;created_at:string};
@@ -6,6 +7,7 @@ type ReportRow={author_key:string;request_id:string;sponsor_key:string;record_id
 type Checked={row:PublicationRow;record:StrategyRecord};
 type Context={actor:StrategyActor;author:StrategyAuthor;reference:StrategyAuthorReference;key:string;sponsor:string};
 type Values=(string|number)[];
+type LineageSnapshot={page:StrategyLineagePage;payload:string;publications:PublicationRow[];events:EventRow[];incoming:PublicationRow[];target:Checked;cursor:Checked|null};
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
 const nowSql="strftime('%Y-%m-%dT%H:%M:%fZ','now')";
 const limitedPayload=(maximum:number)=>`CASE WHEN length(CAST(payload AS BLOB))<=${maximum} THEN payload ELSE NULL END AS payload`;
@@ -23,6 +25,7 @@ function retryAfter(at:string){const date=new Date(at);return Math.max(1,Math.ce
 /** All submission authority is server-derived. No sources are fetched or code executed. */
 export class StrategyRepository{
  constructor(private db:D1Database){}
+ private readonly lineageConfirmations=new WeakMap<object,LineageSnapshot>();
 
  private async context(actor:StrategyActor,at:string):Promise<Context>{
   clock(at);
@@ -138,6 +141,73 @@ export class StrategyRepository{
   const checked=await Promise.all(rows.map(row=>this.checkPublication(row)));const first=checked[0];
   for(let n=0;n<checked.length;n++){const item=checked[n];if(item.record.revision!==n+1||item.record.rootId!==rootId||item.row.author_key!==first.row.author_key||item.record.version!==first.record.version||n>0&&(item.record.content.relation?.id!==checked[n-1].record.id||item.record.content.relation?.digest!==checked[n-1].row.digest||Date.parse(item.record.createdAt)<Date.parse(checked[n-1].record.createdAt)))throw inconsistent();}
   return strategyHistorySchema.parse({version:1,items:await Promise.all(checked.reverse().map(item=>this.project(item))),executionEnabled:false});
+ }
+
+ private lineageIncoming(target:Checked,cursor:Checked|null){
+  return this.db.prepare(`SELECT ${publicationColumns} FROM strategy_publications WHERE json_valid(payload) AND json_extract(payload,'$.content.relation.id')=? ${cursor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT ${strategyLineageLimits.page+1}`).bind(target.record.id,...cursor?[cursor.record.createdAt,cursor.record.createdAt,cursor.record.id]:[]);
+ }
+ private lineageShape(){return this.db.prepare(`SELECT COUNT(*) AS total,COALESCE(SUM(CASE WHEN payload IS NULL OR length(CAST(payload AS BLOB))>${strategyLimits.payloadBytes} OR NOT json_valid(payload) THEN 1 ELSE 0 END),0) AS invalid FROM strategy_publications`);}
+ private async lineageEvents(publication:Checked,rows:EventRow[]){
+  if(rows.length>strategyLimits.eventsPerRecord)throw inconsistent();
+  const events:StrategyPublicEvent[]=[];let state='VISIBLE',time=publication.record.createdAt;
+  for(const row of rows)try{
+   if(!row.payload||!hash.test(row.digest)||!hash.test(row.command_digest))throw Error();
+   const event=strategyPublicEventSchema.parse(JSON.parse(row.payload));
+   if(JSON.stringify(event)!==row.payload||await strategyDigest(row.payload)!==row.digest||event.sequence!==events.length+1||row.record_id!==publication.record.id||event.sequence!==row.sequence||event.requestId!==row.request_id||event.createdAt!==row.created_at||event.state!==row.state||event.reason!==row.reason||authorKey(event.actor)!==row.author_key||event.actor.sponsorId!==row.sponsor_key||state==='WITHDRAWN'||Date.parse(event.createdAt)<Date.parse(time))throw Error();
+   const command=boundedStrategyCommand(event.state==='WITHDRAWN'?{action:'withdraw',requestId:event.requestId,id:publication.record.id,digest:publication.row.digest,reason:event.reason,policyAccepted:'public-strategy-v1'}:{action:'moderate',requestId:event.requestId,id:publication.record.id,digest:publication.row.digest,state:event.state,reason:event.reason,policyAccepted:'public-strategy-v1'});
+   if(await strategyDigest(command.payload)!==row.command_digest||event.state!=='WITHDRAWN'&&(event.actor.kind!=='HUMAN'||event.sequence>=strategyLimits.eventsPerRecord))throw Error();
+   if(event.state==='WITHDRAWN'){
+    const own=authorKey(event.actor)===publication.row.author_key,sponsor=event.actor.kind==='HUMAN'&&event.actor.id===publication.record.author.sponsorId&&event.actor.sponsorId===publication.record.author.sponsorId;
+    if(!own&&!sponsor||event.reason==='AUTHOR_REQUEST'&&!own||event.reason==='SPONSOR_REQUEST'&&!sponsor)throw Error();
+   }
+   events.push(event);state=event.state;time=event.createdAt;
+  }catch{throw inconsistent();}
+  const record=publication.record;
+  return {id:record.id,digest:publication.row.digest,rootId:record.rootId,revision:record.revision,requestId:record.requestId,createdAt:record.createdAt,author:strategyAuthorReference(record.author),state:state as StrategyPublicItem['state'],reason:events.at(-1)?.reason??null,record:state==='VISIBLE'?record:null,moderation:events};
+ }
+ private async lineageFence(snapshot:LineageSnapshot){
+  const ids=snapshot.publications.map(row=>row.id),placeholders=ids.map(()=>'?').join(',');
+  const [publications,events,incoming,shape]=await this.db.batch([
+   this.db.prepare(`SELECT ${publicationColumns} FROM strategy_publications WHERE id IN (${placeholders}) ORDER BY id`).bind(...ids),
+   this.db.prepare(`SELECT ${eventColumns} FROM strategy_moderation WHERE record_id IN (${placeholders}) ORDER BY record_id,sequence LIMIT ${strategyLineageLimits.closure*strategyLimits.eventsPerRecord+1}`).bind(...ids),
+   this.lineageIncoming(snapshot.target,snapshot.cursor),this.lineageShape(),
+  ]);
+  const size=shape.results[0] as {total:number;invalid:number}|undefined;
+  if(!size||size.total>strategyLimits.stored||size.invalid!==0||JSON.stringify(publications.results)!==JSON.stringify(snapshot.publications)||JSON.stringify(events.results)!==JSON.stringify(snapshot.events)||JSON.stringify(incoming.results)!==JSON.stringify(snapshot.incoming))throw inconsistent();
+ }
+ /** Direct incoming relations across roots. Complete ancestors are read only to
+  * check identity and visibility; no descendant graph, evaluator or guest runs. */
+ async lineage(recordId:string,expectedDigest:string,cursorId:string|null=null):Promise<StrategyLineagePage>{
+  try{strategyLineageReferenceSchema.parse({id:recordId,digest:expectedDigest});if(cursorId!==null)strategyLineageReferenceSchema.shape.id.parse(cursorId);}catch{throw new StrategyError('Invalid exact lineage query.',400);}
+  const target=await this.publication(recordId);if(target.row.digest!==expectedDigest)throw new StrategyError('Exact strategy version not found.',404);
+  const checked=new Map<string,Checked>([[target.record.id,target]]);
+  const load=async(recordId:string)=>{const existing=checked.get(recordId);if(existing)return existing;if(checked.size>=strategyLineageLimits.closure)throw inconsistent();const value=await this.publication(recordId);checked.set(recordId,value);return value;};
+  const cursor=cursorId?await load(cursorId):null;
+  if(cursor){if(cursor.record.content.relation?.id!==target.record.id||cursor.record.content.relation.digest!==target.row.digest)throw new StrategyError('Foreign exact lineage cursor.',404);try{verifyStrategyLineageRelation(cursor.record,target.record,target.row.digest);}catch{throw inconsistent();}}
+  const shape=await this.lineageShape().first<{total:number;invalid:number}>();if(!shape||shape.total>strategyLimits.stored||shape.invalid!==0)throw inconsistent();
+  const incoming=(await this.lineageIncoming(target,cursor).all<PublicationRow>()).results;
+  const children:Checked[]=[];
+  for(const row of incoming){const value=await this.checkPublication(row);if(checked.has(value.record.id)&&checked.get(value.record.id)!.row.payload!==row.payload)throw inconsistent();checked.set(value.record.id,value);if(checked.size>strategyLineageLimits.closure)throw inconsistent();try{verifyStrategyLineageRelation(value.record,target.record,target.row.digest);}catch{throw inconsistent();}children.push(value);}
+  const ancestors:Checked[]=[],seen=new Set([target.record.id]);let child=target;
+  while(child.record.content.relation){
+   if(ancestors.length>=strategyLineageLimits.ancestors||seen.has(child.record.content.relation.id))throw inconsistent();
+   let parent:Checked;try{parent=await load(child.record.content.relation.id);}catch{throw inconsistent();}
+   try{verifyStrategyLineageRelation(child.record,parent.record,parent.row.digest);}catch{throw inconsistent();}
+   ancestors.push(parent);seen.add(parent.record.id);child=parent;
+  }
+  const rows=[...checked.values()].map(value=>value.row).sort((a,b)=>a.id.localeCompare(b.id)),ids=rows.map(row=>row.id);
+  const events=(await this.db.prepare(`SELECT ${eventColumns} FROM strategy_moderation WHERE record_id IN (${ids.map(()=>'?').join(',')}) ORDER BY record_id,sequence LIMIT ${strategyLineageLimits.closure*strategyLimits.eventsPerRecord+1}`).bind(...ids).all<EventRow>()).results;
+  if(events.length>strategyLineageLimits.closure*strategyLimits.eventsPerRecord)throw inconsistent();
+  const projected=new Map<string,StrategyPublicItem>();for(const value of checked.values())projected.set(value.record.id,await this.lineageEvents(value,events.filter(row=>row.record_id===value.record.id)));
+  const node=(value:Checked,dependencies:Checked[]):StrategyLineageNode=>{const item=projected.get(value.record.id)!,unavailable=dependencies.some(source=>projected.get(source.record.id)!.state!=='VISIBLE');return {...item,record:unavailable?null:item.record,suppression:item.state==='VISIBLE'&&unavailable?'ANCESTOR_UNAVAILABLE':null};};
+  const page=await validateStrategyLineagePage({version:1,kind:'STRATEGY_LINEAGE_PAGE',reference:{id:recordId,digest:expectedDigest},anchor:node(target,ancestors),parent:ancestors.length?{relation:target.record.content.relation,item:node(ancestors[0],ancestors.slice(1))}:null,items:children.slice(0,strategyLineageLimits.page).map(value=>({relation:value.record.content.relation,item:node(value,[target,...ancestors])})),nextCursor:children.length>strategyLineageLimits.page?children[strategyLineageLimits.page-1].record.id:null,scope:'DIRECT_RELATIONS_ONLY',classification:'AUTHOR_REPORTED',verification:'UNTESTED',qualification:'NONE',independence:'NOT_ESTABLISHED',executionEnabled:false,ordersEnabled:false},{id:recordId,digest:expectedDigest});
+  const snapshot={page,payload:JSON.stringify(page),publications:rows,events,incoming,target,cursor};await this.lineageFence(snapshot);this.lineageConfirmations.set(page,snapshot);return page;
+ }
+ /** Finish this request's exact snapshot after asynchronous HTTP validation.
+  * This capability is request-local, one-use, read-only, and never cached globally. */
+ async confirmLineage(page:StrategyLineagePage):Promise<void>{
+  const snapshot=this.lineageConfirmations.get(page);this.lineageConfirmations.delete(page);
+  if(!snapshot||JSON.stringify(page)!==snapshot.payload)throw inconsistent();await this.lineageFence(snapshot);
  }
  async reports(actor:StrategyActor,at:string,cursor?:string|null){
   const context=await this.context(actor,at);if(context.actor.kind!=='HUMAN'||!context.actor.moderator)throw new StrategyError('Explicit moderator authorization is required.',403);

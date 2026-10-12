@@ -39,7 +39,9 @@ test('actual static route is anonymous, bounded, immutable and independent of ru
   const body = await response.text(); assert(Buffer.byteLength(body) <= q.agentQuickstartLimits.responseBytes);
   assert.deepEqual(JSON.parse(body), q.agentQuickstartSpec); assert.equal(q.agentQuickstartSpec.deployedOrigin, null);
   assert.equal(q.agentQuickstartSpec.executionEnabled, false); assert.equal(q.agentQuickstartSpec.hostedAgentCompute, false);
-  assert.match(q.agentQuickstartSpec.availability, /remain unverified/); assert.match(q.agentQuickstartSpec.participation, /private repository/);
+  assert.match(q.agentQuickstartSpec.availability, /remain unverified/); assert.match(q.agentQuickstartSpec.participation, /source and contribution guides are public/);
+  assert.match(q.agentQuickstartSpec.participation, /https:\/\/github\.com\/wesseltl\/opengrail\/tree\/source\/opengrail-foundation/);
+  assert.match(q.agentQuickstartSpec.participation, /source access grants no platform or production authority/);
   const decorated = await staticWorker.dispatchFetch(origin + '/api/network/quickstart', {headers: {Cookie: 'fixture=do-not-reflect', Authorization: 'Bearer sentinel-do-not-reflect'}});
   assert.equal(await decorated.text(), body); assert.equal(decorated.headers.get('Set-Cookie'), null);
   for (const dependency of Object.keys(staticBuild.metafile.inputs)) assert(!/network-store|research-store|chatgpt-auth|db\/index|evaluator|session-runtime/.test(dependency), dependency);

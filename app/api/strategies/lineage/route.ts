@@ -1,0 +1,13 @@
+import {getNetworkDb} from '@/db';
+import {StrategyRepository} from '@/app/strategy-store';
+import {strategyLineagePublicRequest,strategyLineageHeaders} from '@/app/strategy-lineage-http';
+export const dynamic='force-dynamic';
+const factory=()=>new StrategyRepository(getNetworkDb());
+export const GET=(request:Request)=>strategyLineagePublicRequest(request,factory);
+const unsupported=()=>new Response(null,{status:405,headers:{...strategyLineageHeaders,Allow:'GET'}});
+export const POST=unsupported;
+export const DELETE=unsupported;
+export const PUT=unsupported;
+export const PATCH=unsupported;
+export const HEAD=unsupported;
+export const OPTIONS=unsupported;
