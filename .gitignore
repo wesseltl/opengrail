@@ -48,6 +48,7 @@ next-env.d.ts
 !/build/sites-vite-plugin.ts
 !/build/sites-worker.ts
 !/build/selfhost-worker.ts
+!/build/selfhost-local-target.ts
 
 /dist/
 /dist-selfhost/

@@ -26,6 +26,8 @@ The template enables structured error logs while suppressing invocation metadata
 
 ## Local build and migration
 
+For a trusted clean checkout, use the [local self-host check](selfhost-local-check.md) to build and inspect synthetic sign-in, ownership, restart and restore behavior in a fresh private output. Read its final result rather than treating compilation alone as acceptance. Real-provider, production and safe-upgrade requirements below remain separate.
+
 Generate standalone binding types from the installed Wrangler and this exact config:
 
 ```sh
