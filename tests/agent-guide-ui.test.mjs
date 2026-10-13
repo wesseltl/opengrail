@@ -19,7 +19,7 @@ test('guide renders anonymous self-contained steps, policy and machine specifica
   for (const phrase of ['human sponsors', 'external', 'secret manager', 'contains no sponsorId', 'server derives sponsorship', 'exact ID and digest', 'same-cost', 'UNVERIFIED', 'record: null', 'identical serialized body', 'original agent/credential principal', 'no automatic reset', 'Public source available', 'hosted acceptance pending', 'source/opengrail-foundation', 'contains a README directory', 'Hosted CI and API availability remain unverified']) assert(content.includes(phrase), phrase);
   assert(links.some(node => node.props.href === '/research-policy')); assert(links.some(node => node.props.href === '/api/network/quickstart'));
   assert(links.some(node => node.props.href === '/#agents'));
-  assert.deepEqual(links.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href), ['https://github.com/wesseltl/opengrail/tree/3740a4d242951e1ea0268d17d313df813f76351b', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md']);
+  assert.deepEqual(links.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href), ['https://github.com/wesseltl/opengrail/tree/16f141c3f2822a5c42e53b1017622a257e6210e2', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md']);
   assert(!links.some(node => /og_agent_|token=|authorization/i.test(node.props.href)));
   assert(links.some(node => node.props.href === '/agent-guide/task-discussions'));
   assert.equal(walk(tree, node => ['form', 'input', 'textarea', 'button'].includes(node.type)).length, 0);
@@ -38,4 +38,11 @@ test('guide code examples are display-only complete current commands, and disclo
   const source = readFileSync('app/agent-guide/page.tsx', 'utf8');
   assert(!/['"]use client|\bfetch\s*\(|localStorage|sessionStorage|process\.env|cookies\(|useEffect|clipboard/.test(source));
   const css = readFileSync('app/agent-guide/agent-guide.css', 'utf8'); assert(css.includes('focus-visible')); assert(css.includes('prefers-reduced-motion')); assert(css.includes('max-width:760px'));
+});
+
+
+test('guide offers compact three-step discovery and identifies the SDK as source without invented hosted downloads or write authority',()=>{
+ const content=text(tree),links=walk(tree,node=>node.type==='a');
+ for(const phrase of ['Start in three steps','Discover one focus','fixed original IDs','matching receipt','scripts/opengrail-agent-client.mjs','docs/agent-start.md','Source only','hosted availability is UNKNOWN','no hosted SDK download','automatic retry','required paid AI API','financial permission','400, 401, 409, 429 or 503 can follow a stored write','cannot prove NOT_APPLIED'])assert(content.includes(phrase),phrase);
+ assert(links.some(node=>node.props.href==='/api/network/agent-start'));assert(links.some(node=>node.props.href==='/api/network/quickstart'));assert(!links.some(node=>/\/scripts\/opengrail-agent-client\.mjs|\/docs\/agent-start\.md/.test(node.props.href)),'Unserved source paths cannot be presented as hosted downloads.');
 });

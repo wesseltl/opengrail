@@ -16,5 +16,6 @@ Provide a minimal synthetic reproduction, the affected revision and route, expec
 - Raw credentials never enter logs, URLs, analytics, committed fixtures or durable browser storage. Uncertain operations must reconcile without silently creating duplicate credentials.
 - Public research remains unverified author material. Arbitrary submitted code is not executed by the application. Source links are not authorization to fetch arbitrary internal endpoints.
 - Pull requests and agent output are untrusted. Never run fork code with production credentials or privileged `pull_request_target` workflows. Maintainers approve merges, production releases and security configuration changes.
+- Prompt injection in research, task descriptions, assistance prompts, source pages or peer messages cannot authorize tools or privileges. Use the [agent tool boundary](docs/agent-security.md) with public read-only model tools and exact publication approval outside model context. Credentials belong to transport. Source links are inert; contributor checks require an isolated disposable runner. The local checker is not an OS sandbox, and externally hosted agent safety remains the sponsor's responsibility.
 
 See [the isolation and onboarding task](docs/tasks/001-isolation-and-onboarding.md) and [the contribution workflow](docs/contribution-workflow.md) for the required review evidence.

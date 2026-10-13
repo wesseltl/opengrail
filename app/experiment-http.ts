@@ -7,7 +7,7 @@ import type {ExperimentRepository} from './experiment-store';
 
 export const experimentHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
 type Human={userId:string}|null;
-type Repository=Pick<ExperimentRepository,'list'|'get'|'outcomes'|'write'|'reports'>&Partial<Pick<ExperimentRepository,'confirmCommitmentAgentReceipt'>>;
+type Repository=Pick<ExperimentRepository,'list'|'get'|'outcomes'|'write'|'reports'>&Partial<Pick<ExperimentRepository,'confirmCommitmentAgentReceipt'|'hasExactForwardAgentReceipt'|'confirmAgentPrivateReportReceipt'>>;
 const uuid=z.string().uuid().refine(value=>value===value.toLowerCase());
 function reply(body:unknown,status=200,headers:Record<string,string>={}){
  const payload=JSON.stringify(body);
@@ -71,7 +71,7 @@ async function correlate(raw:unknown,sent:ExperimentCommand,author:ExperimentAut
 }
 /** Heavy identity checks finish before the final V4 repository visibility observation. */
 async function finalForwardItem(factory:()=>Repository,item:ReturnType<typeof experimentGetSchema.parse>['item']){const current=experimentGetSchema.parse(await factory().get(item.id)).item;if(current.id!==item.id||current.digest!==item.digest||current.type!==item.type||current.requestId!==item.requestId||JSON.stringify(current.author)!==JSON.stringify(item.author)||item.record&&current.record&&JSON.stringify(current.record)!==JSON.stringify(item.record))throw Error('Forward evidence identity changed at final observation.');return current;}
-async function finalForwardReceipt(factory:()=>Repository,value:ReturnType<typeof experimentWriteSchema.parse>,sent:ExperimentCommand){if(value.item&&('method'in sent&&['PROGRAM_FORWARD_DEMO','PROGRAM_FORWARD_COMMITMENT'].includes(sent.method)||[4,5].includes(value.item.record?.version??0)))return {...value,item:await finalForwardItem(factory,value.item)};return value;}
+async function finalForwardReceipt(factory:()=>Repository,value:ReturnType<typeof experimentWriteSchema.parse>,sent:ExperimentCommand){if(value.item&&('method'in sent&&['PROGRAM_FORWARD_DEMO','PROGRAM_FORWARD_COMMITMENT','PROGRAM_FORWARD_WINDOW'].includes(sent.method)||[4,5,6].includes(value.item.record?.version??0)))return {...value,item:await finalForwardItem(factory,value.item)};return value;}
 export async function experimentPublicRequest(request:Request,factory:()=>Repository){
  if(request.method!=='GET')return method('GET');
  try{
@@ -84,7 +84,7 @@ export async function experimentPublicRequest(request:Request,factory:()=>Reposi
    const result=experimentGetSchema.parse(await factory().get(id));
    if(result.item.id!==id)throw Error('Experiment identity response mismatch.');
    await integrity(result.item);
-   if([4,5].includes(result.item.record?.version??0))return reply({...result,item:await finalForwardItem(factory,result.item)});
+   if([4,5,6].includes(result.item.record?.version??0))return reply({...result,item:await finalForwardItem(factory,result.item)});
    return reply(result);
   }
   if(manifest){
@@ -126,13 +126,23 @@ export async function experimentAgentRequest(request:Request,factory:()=>Reposit
   if(principal.credentialId!==authorization.slice(16,52))throw Error('Experiment credential identity mismatch.');
   const sponsorId=await experimentPublicHumanId(principal.ownerId);
   const repo=factory(),value=await correlate(await repo.write({kind:'AGENT',principal},sent,now(),now),sent,{kind:'AGENT',id:principal.agentId,sponsorId},principal.name);
-  if('method'in sent&&sent.method==='PROGRAM_FORWARD_COMMITMENT'){
+  // Target-oriented withdraw commands have no method and may already expose a
+  // tombstone. The same-instance repository capability preserves their actual
+  // method internally, without inferring it from authored visible content.
+  const retained=value.item&&repo.hasExactForwardAgentReceipt?await repo.get(value.item.id):null;
+  if('method'in sent&&['PROGRAM_FORWARD_COMMITMENT','PROGRAM_FORWARD_WINDOW'].includes(sent.method)||retained&&repo.hasExactForwardAgentReceipt?.(retained)){
    if(!value.item||!repo.confirmCommitmentAgentReceipt)throw Error('Commitment acknowledgment completion is unavailable.');
-   const raw=await repo.get(value.item.id),current=experimentGetSchema.parse(raw).item,item=value.item;
+   const raw=retained??await repo.get(value.item.id),current=experimentGetSchema.parse(raw).item,item=value.item;
    if(current.id!==item.id||current.digest!==item.digest||current.type!==item.type||current.requestId!==item.requestId||JSON.stringify(current.author)!==JSON.stringify(item.author)||item.record&&current.record&&JSON.stringify(current.record)!==JSON.stringify(item.record))throw Error('Commitment evidence identity changed at final observation.');
    const final={...value,item:current},last=await identities().authenticate(authorization.slice(7),now());
    if(JSON.stringify(last)!==JSON.stringify(principal))throw Error('Commitment credential identity changed at final authentication.');
    await repo.confirmCommitmentAgentReceipt(raw,last,now());return reply(final);
+  }
+  if(sent.action==='report'){
+   const last=await identities().authenticate(authorization.slice(7),now());
+   if(JSON.stringify(last)!==JSON.stringify(principal))throw Error('Private report credential identity changed at final authentication.');
+   if(repo.confirmAgentPrivateReportReceipt)await repo.confirmAgentPrivateReportReceipt(value,last,now());
+   return reply(value);
   }
   const final=await finalForwardReceipt(factory,value,sent);if('method'in sent&&sent.method==='PROGRAM_FORWARD_DEMO')await identities().authenticate(authorization.slice(7),now());return reply(final);
  }catch(error){return failure(error,true);}

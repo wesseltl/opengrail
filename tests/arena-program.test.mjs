@@ -7,7 +7,7 @@ import ts from 'typescript';
 import {firstOnlyProgram,constantProgram,trapProgram,infiniteProgram,moduleHex,makeProgram,local,iconst} from './helpers/program-fixtures.mjs';
 
 const native=createRequire(import.meta.url),cache=new Map();
-function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const item={exports:{}};cache.set(file,item);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),id.endsWith('.ts')?id:id+'.ts')):native(id);new Function('module','exports','require',code)(item,item.exports,req);return item.exports;}
+function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const item={exports:{}};cache.set(file,item);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),/\.(?:ts|mjs)$/.test(id)?id:id+'.ts')):native(id);new Function('module','exports','require',code)(item,item.exports,req);return item.exports;}
 const arena=load('app/arena-model.ts'),evaluate=load('app/arena-evaluator.ts'),run=load('app/program-run.ts'),program=load('app/program-source-model.ts'),model=load('app/program-run-model.ts'),strategy=load('app/strategy-model.ts'),experiment=load('app/experiment-model.ts');
 const copy=structuredClone,uid=()=>crypto.randomUUID();
 async function fixture(binary=firstOnlyProgram(),{mutate=()=>{},interrupt=null}={}){

@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "kind": "PROGRAM_WINDOW_FIXED_LEGACY_PHYSICAL_GRAPH",
+  "files": [
+    {
+      "path": "app/comparison-model.ts",
+      "sha256": "c5e83dff8f89685e72681abb498ccb7ae7875d163d4a74b9e9db0db8622e61cc",
+      "bytes": 8387,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/demo-engine.ts",
+      "sha256": "cbc31d441c12a8c3652ddbb1873e9160b574316968889805cdc57aed04597e51",
+      "bytes": 24207,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/demo-model.ts",
+      "sha256": "a689f435ad075dedac88a99bc468a8c10d53c9e2f31e0bdc3abe417908703017",
+      "bytes": 11096,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/evaluator-comparison.ts",
+      "sha256": "fd753bf0c5870abfe081a0988c08706a9588024921f03040dd67fe118f778e3d",
+      "bytes": 3431,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/evaluator-fingerprints.ts",
+      "sha256": "7ca6f199ef9161ce178249ad58633072398bf1ff1740a9751cc37a24d3c63d43",
+      "bytes": 377,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-comparison-model.ts",
+      "sha256": "af473b87014af6c858d1c4666f0f6463eee234d2322f74945997a18cb806b1f8",
+      "bytes": 13363,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-comparison.ts",
+      "sha256": "bca7fa2b9b08e1c26679c61706d51e70ef187ecaed052b6eab225263150a1483",
+      "bytes": 2705,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-direction-fingerprints.ts",
+      "sha256": "e4f2919dfdfb92fa49cd580ebf7d024a537c5ea8da8d2de17d8d4ae49811cdb4",
+      "bytes": 361,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-direction-forward-plan-model.ts",
+      "sha256": "fce4ce768b4e4425786021d94c57198bf4e7ecf5563da76d778b4f50537ca62b",
+      "bytes": 12799,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-direction-forward-plan.ts",
+      "sha256": "5be2de2a863243fbc9f2da36e1cf0b3da6d7dd26f0346976fff4a984cff12106",
+      "bytes": 2969,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-direction-search-model.ts",
+      "sha256": "a1ba2a306da0e3d09ef8a78fc669393238a9bacb63e1b481cf8188605e72faca",
+      "bytes": 48729,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-direction-search.ts",
+      "sha256": "ec994de75c54031c0222a32874587b848946672500a9739da76b899467fc3306",
+      "bytes": 8008,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-evidence.ts",
+      "sha256": "74c1812a6df4606e53931726f7ed60a4807a1761dbe2d14b42d1e1e3e2029f9d",
+      "bytes": 9373,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-fingerprints.ts",
+      "sha256": "8de2a73f1b5c4ab4b370341acc28852e32d19fe3973e814f0f15710396c3be6f",
+      "bytes": 993,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-forward-plan.ts",
+      "sha256": "4ca9779ed221c48dfa1a5624df95efd52ea4a4e973c0d09ea7a087183c3c363a",
+      "bytes": 14684,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-run-model.ts",
+      "sha256": "27dc7a06db7b6b8a1da85c88e882ff8afc5200afaee060d822a75f10819d3c3c",
+      "bytes": 8496,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-run.ts",
+      "sha256": "33881d311297ee49a94ff14f3606d6f30ceb471af9ae6eb4aa7f1559baea2a97",
+      "bytes": 10080,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-search-protocol.ts",
+      "sha256": "b49eab2a7defdcd04a81bfc933fec7c99fe9a59f1331669f2ebb4c27be32c5af",
+      "bytes": 36956,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-session-engine.ts",
+      "sha256": "3a97a8b84b306dc43db840ffed4edc3558b051e4637969d1ee79a9b0294c2ece",
+      "bytes": 10578,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-session-fingerprints.ts",
+      "sha256": "e0c1a76cc0b065fa8506adaf35d4a44548fb2ae6d8d6f1220e6393acf0ce2116",
+      "bytes": 374,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-session-journal.ts",
+      "sha256": "ea3fc52299295beab12d166cfa0bad34e620fcd1f491a2ed165a47ae3af0c9a3",
+      "bytes": 13271,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-session-model.ts",
+      "sha256": "998ff75167100a63b6b26bd0556e875ed3e1ff5e8c5f443bff578a31ef5a7c73",
+      "bytes": 9217,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-source-model.ts",
+      "sha256": "0228ba6f0d5a9e4586ed3cfb4d9ad891209c9e65ae588248bc5a5443a25b3cc7",
+      "bytes": 3222,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/program-wasm.ts",
+      "sha256": "7deae26a6ce3640db14aa99b778989b50e222062efa00e0939a0385827c1103e",
+      "bytes": 29628,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/reference-engine.ts",
+      "sha256": "de2e301a527db0bc7aa79fd65bfba2e6fbe1b63ab5d666c7947459c3d353ddd0",
+      "bytes": 19038,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/research-model.ts",
+      "sha256": "ccbc1f0e0861e1e24586209757e1296b98e28e48e30ac32330fcd8ce6cd2e8e0",
+      "bytes": 18070,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/session-engine.ts",
+      "sha256": "7f4c1263910a4ca25036c610b755af548e2e2a002a2a9021be8c528ff6455215",
+      "bytes": 19261,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/session-fingerprints.ts",
+      "sha256": "c1f87d609b22092c9b83e6188bafe143235b10563b523c8503f191b13d1942a4",
+      "bytes": 377,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/session-journal.ts",
+      "sha256": "f2ebbeb3121e61d140bb68a4a41957509208b2dd8d38009a226a227f043c81fe",
+      "bytes": 6455,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/session-model.ts",
+      "sha256": "7d6dc8a8b7cc05a39b759c82c970a72443cd1af7dc897076234a839b75a265d3",
+      "bytes": 12008,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/strategy-model.ts",
+      "sha256": "2f2af2b98f00623ea1d1bddd5ff3db53c02ca04e6880a79ad48c82518975c6f2",
+      "bytes": 15937,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/unique-json.ts",
+      "sha256": "b58931155b37c20179a0a337e971e359559959de4ee5606237c1b0ff7f0b06ce",
+      "bytes": 1797,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "app/venture-model.ts",
+      "sha256": "5e712118b85642c04d06a6946003b5432c2bb661b7eebdaf02f084ae0f2f7ada",
+      "bytes": 10902,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/index.js",
+      "sha256": "6419c4ac0e637ff08463083e31886d10354f74cbcc4e584400b2b837e39ac881",
+      "bytes": 105,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/ZodError.js",
+      "sha256": "f5ac9e86b92e201d41e294d7aa35986a2aa28829e1bcc8ac25f7c8dce0674b99",
+      "bytes": 4349,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/errors.js",
+      "sha256": "d40831f478288d76e82bbbcc3b7e95c8513b6e76471f2d49a37c979bc57d492d",
+      "bytes": 243,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/external.js",
+      "sha256": "5d26d2e47e2352def36f89a3e8bf8581da22b7f857e07ef3114cd52cf4813445",
+      "bytes": 205,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/errorUtil.js",
+      "sha256": "68589c0cf44c8b4ad19b77418f53caad2cd1dbc8d714f526e1876ebdee4828c5",
+      "bytes": 300,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/parseUtil.js",
+      "sha256": "b57484013bb360bac2e334d58fcd5f6cbfa63ffcc7d8ff3dbbb3380ca659b956",
+      "bytes": 3601,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/typeAliases.js",
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "bytes": 11,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/util.js",
+      "sha256": "906ef685e5853d496e293ee8f8a2bb8b1ed2d078a1bcdfedb2dfd61d75b6330c",
+      "bytes": 4055,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/locales/en.js",
+      "sha256": "51a6dcc5d4bd52a64da127c012c6c963395c1d9a343ad75d4a8eca662fc8b205",
+      "bytes": 5602,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "node_modules/zod/v3/types.js",
+      "sha256": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+      "bytes": 131212,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "225fc399e48a7dc093f84c9e3da14c36dd47e674ab073caa3a464396d3f4d6b4",
+      "bytes": 504132,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "package.json",
+      "sha256": "a5900fc0dadaca64121f0db369d8019affc958ec180d590d405f23e8bedd1537",
+      "bytes": 2169,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/forward-demo-files.mjs",
+      "sha256": "d7f522b892b8a9759758f5dcaa324aac0e4e8338d851e2feeb7fcca042399637",
+      "bytes": 7346,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/kraken-market-data-core.mjs",
+      "sha256": "2b979abd04a4d56897923848d3c113d69a590a1e59a8dc86abf2cd17fda376ac",
+      "bytes": 9638,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-direction-fingerprint-core.mjs",
+      "sha256": "1e290d3ba0afda685806c1b92d6ce38a31fe97980198b70d3e5b7ef7cc8e8443",
+      "bytes": 1092,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-direction-search.mjs",
+      "sha256": "477da281bea950751c14488a04b95c94ff417df8bd575854911f7adb5f9f60db",
+      "bytes": 18485,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-fingerprint-core.mjs",
+      "sha256": "f0356759320fb0b2563516ee6fc4ddfa828fe6a06c15adf0f6774d7e483ab576",
+      "bytes": 1549,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-files.mjs",
+      "sha256": "759406afd46942de4aca31a3eb361e9263cbc37ee6e9d572ffbdee0cfce4994f",
+      "bytes": 2164,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-fingerprint-core.mjs",
+      "sha256": "a1cd5c5fc0aecba3fa0df27b639a2fdb0876562ed18bbd5b3e3548dca8f7a911",
+      "bytes": 1679,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-monitor.css",
+      "sha256": "2145269bcc50bedfff3ad4375e91b76a97cfd8d3c7944f5bebd35add5f18e8aa",
+      "bytes": 1812,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-monitor.html",
+      "sha256": "506c7d13a8425f003e71a97fcd40b303209dbb2ff94bb57a7d955a5b5ff80e66",
+      "bytes": 2068,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-monitor.mjs",
+      "sha256": "4455efbdd701e38966687a6c9abfb9d06248a5f8276c2db78a976bcc6c0813b5",
+      "bytes": 18660,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-receiver-protocol.mjs",
+      "sha256": "c34c2ebdabef0c7074ab1bc897e63995d3f2d08a89ea36b92a047b476648b310",
+      "bytes": 5584,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-receiver.mjs",
+      "sha256": "38b433f1901a2f44ca7ea64e0008cfbc10c8bd0e05873221fd7289a0e3fe4cf0",
+      "bytes": 10423,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/program-session-runtime.mjs",
+      "sha256": "0c61e5fd4db6160bc7fd317f13f19f14ef2ea0fecea4fe55fed3a4f251ad46ef",
+      "bytes": 15475,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/recorded-direction-program-kraken-core.mjs",
+      "sha256": "a5ae5e871e7646d269ee9e012bcddc754e2adb1498abcfdd37f437e07a6bb842",
+      "bytes": 37469,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/recorded-direction-program-kraken.mjs",
+      "sha256": "1cfe5d60da5cd9b7fe6d16c3c72950de4c53c6cee3c2290f2808d32130d0f04f",
+      "bytes": 4014,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/recorded-program-kraken-core.mjs",
+      "sha256": "fa975f54066c3730f1721f75daecf0b8abf953a482b574bce03499f02a8ae176",
+      "bytes": 36217,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/recorded-program-kraken.mjs",
+      "sha256": "1cb4953c3d97255d8c3bfdadd9a1b888ef2441219b83ed32389f2bceefa2d471",
+      "bytes": 3788,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/session-file-lock.py",
+      "sha256": "f8e044a39758f4daee05c6c415cc3ba8d98da08b2d974ab65b866fa7a20b8d7a",
+      "bytes": 713,
+      "physicalMode": "0644"
+    },
+    {
+      "path": "scripts/session-receiver-protocol.mjs",
+      "sha256": "1fb2d11321b7c6e7aa3dfd74633beac584405e9ffa1518ba579fe8db966782b9",
+      "bytes": 8715,
+      "physicalMode": "0644"
+    }
+  ]
+}

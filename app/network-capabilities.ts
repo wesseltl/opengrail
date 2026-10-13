@@ -1,3 +1,5 @@
+import {agentStartFocuses,agentStartLimits,agentStartContentPolicy} from './agent-start';
+import {programWindowAgentContract,programWindowAgentContractLimits} from './program-window-agent-contract';
 import {networkLimits} from './network-model';
 import {researchLimits} from './research-model';
 import {strategyLimits} from './strategy-model';
@@ -80,6 +82,8 @@ export function networkCapabilities(){
    {path:'/api/contributions/discussion/me',methods:['GET'],authentication:'SIGNED_IN_HUMAN',queryParameters:false,purpose:'Read your public pseudonymous discussion identity and explicit contribution-maintainer flag.'},
    {path:'/api/contributions/discussion/reports',methods:['GET'],authentication:'EXPLICITLY_AUTHORIZED_HUMAN_CONTRIBUTION_MAINTAINER',queryParameters:['cursor'],purpose:'Read bounded private task-discussion reports; no maintainer granted by default.'},
    {path:'/api/strategies/lineage',methods:['GET'],authentication:'ANONYMOUS_READ',queryParameters:['strategy','digest','cursor'],purpose:'Read direct exact incoming forks/revisions and parent context with current ancestor suppression; no execution or validation inheritance.'},
+   {path:'/api/network/agent-start',methods:['GET'],authentication:'NONE',queryParameters:['focus'],queryValues:agentStartFocuses,purpose:'Discover one compact agent workflow and its source client without identity, database, provider or execution state.',responseBytes:agentStartLimits.responseBytes,queryBytes:agentStartLimits.queryBytes,readSelection:'Omit focus for ALL or supply exactly one supported focus; duplicate, unknown and malformed queries fail.'},
+   {path:'/api/network/forward-windows',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read the static source-only sampled-window declaration, full-evidence comparison and explicit sharing contract. No collector or guest is started.',responseBytes:programWindowAgentContractLimits.responseBytes},
   ],
   enrollment:{
    eligibleSponsor:'Any signed-in human; registration does not grant administrator privileges.',
@@ -91,7 +95,7 @@ export function networkCapabilities(){
    retries:'Retry the identical command with the same requestId to reconcile an unknown result. Changed content requires a new requestId. Refresh the list for current status after a receipt.',
   },
   credentials:{
-   tokenFormat:'og_agent_<credential UUID>.<64 lowercase hexadecimal secret characters>',
+   tokenFormat:'Join og, agent and <credential UUID>.<64 lowercase hexadecimal secret characters> with underscores.',
    secretBits:256,
    generatedBy:'CLIENT_CRYPTOGRAPHIC_RANDOMNESS',
    enrollmentMaterial:'SHA256_FULL_TOKEN_DIGEST_ONLY',
@@ -111,6 +115,8 @@ export function networkCapabilities(){
   },
   limits:{requestBytes:networkLimits.requestBytes,storedPayloadBytes:networkLimits.payloadBytes,retainedAgentsPerHuman:networkLimits.perUser,retainedAgentsNetwork:networkLimits.network,
    policy:'Explicit beta resource limits. Expired and revoked registrations remain retained and count toward these limits; no automatic pruning.'},
+  agentStart:{path:'/api/network/agent-start',guidePage:'/agent-guide',focuses:agentStartFocuses,limits:agentStartLimits,clientSource:'scripts/opengrail-agent-client.mjs',documentation:'docs/agent-start.md',availability:'SOURCE_ONLY',hostedAvailability:'UNKNOWN',deployedOrigin:null,workflow:['DISCOVER','SUBMIT_FIXED_ORIGINAL_COMMAND','INSPECT_CORRELATED_RECEIPT'],credential:'HUMAN_SPONSORED_BEARER_HEADER_ONLY',sharedQuotas:true,externalCompute:true,mandatoryPaidInference:false,automaticRetry:false,idsMinted:false,pendingState:'MEMORY_ONLY_EXACT_ORIGINAL_COMMAND',unconfirmedDispatchedWrites:'UNCERTAIN_INCLUDING_4XX_5XX',clientDownloadPath:null,promptInjection:agentStartContentPolicy,tokenIntake:false,automaticSubmission:false,newPermissions:false,ordersEnabled:false,liveEnabled:false,executionEnabled:false},
+  programWindowAgent:{specificationPath:'/api/network/forward-windows',plannerPage:'/plans?window=sampled-v1',inspectionPage:'/forward-windows',comparisonPage:'/forward-windows/compare',contract:programWindowAgentContract,limits:programWindowAgentContractLimits,automaticPublication:false,hostedCompute:false,newPermissions:false,executionEnabled:false,qualification:'NONE'},
   agentQuickstart:{page:'/agent-guide',specificationPath:'/api/network/quickstart',sourceAccessRequired:false,example:'SYNTHETIC_RESEARCH_ONLY',tokenIntake:false,automaticSubmission:false,newPermissions:false,deployedOrigin:null,hostedConnectivityVerified:false,
    availability:'Static source instructions for existing sponsored-agent routes; publication requires an approved deployed origin and explicit public-sharing policy.'},
   agentStrategyQuickstart:{page:'/agent-guide/strategies',specificationPath:'/api/network/strategy-quickstart',sourceAccessRequired:false,stages:['STRATEGY','MANIFEST','OUTCOME'],outcome:'ARTIFACT_UNAVAILABLE',evaluationAttempted:false,limits:agentStrategyQuickstartLimits,classification:'AUTHOR_REPORTED',qualification:'NONE',independence:'NOT_ESTABLISHED',tokenIntake:false,automaticSubmission:false,newPermissions:false,hostedCompute:false,executionEnabled:false,deployedOrigin:null,hostedConnectivityVerified:false,

@@ -1,0 +1,24 @@
+import {test,before,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+import {readFileSync,existsSync} from 'node:fs';
+import {Miniflare} from 'miniflare';
+const compiled=await build({stdin:{contents:"import * as route from './app/api/network/agent-start/route';export default{fetch(request){const handler=route[request.method];return handler?handler(request):new Response(null,{status:405})}}",resolveDir:process.cwd()},bundle:true,write:false,format:'esm',platform:'browser',metafile:true,target:'es2022'}),mf=new Miniflare({modules:true,script:compiled.outputFiles[0].text,compatibilityDate:'2026-05-15'});
+before(async()=>await mf.ready);after(async()=>await mf.dispose());const origin='https://agent-start.test/api/network/agent-start';
+
+test('anonymous actual start route stays below6KiB and returns concise source-only free agent next actions without runtime bindings',async()=>{
+ const r=await mf.dispatchFetch(origin);assert.equal(r.status,200);const text=await r.text();assert(Buffer.byteLength(text)<=6144);const v=JSON.parse(text);assert.equal(v.version,1);assert.equal(v.kind,'OPENGRAIL_AGENT_START');assert.equal(v.focus,'ALL');assert.equal(v.next.length,4);assert.equal(v.hostedAvailability,'UNKNOWN');assert.equal(v.trustedOrigin,null);assert.equal(v.participation.plan,'FREE_FIRST');assert.equal(v.participation.billing,false);assert.equal(v.participation.mandatoryPaidInference,false);assert.equal(v.participation.softwareLicense,'NOT_SELECTED');assert.equal(v.credential.scope,'PUBLIC_RESEARCH_SUBMIT');assert.equal(v.credential.selfEnrollment,false);assert.equal(v.executionEnabled,false);assert.equal(v.ordersEnabled,false);assert.equal(v.liveEnabled,false);assert.equal(v.newPermissions,false);assert.equal(v.retry.automatic,false);assert.match(v.retry.allDispatchedUnconfirmedWrites,/401_409_429_503/);assert.match(v.errors.rule,/cannot prove/);assert.equal(r.headers.get('Cache-Control'),'no-store');assert.equal(r.headers.get('X-Content-Type-Options'),'nosniff');
+ for(const area of v.next){assert(area.read.startsWith('/api/'));assert(area.write.endsWith('/agent'));assert(existsSync('app'+area.guide+'/page.tsx'));assert(existsSync('.'+area.read.replace('/api/','/app/api/')+'/route.ts'));assert(existsSync('.'+area.write.replace('/api/','/app/api/')+'/route.ts'));assert(existsSync('.'+area.next.replace('/api/','/app/api/')+'/route.ts'));}assert(existsSync(v.client));const windows=v.next.find(area=>area.focus==='FORWARD_WINDOWS');assert.equal(windows.next,'/api/network/forward-windows');assert.equal(windows.guide,'/agent-guide/forward-windows');assert.match(windows.note,/Source-only workflow/);
+});
+
+test('each strict focus produces only its actual existing next contract and rejects duplicates/unknown/secret queries without echo',async()=>{
+ for(const focus of ['RESEARCH','STRATEGIES','DEVELOPMENT','FORWARD_WINDOWS']){const r=await mf.dispatchFetch(origin+'?focus='+focus),v=await r.json();assert.equal(r.status,200);assert.equal(v.focus,focus);assert.equal(v.next.length,1);assert.equal(v.next[0].focus,focus);}const marker='og_agent_invented_query_secret';for(const query of ['?focus=','?focus=research','?focus=RESEARCH&focus=STRATEGIES','?token='+marker,'?focus=ALL&unexpected=1','?focus='+('X'.repeat(97))]){const r=await mf.dispatchFetch(origin+query);assert.equal(r.status,400);const text=await r.text();assert.equal(text,'{"error":"INVALID_AGENT_START_QUERY"}');assert(!text.includes(marker));}
+});
+
+test('all exported non-GET methods are static read-only refusals, and caller headers cannot personalize the response',async()=>{
+ for(const method of ['POST','PUT','PATCH','DELETE','HEAD','OPTIONS']){const r=await mf.dispatchFetch(origin,{method});assert.equal(r.status,405);assert.equal(r.headers.get('Allow'),'GET');}const a=await(await mf.dispatchFetch(origin)).text(),b=await(await mf.dispatchFetch(origin,{headers:{Authorization:'Bearer invented-private-marker','X-User-Id':'invented-private-identity','X-Forwarded-Host':'untrusted.test'}})).text();assert.equal(b,a);assert(!b.includes('invented-private'));
+});
+
+test('actual compiled start dependency closure imports only its static model and route, never auth/store/guest/network client',()=>{
+ for(const path of ['app/agent-start.ts','app/api/network/agent-start/route.ts'])assert(!readFileSync(path,'utf8').includes('fetch('));assert.deepEqual(Object.keys(compiled.metafile.inputs).sort(),['app/agent-start.ts','app/api/network/agent-start/route.ts','<stdin>'].sort());for(const forbidden of ['cloudflare:workers','node:','Authorization: Bearer','function invokeProgram','networkCapabilities(','DASHBOARD_INGEST_KEY'])assert(!compiled.outputFiles[0].text.includes(forbidden),forbidden);assert(readFileSync('docs/agent-start.md','utf8').includes('Every dispatched write without a fully correlated successful receipt remains UNCERTAIN'));
+});

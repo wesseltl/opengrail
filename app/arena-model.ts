@@ -39,6 +39,7 @@ function credentials(raw:unknown,inAuthor=false):void{if(typeof raw==='string'){
 /** Supplied projections are coherent data, not proof of current HTTP visibility. */
 export async function validateArenaMembers(raw:unknown):Promise<ArenaMember[]>{
  plain(raw,arenaLimits.admissionBytes);credentials(raw);const members=z.array(arenaMemberSchema).min(2).max(arenaLimits.members).parse(raw);
+ if(members.some(member=>member.manifest.record?.version===6||member.outcome.record?.version===6))throw new ArenaError('Sampled windows require their separate complete-cohort comparison workflow; this Arena does not support that method.');
  memberDepth(raw,members,arenaLimits.admissionBytes);
  if(new Set(members.map(m=>m.outcome.id)).size!==members.length||new Set(members.map(m=>m.strategy.id+':'+m.strategy.digest)).size!==members.length)throw new ArenaError('Each competitor requires a distinct exact outcome and strategy version.');
  for(const member of members){
@@ -61,7 +62,7 @@ export async function validateArenaMembers(raw:unknown):Promise<ArenaMember[]>{
  return structuredClone(members);
 }
 export async function arenaMemberProtocol(member:ArenaMember):Promise<ArenaProtocol|null>{
- const r=member.manifest.record;if(!r||r.type!=='MANIFEST'||r.version===2||r.version===4||r.version===5)return null;
+ const r=member.manifest.record;if(!r||r.type!=='MANIFEST'||r.version===2||r.version===4||r.version===5||r.version===6)return null;
  if(r.version===3){const input=r.content.input,d=input.strategy.record.content.definition;return arenaProgramProtocolSchema.parse({method:'PROGRAM_DEMO',datasetDigest:await experimentDigest(JSON.stringify(input.dataset)),market:d.market,risk:d.risk,costs:d.costs,initialCapital:input.initialCapital,emergencyStopAt:input.emergencyStopAt,methodDigest:r.content.evaluator.methodDigest,evaluatorVersion:r.content.evaluator.version,implementations:r.content.evaluator.implementations,sourceVersion:r.content.evaluator.sourceVersion,baseline:'COST_AWARE_LONG_SAME_ALLOCATION_V1'});}
  const input=r.content.input,d=input.strategy.record.content.definition;
  return arenaProtocolSchema.parse({datasetDigest:await experimentDigest(JSON.stringify(input.dataset)),signalsDigest:await experimentDigest(JSON.stringify(input.signals)),market:d.market,risk:d.risk,costs:d.costs,initialCapital:input.initialCapital,emergencyStopAt:input.emergencyStopAt,methodDigest:r.content.evaluator.methodDigest,evaluatorVersion:r.content.evaluator.version,sourceDigest:r.content.evaluator.sourceDigest,sourceVersion:r.content.evaluator.sourceVersion,baseline:r.content.baseline});
@@ -74,7 +75,7 @@ export async function arenaProtocols(members:ArenaMember[]){const protocols=awai
   else if(p.sourceDigest!==evaluatorSourceFingerprints.primary||p.methodDigest!==await experimentDigest(JSON.stringify(demoEvaluatorMethod)))protocolDifferences.push('MEMBER_'+i+':UNSUPPORTED_EVALUATOR');
  }
  return {commonProtocol,protocolDifferences};}
-export function initialArenaRows(members:ArenaMember[]):ArenaRow[]{return members.map((m,index)=>{const r=m.outcome.record;let claimedStatus:ArenaRow['claimedStatus']=null;if(r?.version===5)claimedStatus='PROGRAM_FORWARD_COMMITMENT';else if(r?.version===4)claimedStatus='PROGRAM_FORWARD_DEMO';else if(r?.version===2)claimedStatus='CONTINUOUS_DEMO';else if(r?.type==='OUTCOME')claimedStatus=r.content.result.kind==='ARTIFACT'?r.content.result.artifact.status:r.content.result.kind;return arenaRowSchema.parse({index,outcome:ref(m.outcome),manifest:ref(m.manifest),strategy:ref(m.strategy),name:r?.content.name??null,status:'HELD',reason:'NOT_YET_RECONSTRUCTED',claimedStatus,comparison:null,reconstructed:null,...r?.version===3?{programComparison:null,programReconstructed:null}:{},diagnostics:null,cautions:[...new Set([...(m.manifest.record?.flags??[]),...(r?.flags??[])])],rank:null});});}
+export function initialArenaRows(members:ArenaMember[]):ArenaRow[]{return members.map((m,index)=>{const r=m.outcome.record;if(r?.version===6||m.manifest.record?.version===6)throw new ArenaError('Sampled windows require their separate complete-cohort comparison workflow.');let claimedStatus:ArenaRow['claimedStatus']=null;if(r?.version===5)claimedStatus='PROGRAM_FORWARD_COMMITMENT';else if(r?.version===4)claimedStatus='PROGRAM_FORWARD_DEMO';else if(r?.version===2)claimedStatus='CONTINUOUS_DEMO';else if(r?.type==='OUTCOME')claimedStatus=r.content.result.kind==='ARTIFACT'?r.content.result.artifact.status:r.content.result.kind;return arenaRowSchema.parse({index,outcome:ref(m.outcome),manifest:ref(m.manifest),strategy:ref(m.strategy),name:r?.content.name??null,status:'HELD',reason:'NOT_YET_RECONSTRUCTED',claimedStatus,comparison:null,reconstructed:null,...r?.version===3?{programComparison:null,programReconstructed:null}:{},diagnostics:null,cautions:[...new Set([...(m.manifest.record?.flags??[]),...(r?.flags??[])])],rank:null});});}
 /** Fresh evaluator equity only. Periods include initial-capital -> first close;
  * sample SD uses n-1; downside is sqrt(sum(min(r,0)^2)/n). No annualization. */
 export function arenaRiskDiagnostics(artifact:DemoArtifact):ArenaDiagnostics{

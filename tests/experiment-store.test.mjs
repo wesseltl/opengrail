@@ -7,7 +7,7 @@ import ts from 'typescript';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
 const native=createRequire(import.meta.url),cache=new Map();
-function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),id.endsWith('.ts')?id:id+'.ts')):native(id);new Function('module','exports','require',code)(m,m.exports,req);return m.exports;}
+function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),/\.(?:ts|mjs)$/.test(id)?id:id+'.ts')):native(id);new Function('module','exports','require',code)(m,m.exports,req);return m.exports;}
 const model=load('app/experiment-model.ts'),{ExperimentRepository}=load('app/experiment-store.ts'),strategy=load('app/strategy-model.ts'),{StrategyRepository}=load('app/strategy-store.ts'),{NetworkRepository}=load('app/network-store.ts'),{createNetworkToken}=load('app/network-model.ts'),demo=load('app/demo-model.ts'),engine=load('app/demo-engine.ts');
 const uid=()=>crypto.randomUUID(),at=()=>new Date(Date.now()-10_000).toISOString(),human=(moderator=false)=>({kind:'HUMAN',userId:uid(),moderator}),policyAccepted='public-experiment-v1';
 const ref=item=>({id:item.id,digest:item.digest});

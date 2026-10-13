@@ -1,0 +1,3 @@
+import {resolve} from 'node:path';import {fileURLToPath} from 'node:url';import {currentWindowComponentGraphs} from './program-window-fingerprint-core.mjs';
+export async function currentWindowImplementationDeclaration(){const graphs=await currentWindowComponentGraphs();return{kind:'AUTHOR_DECLARED_IMPLEMENTATION',verification:'NOT_ESTABLISHED',components:Object.fromEntries(Object.entries(graphs).map(([name,row])=>[name,{kind:'AUTHOR_DECLARED_SHA256',sha256:row.sha256}]))};}
+if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){if(process.argv.length!==2)throw Error('NO_FINGERPRINT_MUTATION_FLAGS');process.stdout.write(JSON.stringify(await currentWindowImplementationDeclaration())+'\n');}

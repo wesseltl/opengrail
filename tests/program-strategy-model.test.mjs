@@ -7,7 +7,7 @@ import ts from 'typescript';
 import {createHash} from 'node:crypto';
 import {section,text} from './helpers/program-fixtures.mjs';
 const native=createRequire(import.meta.url),cache=new Map();
-function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),id.endsWith('.ts')?id:id+'.ts')):native(id);new Function('module','exports','require',code)(m,m.exports,req);return m.exports;}
+function load(file){file=resolve(file);if(cache.has(file))return cache.get(file).exports;const m={exports:{}};cache.set(file,m);const code=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText;const req=id=>id.startsWith('.')?load(resolve(dirname(file),/\.(?:ts|mjs)$/.test(id)?id:id+'.ts')):native(id);new Function('module','exports','require',code)(m,m.exports,req);return m.exports;}
 const model=load('app/strategy-model.ts'),program=load('app/program-source-model.ts');
 const uid=()=>crypto.randomUUID(),moduleHex='0061736d01000000010c0160077f7c7c7c7c7c7c017f03020100070a01066f6e5f62617200000a0601040041010b';
 const source=async(extra={})=>({profile:program.programProfile,abi:program.programAbi,bytesHex:moduleHex,digest:await program.programBinaryDigest(moduleHex),parameters:[],...extra});
