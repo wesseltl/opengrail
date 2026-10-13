@@ -6,7 +6,7 @@ import type {NetworkRepository} from './network-store';
 
 export const contributionHeaders={'Cache-Control':'private, no-store',Vary:'Cookie, Authorization','X-Content-Type-Options':'nosniff'};
 type Human={userId:string}|null;
-type Repository=Pick<ContributionRepository,'list'|'get'|'claims'|'getClaim'|'write'>;
+type Repository=Pick<ContributionRepository,'list'|'get'|'claims'|'getClaim'|'write'|'confirmRevisionReceipt'>;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
 const same=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 const method=(allow:string)=>new Response(null,{status:405,headers:{...contributionHeaders,Allow:allow}});
@@ -78,8 +78,9 @@ export async function contributionHumanRequest(request:Request,actor:Human,facto
   if(request.headers.get('X-Contribution-Author')!==authorId)throw new NetworkError('Contribution participant changed. Reconcile with the original account.',403);
   const sent=await command(request),privileged=['register','close','hide','review'].includes(sent.action),allowed=maintainer(actor.userId);
   if(privileged&&!allowed)throw new NetworkError('Explicit human contribution maintainer authorization is required.',403);
-  const raw=await factory().write({kind:'HUMAN',userId:actor.userId,maintainer:allowed},sent,now());
-  const value=await trusted(()=>validateContributionWrite(raw,sent,{kind:'HUMAN',id:authorId,sponsorId:authorId}));
+  const repo=factory(),raw=await repo.write({kind:'HUMAN',userId:actor.userId,maintainer:allowed},sent,now());
+  let value=await trusted(()=>validateContributionWrite(raw,sent,{kind:'HUMAN',id:authorId,sponsorId:authorId}));
+  if(value.claim?.record?.version===2||sent.action==='claim'&&'version'in sent)value=await repo.confirmRevisionReceipt({kind:'HUMAN',userId:actor.userId,maintainer:maintainer(actor.userId)},sent,now());
   if(privileged&&!maintainer(actor.userId))throw new NetworkError('Current contribution maintainer authorization is required.',403);
   return reply(value);
  }catch(error){return failure(error);}
@@ -98,8 +99,10 @@ export async function contributionAgentRequest(request:Request,factory:()=>Repos
   const principal=await identities().authenticate(authorization.slice(7),now());
   if(principal.credentialId!==authorization.slice(16,52))throw Error('Contribution credential identity mismatch.');
   const sponsorId=await contributionPublicHumanId(principal.ownerId);
-  const raw=await factory().write({kind:'AGENT',principal},sent,now());
-  return reply(await trusted(()=>validateContributionWrite(raw,sent,{kind:'AGENT',id:principal.agentId,sponsorId})));
+  const repo=factory(),raw=await repo.write({kind:'AGENT',principal},sent,now());
+  let value=await trusted(()=>validateContributionWrite(raw,sent,{kind:'AGENT',id:principal.agentId,sponsorId}));
+  if(value.claim?.record?.version===2||sent.action==='claim'&&'version'in sent)value=await repo.confirmRevisionReceipt({kind:'AGENT',principal},sent,now());
+  return reply(value);
  }catch(error){return failure(error,true);}
 }
 export async function contributionMeRequest(request:Request,actor:Human,maintainer:(userId:string)=>boolean){

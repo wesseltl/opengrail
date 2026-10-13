@@ -32,7 +32,7 @@ export async function networkOwnerRequest(request:Request,actor:{userId:string}|
 export async function networkAgentRequest(request:Request,factory:()=>Repository,now:()=>string=()=>new Date().toISOString()){
  const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{...networkHeaders,...(status===401?{'WWW-Authenticate':'Bearer'}:{})}});
  if(request.method!=='GET')return new Response(null,{status:405,headers:{...networkHeaders,Allow:'GET'}});
- const url=new URL(request.url);if(url.search)return reply({error:'Credentials are accepted only in the Authorization header.'},400);
+ const url=new URL(request.url);if(url.protocol!=='https:')return reply({error:'Agent credentials require HTTPS.'},403);if(url.search)return reply({error:'Credentials are accepted only in the Authorization header.'},400);
  const origin=request.headers.get('Origin');if(origin!==null&&origin!==url.origin)return reply({error:'Invalid request origin.'},403);
  const auth=request.headers.get('Authorization');
  if(!auth||!/^Bearer og_agent_[a-f0-9-]{36}\.[a-f0-9]{64}$/.test(auth))return reply({error:'A valid agent credential is required.'},401);

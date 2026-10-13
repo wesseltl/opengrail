@@ -60,7 +60,8 @@ test('checker instructions bind explicit reviewed commits and retain failed and 
   assert(content.includes('Replace') && content.includes('NEW_REPORT.json') && content.includes('new report path that must be absolute and outside the checkout'));
   for (const outcome of ['PASSED', 'FAILED', 'INTERRUPTED']) assert(content.includes(outcome));
   for (const command of ['npm test', 'npm run typecheck', 'npm run build', 'git diff --check']) assert(blocks.some(block => block.includes(command)));
-  assert(content.includes('20-minute') && content.includes('32 KiB') && content.includes('256 KiB'));
+  assert(content.includes('75-minute') && content.includes('20-minute') && content.includes('80-minute execution budget'));
+  assert(content.includes('32 KiB') && content.includes('256 KiB'));
   assert(content.includes('not verify research, security, profitability, independent review or merge approval'));
 });
 
@@ -74,8 +75,10 @@ test('collector instructions distinguish offline verification and current-PR che
   for (const status of ['CI_VERIFIED', 'PENDING', 'FAILED', 'STALE', 'UNAVAILABLE']) assert(content.includes(status));
   assert(content.includes('Invented fixtures') && content.includes('cannot establish a hosted run'));
   const details = walk(tree, node => node.type === 'details');
-  assert.equal(details.length, 4);
-  assert(details.every(node => !node.props.open && walk(node, child => child.type === 'summary').length === 1));
+  const guide = details.find(node => node.props.className === 'og-contribution-guide'), cards = details.filter(node => node !== guide);
+  assert(guide && !guide.props.open && guide.props.children[0].type === 'summary');
+  assert.equal(details.length, 5); assert.equal(cards.length, 4);
+  assert(cards.every(node => !node.props.open && walk(node, child => child.type === 'summary').length === 1));
 });
 
 test('private review instructions isolate read credentials and evidence from contributors and public research', async () => {
@@ -98,5 +101,16 @@ test('server route passes only fail-closed auth boolean and preserves explicit h
   globalThis.__guideAuthFailure = true;
   assert.deepEqual(walk(await Contribute(), node => typeof node.type === 'function' && node.type.name === 'Contributions')[0].props, {authenticated: false});
   delete globalThis.__guideAuthFailure; delete globalThis.__guideAuthUser;
+  assert.equal(requests, 0);
+});
+
+test('the contribution desk precedes closed supplemental guidance with all source and authority instructions retained', async () => {
+  const tree = await Contribute(), nodes = walk(tree, node => typeof node.type === 'function' && node.type.name === 'Contributions' || node.props?.className === 'og-contribution-guide');
+  assert.equal(nodes.length, 2); assert.equal(typeof nodes[0].type, 'function'); assert.equal(nodes[1].type, 'details');
+  const guide = nodes[1], summary = guide.props.children[0];
+  assert.equal(summary.type, 'summary'); assert.equal(text(summary), 'Contribution guide and source handoff'); assert(!guide.props.open);
+  const content = text(guide);
+  for (const phrase of ['verified application snapshot', 'owner-created GitHub project is verified PUBLIC', 'Hosted CI and public launch remain unverified', 'grants no GitHub write or production access', 'maintainer reviews', 'no financial authority', 'paid compute entitlement']) assert(content.includes(phrase), phrase);
+  assert.equal(walk(guide, node => node.type === 'details').length, 5);
   assert.equal(requests, 0);
 });

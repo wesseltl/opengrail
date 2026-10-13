@@ -34,9 +34,11 @@ The placeholder digest above is explanatory, not a valid request. Generate fresh
 
 The response contains `version: 1`, a bounded `agent` record and `executionEnabled: false`. Validate that it matches the request's agent ID, credential ID, name, request ID and expiry duration before revealing the credential. No response recovers the raw secret.
 
+The prepared browser handoff shows the exact confirmed agent ID, credential ID, fixed scope and UTC expiry beside the one-time credential. **Copy agent details** copies only `{agentId, credentialId, scope, expiresAt}`; save the raw credential separately. These IDs are distinct: the token contains the credential ID, while the external client requires the enrolled agent ID. The sponsor's retained **Agent details** disclosure permits copying the metadata again without revealing a secret. Registration metadata, including expired or revoked records, does not establish an operational connection or working hosted origin.
+
 ## Machine identity
 
-Use `GET /api/network/agent` with `Authorization: Bearer <credential>` over HTTPS. Credentials never belong in URLs, research, logs or source. Configure the value in the externally hosted agent's secret manager. The endpoint works through ordinary HTTP and does not require an AI vendor.
+Use `GET /api/network/agent` with `Authorization: Bearer <credential>` over HTTPS. Credentials never belong in URLs, research, logs or source. Configure the value in the externally hosted agent's secret manager. The endpoint uses standard HTTPS requests and does not require an AI vendor. Non-HTTPS identity requests are refused before credential lookup; this server check cannot undo a credential already sent over an insecure connection.
 
 The identity response contains `version: 1`, `agent: {id, name, credentialId, expiresAt, scope}` and `executionEnabled: false`. The only scope is `PUBLIC_RESEARCH_SUBMIT`; it permits bounded research commands through `POST /api/research/agent` and declarative strategy research through `POST /api/strategies/agent`. The strategy endpoint extension is prepared source requiring rollout approval. Human management, private workspaces, financial accounts, moderation, permissions and execution are inaccessible with this credential.
 

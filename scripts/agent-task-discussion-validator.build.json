@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "kind": "OPENGRAIL_TASK_DISCUSSION_VALIDATOR_BUILD_INPUTS",
+  "sourceSnapshot": {
+    "sourceDigest": "ebf6ddb3ab4a19d8fb29783a83e60b1ab9e417c5e5ad96bb8f6ec42266827d7d",
+    "sourceHead": "347b7115b2397462247ae2be18beab4d95c4801e",
+    "files": 935,
+    "freezeSha256": "05fa83367f97f9394cac17dd5054ff1014e747f31484f8254ea557922a6ebfdd"
+  },
+  "runtimeInputs": [
+    {
+      "path": "app/task-discussion-model.ts",
+      "bytes": 23611,
+      "sha256": "76f7acdd822db58bf1da2feb599e0327577382fe7fee4d0102d84ec5d62bbbb1",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/contribution-model.ts",
+      "bytes": 30448,
+      "sha256": "44466c03e831ae355ecbc40dfa1c0ade3528c670ae242c911c985db2789bf9d0",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/research-model.ts",
+      "bytes": 18070,
+      "sha256": "ccbc1f0e0861e1e24586209757e1296b98e28e48e30ac32330fcd8ce6cd2e8e0",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/venture-model.ts",
+      "bytes": 10902,
+      "sha256": "5e712118b85642c04d06a6946003b5432c2bb661b7eebdaf02f084ae0f2f7ada",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/index.js",
+      "bytes": 105,
+      "sha256": "6419c4ac0e637ff08463083e31886d10354f74cbcc4e584400b2b837e39ac881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/external.js",
+      "bytes": 205,
+      "sha256": "5d26d2e47e2352def36f89a3e8bf8581da22b7f857e07ef3114cd52cf4813445",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/errors.js",
+      "bytes": 243,
+      "sha256": "d40831f478288d76e82bbbcc3b7e95c8513b6e76471f2d49a37c979bc57d492d",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/parseUtil.js",
+      "bytes": 3601,
+      "sha256": "b57484013bb360bac2e334d58fcd5f6cbfa63ffcc7d8ff3dbbb3380ca659b956",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/typeAliases.js",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/util.js",
+      "bytes": 4055,
+      "sha256": "906ef685e5853d496e293ee8f8a2bb8b1ed2d078a1bcdfedb2dfd61d75b6330c",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/types.js",
+      "bytes": 131212,
+      "sha256": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/ZodError.js",
+      "bytes": 4349,
+      "sha256": "f5ac9e86b92e201d41e294d7aa35986a2aa28829e1bcc8ac25f7c8dce0674b99",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/errorUtil.js",
+      "bytes": 300,
+      "sha256": "68589c0cf44c8b4ad19b77418f53caad2cd1dbc8d714f526e1876ebdee4828c5",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/locales/en.js",
+      "bytes": 5602,
+      "sha256": "51a6dcc5d4bd52a64da127c012c6c963395c1d9a343ad75d4a8eca662fc8b205",
+      "mode": "0o644"
+    }
+  ],
+  "packageMetadata": [
+    {
+      "path": "node_modules/zod/package.json",
+      "bytes": 3284,
+      "sha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/LICENSE",
+      "bytes": 1072,
+      "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8",
+      "mode": "0o644"
+    }
+  ],
+  "compiler": {
+    "path": "node_modules/@esbuild/linux-x64/bin/esbuild",
+    "bytes": 11366512,
+    "sha256": "aafacdf135322bf47c882a4ea4db33d0375583f5b9c3fd2d4e12258e470568be",
+    "mode": "0o755",
+    "allowedHardLinks": 2
+  },
+  "node": {
+    "path": "/root/.hermes/node/bin/node",
+    "bytes": 150434304,
+    "sha256": "8a22a371fd85aecf5411636574309f6380fbc42694aaf0651a089a8ef9c44e52",
+    "version": "26.8.2"
+  },
+  "compilerVersion": "0.28.0",
+  "zodVersion": "3.25.76",
+  "entrySource": "export {validateTaskDiscussionWrite, validateTaskDiscussionGet, boundedTaskDiscussionCommand} from './app/task-discussion-model.ts';\nexport {validateContributionTaskItem} from './app/contribution-model.ts';\n",
+  "exports": [
+    "boundedTaskDiscussionCommand",
+    "validateContributionTaskItem",
+    "validateTaskDiscussionGet",
+    "validateTaskDiscussionWrite"
+  ],
+  "maximumBundleBytes": 1048576,
+  "maximumMetafileBytes": 65536,
+  "status": "NOT_GENERATED_NOT_RUN"
+}

@@ -228,7 +228,7 @@ test('a valid near-capacity 32-version history larger than 1 MiB renders; respon
   for(const body of [valid,valid+' '.repeat(2_097_153-Buffer.byteLength(valid))]) {
     globalThis.fetch=async path=>path.includes('?root=')?new Response(body):Response.json(list([items.at(-1)]));
     const h=harness({signedIn:false}); await h.until(large.name); h.click('History',h.card(items.at(-1).id));
-    if(body===valid) { await h.until(tree=>walk(tree,node=>node.props?.['aria-label']?.startsWith('Strategy ')).length===33); assert(!text(h.render()).includes('History unavailable')); }
+    if(body===valid) { await h.until(tree=>walk(tree,node=>node.type==='article'&&node.props?.['aria-label']?.startsWith('Strategy ')).length===33); assert(!text(h.render()).includes('History unavailable')); }
     else await h.until('History unavailable');
   }
 });
@@ -432,4 +432,65 @@ test('lineage navigation retains exact visible and tombstone references and resp
   await fill(h); h.submit(); await h.until('Outcome unknown'); prevented = false;
   retained.props.onClick({preventDefault() {prevented = true;}}); assert(prevented);
   assert.equal(requests.filter(request => request.init.method === 'POST').length, 1);
+});
+
+
+const recordedStrategyLink = tree => walk(tree, node => node.type === 'a' && label(node) === 'Open this strategy')[0];
+
+test('confirmed publication navigation pins the new root, fork or revision even when the catalog omits it', async () => {
+  for (const relation of ['ROOT', 'FORK', 'REVISION']) {
+    const parent = relation === 'ROOT' ? null : await item(); let saved;
+    const {requests} = server(parent ? [parent] : [], async command => { saved = await publication(command, parent); return receipt(command, saved); });
+    const h = harness(); await ready(h); h.click(relation === 'ROOT' ? 'Create strategy' : relation === 'FORK' ? 'Fork' : 'Revise', parent ? h.card(parent.id) : undefined); await h.flush(); await fill(h); h.submit();
+    const tree = await h.until(value => !!recordedStrategyLink(value)), anchor = recordedStrategyLink(tree), command = JSON.parse(requests.find(value => value.init.method === 'POST').init.body);
+    assert.equal(saved.id, command.id); if (parent) assert.notEqual(saved.id, parent.id);
+    assert.equal(anchor.props.href, '/strategies?id=' + saved.id + '&digest=' + saved.digest);
+    assert.deepEqual([...new URL(anchor.props.href, 'https://local').searchParams], [['id', saved.id], ['digest', saved.digest]]);
+    assert.equal(saved.record.verification, 'UNTESTED'); assert.equal(saved.record.executionEnabled, false); assert(button(tree, 'Done'));
+    const count = requests.length; let prevented = false; anchor.props.onClick({preventDefault() {prevented = true;}});
+    assert.equal(prevented, false); assert.equal(requests.length, count, 'the link neither fetches nor evaluates nor publishes');
+    assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+  }
+});
+
+test('a held or uncertain publication offers no next-step link until its identical retry is confirmed', async () => {
+  let first = true, release;
+  const {requests} = server([], () => { if (first) {first = false; return new Promise(resolve => release = resolve);} });
+  const h = harness(); await ready(h); h.click('Create strategy'); await h.flush(); await fill(h); h.submit(); await h.until('Submitting…');
+  assert.equal(recordedStrategyLink(h.render()), undefined); assert.equal(typeof release, 'function'); release(new Response(null, {status: 503})); await h.until('Outcome unknown');
+  assert.equal(recordedStrategyLink(h.render()), undefined); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+  h.click('Retry same request'); const tree = await h.until(value => !!recordedStrategyLink(value));
+  const posts = requests.filter(value => value.init.method === 'POST'); assert.equal(posts.length, 2); assert.equal(posts[0].init.body, posts[1].init.body);
+  const command = JSON.parse(posts[0].init.body), url = new URL(recordedStrategyLink(tree).props.href, 'https://local'); assert.equal(url.searchParams.get('id'), command.id);
+});
+
+test('a digest-valid receipt with different frozen content cannot offer confirmed strategy navigation', async () => {
+  const {requests} = server([], async command => receipt(command, await publication(command, null, {}, {name: 'Unrequested publication content'})));
+  const h = harness(); await ready(h); h.click('Create strategy'); await h.flush(); await fill(h); h.submit(); await h.until('Outcome unknown');
+  assert.equal(recordedStrategyLink(h.render()), undefined); assert(!text(h.render()).includes('Strategy recorded')); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+});
+
+test('correlated hidden and withdrawn publication acknowledgments offer no next-step link or restored authored body', async () => {
+  for (const state of ['HIDDEN', 'WITHDRAWN']) {
+    const {requests} = server([], async command => receipt(command, tombstone(await publication(command), state)));
+    const h = harness(); await ready(h); h.click('Create strategy'); await h.flush(); await fill(h, {name: 'Suppressed receipt-only title'}); h.submit(); const tree = await h.until('content is hidden or withdrawn');
+    assert.equal(recordedStrategyLink(tree), undefined); assert(button(tree, 'Done')); assert(!text(tree).includes('Suppressed receipt-only title')); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+  }
+});
+
+test('a fresh catalog suppression withholds navigation from an earlier visible correlated receipt', async () => {
+  const {requests} = server([], async (command, records) => {const saved = await publication(command); records.splice(0, records.length, tombstone(saved, 'HIDDEN')); return receipt(command, saved);});
+  const h = harness(); await ready(h); h.click('Create strategy'); await h.flush(); await fill(h); h.submit(); const tree = await h.until(value => text(value).includes('Strategy recorded') && text(value).includes('Hidden strategy'));
+  assert.equal(recordedStrategyLink(tree), undefined); assert(button(tree, 'Done')); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+});
+
+test('captured confirmed strategy links cannot bypass a closed or replaced form, sign-out or unmount', async () => {
+  for (const change of ['CLOSED', 'REPLACED', 'SIGNED_OUT', 'UNMOUNTED']) {
+    const {requests} = server(), h = harness(); await ready(h); h.click('Create strategy'); await h.flush(); await fill(h); h.submit();
+    const tree = await h.until(value => !!recordedStrategyLink(value)), anchor = recordedStrategyLink(tree);
+    if (change === 'CLOSED' || change === 'REPLACED') {h.click('Done'); await h.flush(); if (change === 'REPLACED') {await ready(h); h.click('Create strategy'); await h.flush();}}
+    else if (change === 'SIGNED_OUT') {h.props.signedIn = false; await h.flush();} else h.unmount();
+    assert.equal(recordedStrategyLink(h.render()), undefined); const count = requests.length; let prevented = false;
+    anchor.props.onClick({ctrlKey: true, preventDefault() {prevented = true;}}); assert.equal(prevented, true); assert.equal(requests.length, count); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+  }
 });

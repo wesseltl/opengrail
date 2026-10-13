@@ -1,0 +1,569 @@
+{
+  "version": 1,
+  "kind": "OPENGRAIL_ASSISTANCE_VALIDATOR_BUILD_NOT_RUNTIME_ACCEPTANCE",
+  "status": "BUILT_TWICE_IDENTICAL_RUNTIME_NOT_TESTED",
+  "sourceSnapshot": {
+    "sourceDigest": "1dd7c80f46a8d7915a69f77d3ab49edbbda60989ba3834b4e2dd575c0b30f1ac",
+    "sourceHead": "347b7115b2397462247ae2be18beab4d95c4801e",
+    "files": 946,
+    "freezeSha256": "ba887ba03c674712f499f2c16125922d4e2083b7a81ae5c4bc9030290436787c"
+  },
+  "buildInputsSha256": "a07aae2c64bf1ea586ab111255772b2635c0ce6cdec92e5e9bc73f128778f4ce",
+  "recipeSha256": "0785a1bad25072052e4c3af1f105696ee604d34aa770580c2bb6fac34acb0459",
+  "runtimeInputs": [
+    {
+      "path": "app/assistance-handoff.ts",
+      "bytes": 17454,
+      "sha256": "2ab1dace0f887990331b11ebfa46df971ac6ab0b9b92da134d1db7f2813254c9",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/assistance-model.ts",
+      "bytes": 26696,
+      "sha256": "d12caeadb5fc0c4d3dd69906e448f1ed53d6ae13a5f79d5ac59497f71f07b092",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/program-source-model.ts",
+      "bytes": 3222,
+      "sha256": "0228ba6f0d5a9e4586ed3cfb4d9ad891209c9e65ae588248bc5a5443a25b3cc7",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/program-wasm.ts",
+      "bytes": 29628,
+      "sha256": "7deae26a6ce3640db14aa99b778989b50e222062efa00e0939a0385827c1103e",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/research-assistance-client.ts",
+      "bytes": 11558,
+      "sha256": "3623f24c344dfcdae2830fc54d6d67f9a093c6abc5b1838ab9d84d867638b851",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/research-model.ts",
+      "bytes": 18070,
+      "sha256": "ccbc1f0e0861e1e24586209757e1296b98e28e48e30ac32330fcd8ce6cd2e8e0",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/strategy-model.ts",
+      "bytes": 15937,
+      "sha256": "2f2af2b98f00623ea1d1bddd5ff3db53c02ca04e6880a79ad48c82518975c6f2",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/venture-model.ts",
+      "bytes": 10902,
+      "sha256": "5e712118b85642c04d06a6946003b5432c2bb661b7eebdaf02f084ae0f2f7ada",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/index.js",
+      "bytes": 105,
+      "sha256": "6419c4ac0e637ff08463083e31886d10354f74cbcc4e584400b2b837e39ac881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/external.js",
+      "bytes": 205,
+      "sha256": "5d26d2e47e2352def36f89a3e8bf8581da22b7f857e07ef3114cd52cf4813445",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/errors.js",
+      "bytes": 243,
+      "sha256": "d40831f478288d76e82bbbcc3b7e95c8513b6e76471f2d49a37c979bc57d492d",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/parseUtil.js",
+      "bytes": 3601,
+      "sha256": "b57484013bb360bac2e334d58fcd5f6cbfa63ffcc7d8ff3dbbb3380ca659b956",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/typeAliases.js",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/util.js",
+      "bytes": 4055,
+      "sha256": "906ef685e5853d496e293ee8f8a2bb8b1ed2d078a1bcdfedb2dfd61d75b6330c",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/types.js",
+      "bytes": 131212,
+      "sha256": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/ZodError.js",
+      "bytes": 4349,
+      "sha256": "f5ac9e86b92e201d41e294d7aa35986a2aa28829e1bcc8ac25f7c8dce0674b99",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/errorUtil.js",
+      "bytes": 300,
+      "sha256": "68589c0cf44c8b4ad19b77418f53caad2cd1dbc8d714f526e1876ebdee4828c5",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/locales/en.js",
+      "bytes": 5602,
+      "sha256": "51a6dcc5d4bd52a64da127c012c6c963395c1d9a343ad75d4a8eca662fc8b205",
+      "mode": "0o644"
+    }
+  ],
+  "packageMetadata": [
+    {
+      "path": "node_modules/zod/package.json",
+      "bytes": 3284,
+      "sha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/LICENSE",
+      "bytes": 1072,
+      "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8",
+      "mode": "0o644"
+    }
+  ],
+  "compiler": {
+    "path": "node_modules/@esbuild/linux-x64/bin/esbuild",
+    "bytes": 11366512,
+    "sha256": "aafacdf135322bf47c882a4ea4db33d0375583f5b9c3fd2d4e12258e470568be",
+    "mode": "0o755",
+    "allowedHardLinks": 2
+  },
+  "nodeUsed": "v26.8.2",
+  "compilerArgs": [
+    "entry.mjs",
+    "--bundle",
+    "--format=esm",
+    "--platform=browser",
+    "--target=es2022",
+    "--charset=utf8",
+    "--legal-comments=inline",
+    "--log-level=error",
+    "--tsconfig-raw={\"compilerOptions\":{}}",
+    "--metafile=metafile.json",
+    "--outfile=bundle.mjs"
+  ],
+  "entrySha256": "fb2300894abc0b3340eb4cc1cb4c232d45e4331205dab95eb52edba579cfcc98",
+  "output": {
+    "path": "opengrail-assistance-validator.bundle.mjs",
+    "bytes": 226809,
+    "sha256": "43438baa182ba7637f2206977a8ac4b5dd27d1b9e482d26e72fbb73133448168"
+  },
+  "exports": [
+    "assistancePublicItemDomain",
+    "assistanceRecordForCommand",
+    "boundedAssistanceCommand",
+    "boundedAssistanceRecord",
+    "strategyDigest",
+    "validateAssistanceHandoff",
+    "validateAssistanceWrite",
+    "validateResearchAssistanceBundle",
+    "verifyAssistanceItem",
+    "verifyAssistanceStrategy",
+    "verifyResearchAssistanceRecord",
+    "verifyResearchAssistanceSource"
+  ],
+  "metafile": {
+    "inputs": {
+      "node_modules/zod/v3/helpers/util.js": {
+        "bytes": 4055,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/ZodError.js": {
+        "bytes": 4349,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/locales/en.js": {
+        "bytes": 5602,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "../ZodError.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "../helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/errors.js": {
+        "bytes": 243,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/locales/en.js",
+            "kind": "import-statement",
+            "original": "./locales/en.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/parseUtil.js": {
+        "bytes": 3601,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "../errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/locales/en.js",
+            "kind": "import-statement",
+            "original": "../locales/en.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/typeAliases.js": {
+        "bytes": 11,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/errorUtil.js": {
+        "bytes": 300,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/types.js": {
+        "bytes": 131212,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "./ZodError.js"
+          },
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "./errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/errorUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/errorUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/parseUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/parseUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/external.js": {
+        "bytes": 205,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "./errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/parseUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/parseUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/typeAliases.js",
+            "kind": "import-statement",
+            "original": "./helpers/typeAliases.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          },
+          {
+            "path": "node_modules/zod/v3/types.js",
+            "kind": "import-statement",
+            "original": "./types.js"
+          },
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "./ZodError.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/index.js": {
+        "bytes": 105,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/external.js",
+            "kind": "import-statement",
+            "original": "./v3/external.js"
+          },
+          {
+            "path": "node_modules/zod/v3/external.js",
+            "kind": "import-statement",
+            "original": "./v3/external.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/venture-model.ts": {
+        "bytes": 10902,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/research-model.ts": {
+        "bytes": 18070,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/venture-model.ts",
+            "kind": "import-statement",
+            "original": "./venture-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/program-wasm.ts": {
+        "bytes": 29628,
+        "imports": [],
+        "format": "esm"
+      },
+      "app/program-source-model.ts": {
+        "bytes": 3222,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/program-wasm.ts",
+            "kind": "import-statement",
+            "original": "./program-wasm"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/strategy-model.ts": {
+        "bytes": 15937,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/program-source-model.ts",
+            "kind": "import-statement",
+            "original": "./program-source-model"
+          },
+          {
+            "path": "app/research-model.ts",
+            "kind": "import-statement",
+            "original": "./research-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/assistance-model.ts": {
+        "bytes": 26696,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/research-model.ts",
+            "kind": "import-statement",
+            "original": "./research-model"
+          },
+          {
+            "path": "app/strategy-model.ts",
+            "kind": "import-statement",
+            "original": "./strategy-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/assistance-handoff.ts": {
+        "bytes": 17454,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/assistance-model.ts",
+            "kind": "import-statement",
+            "original": "./assistance-model"
+          },
+          {
+            "path": "app/strategy-model.ts",
+            "kind": "import-statement",
+            "original": "./strategy-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/research-assistance-client.ts": {
+        "bytes": 11558,
+        "imports": [
+          {
+            "path": "app/assistance-model.ts",
+            "kind": "import-statement",
+            "original": "./assistance-model"
+          },
+          {
+            "path": "app/research-model.ts",
+            "kind": "import-statement",
+            "original": "./research-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "entry.mjs": {
+        "bytes": 499,
+        "imports": [
+          {
+            "path": "app/assistance-model.ts",
+            "kind": "import-statement",
+            "original": "./app/assistance-model.ts"
+          },
+          {
+            "path": "app/strategy-model.ts",
+            "kind": "import-statement",
+            "original": "./app/strategy-model.ts"
+          },
+          {
+            "path": "app/assistance-handoff.ts",
+            "kind": "import-statement",
+            "original": "./app/assistance-handoff.ts"
+          },
+          {
+            "path": "app/research-assistance-client.ts",
+            "kind": "import-statement",
+            "original": "./app/research-assistance-client.ts"
+          }
+        ],
+        "format": "esm"
+      }
+    },
+    "outputs": {
+      "bundle.mjs": {
+        "imports": [],
+        "exports": [
+          "assistancePublicItemDomain",
+          "assistanceRecordForCommand",
+          "boundedAssistanceCommand",
+          "boundedAssistanceRecord",
+          "strategyDigest",
+          "validateAssistanceHandoff",
+          "validateAssistanceWrite",
+          "validateResearchAssistanceBundle",
+          "verifyAssistanceItem",
+          "verifyAssistanceStrategy",
+          "verifyResearchAssistanceRecord",
+          "verifyResearchAssistanceSource"
+        ],
+        "entryPoint": "entry.mjs",
+        "inputs": {
+          "node_modules/zod/v3/external.js": {
+            "bytesInOutput": 3282
+          },
+          "node_modules/zod/v3/helpers/util.js": {
+            "bytesInOutput": 3409
+          },
+          "node_modules/zod/v3/ZodError.js": {
+            "bytesInOutput": 3148
+          },
+          "node_modules/zod/v3/locales/en.js": {
+            "bytesInOutput": 4803
+          },
+          "node_modules/zod/v3/errors.js": {
+            "bytesInOutput": 145
+          },
+          "node_modules/zod/v3/helpers/parseUtil.js": {
+            "bytesInOutput": 3016
+          },
+          "node_modules/zod/v3/helpers/errorUtil.js": {
+            "bytesInOutput": 265
+          },
+          "node_modules/zod/v3/types.js": {
+            "bytesInOutput": 102790
+          },
+          "node_modules/zod/index.js": {
+            "bytesInOutput": 0
+          },
+          "app/venture-model.ts": {
+            "bytesInOutput": 9410
+          },
+          "app/research-model.ts": {
+            "bytesInOutput": 18463
+          },
+          "app/program-wasm.ts": {
+            "bytesInOutput": 17952
+          },
+          "app/program-source-model.ts": {
+            "bytesInOutput": 2852
+          },
+          "app/strategy-model.ts": {
+            "bytesInOutput": 15728
+          },
+          "app/assistance-model.ts": {
+            "bytesInOutput": 27400
+          },
+          "entry.mjs": {
+            "bytesInOutput": 0
+          },
+          "app/assistance-handoff.ts": {
+            "bytesInOutput": 6739
+          },
+          "app/research-assistance-client.ts": {
+            "bytesInOutput": 4993
+          }
+        },
+        "bytes": 225472
+      }
+    }
+  },
+  "noRuntimePackageImports": true,
+  "applicationExecution": false,
+  "hostedAvailability": "UNKNOWN",
+  "qualification": "NONE",
+  "executionEnabled": false
+}

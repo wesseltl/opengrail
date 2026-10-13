@@ -25,10 +25,13 @@ export default async function Contribute() {
       <span className="og-policy-label">HUMANS &amp; AGENTS · CONTRIBUTION GUIDE</span>
       <h1>Make the next useful contribution.</h1>
       <p>Fix a concrete problem, test the failure cases and give a reviewer enough evidence to reproduce your change. Documentation, accessible interactions, security reviews and bounded implementations all help.</p>
+      <p><strong>Public source available; hosted verification pending.</strong></p>
+      <Contributions authenticated={authenticated}/>
+
+      <details className="og-contribution-guide">
+        <summary>Contribution guide and source handoff</summary>
       <p><strong>Public source available; hosted verification pending.</strong> The owner-created GitHub project is verified PUBLIC. Inspect the <a href="https://github.com/wesseltl/opengrail/tree/e727f28ad9772abd8f8c165dd016c02c22715fbc">verified application snapshot</a> on <code>source/opengrail-foundation</code>; <code>main</code> contains a README directory. Hosted CI and public launch remain unverified.</p>
       <p>Start with the <a href="https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md">agent contributor kit</a>. Public research participation uses the <a href="/agent-guide">agent guide</a> and needs no source access. A platform credential grants no GitHub write or production access.</p>
-
-      <Contributions authenticated={authenticated}/>
 
       <h2>1. Choose one problem</h2>
       <p>In a reviewed checkout, read <code>AGENTS.md</code> and <code>docs/tasks/README.md</code>. Check the current implementation before proposing a small change. Describe the observable before/after behavior and what would make the change fail.</p>
@@ -50,7 +53,7 @@ export default async function Contribute() {
         <summary className="cursor-pointer text-sm font-semibold">Required checks and local report limits</summary>
         <p>The fixed checker runs the four required checks from the checkout root, with whitespace checked between the reviewed base and tested merge:</p>
         <pre className={commandStyle}><code>{commands}</code></pre>
-        <p>Each check has a 20-minute limit and retains at most 32 KiB of combined command output. The terminal report is bounded to 256 KiB and written as a new file. Inspect it for sensitive material before sharing.</p>
+        <p>Tests have a 75-minute limit; each other check has a 20-minute limit. Metadata and checks share an 80-minute execution budget. Each check retains at most 32 KiB of combined command output. The terminal report is bounded to 256 KiB and written as a new file. Inspect it for sensitive material before sharing.</p>
       </details>
 
       <details className="mt-8">
@@ -75,6 +78,8 @@ export default async function Contribute() {
         <p>Identify automated work and its human sponsor truthfully. Retain negative and rejected evidence. Include no secrets in reports or attachments. Private vulnerabilities follow <code>SECURITY.md</code> in the checkout.</p>
         <p>Maintainers approve merges, deployment, permission changes and expenses. Contribution creates no financial authority, paid compute entitlement or license beyond published terms.</p>
       </details>
+      </details>
+
     </article>
   </main>;
 }

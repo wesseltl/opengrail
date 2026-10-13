@@ -135,3 +135,53 @@ test('an oversized source file is rejected without loading an unbounded document
   const options = await fixture(t); await writeFile(resolve(options.root, '.github/workflows/contribution.yml'), 'x'.repeat(contributionCheckLimits.sourceBytes + 1));
   const report = await checked(options); assert.ok(report.failureReasons.includes('INPUT_LIMIT')); assert.ok(report.checks.every(v => v.status === 'NOT_RUN'));
 });
+
+
+test('the shared runtime budget terminates an actual hanging test before its longer command allowance and retains unrun checks', async t => {
+  const options = await fixture(t, { test: 'setInterval(()=>{},1000);' }); const started = performance.now();
+  const report = await checked({ ...options, commandTimeoutMs: 10000, runTimeoutMs: 2000 });
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[0].status, 'TIMED_OUT');
+  assert.ok(report.failureReasons.includes('CHECK_RUN_TIMED_OUT'));
+  assert.ok(report.source); assert.equal(report.afterSource, null);
+  assert.ok(report.checks.slice(1).every(item => item.status === 'NOT_RUN'));
+  assert.ok(performance.now() - started < 15000);
+});
+test('one runtime budget covers earlier failed checks and a later hanging build without hiding adverse evidence', async t => {
+  const options = await fixture(t, { test: "import test from 'node:test';test('retained earlier rejection',()=>{throw Error('failure before shared deadline');});", build: 'setInterval(()=>{},1000);' });
+  const report = await checked({ ...options, commandTimeoutMs: 10000, runTimeoutMs: 2500 });
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[0].status, 'FAILED');
+  assert.match(report.checks[0].stdout.text, /failure before shared deadline/);
+  assert.equal(report.checks[1].status, 'PASSED'); assert.equal(report.checks[2].status, 'TIMED_OUT');
+  assert.equal(report.checks[3].status, 'NOT_RUN'); assert.ok(report.failureReasons.includes('CHECK_RUN_TIMED_OUT'));
+  assert.equal(report.afterSource, null);
+});
+test('a shorter explicit command timeout remains a command failure while the remaining checks fit the shared budget', async t => {
+  const options = await fixture(t, { test: 'setInterval(()=>{},1000);' });
+  const report = await checked({ ...options, commandTimeoutMs: 1000, runTimeoutMs: 10000 });
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[0].status, 'TIMED_OUT');
+  assert.equal(report.failureReasons.includes('CHECK_RUN_TIMED_OUT'), false);
+  assert.deepEqual(report.checks.slice(1).map(item => item.status), ['PASSED', 'PASSED', 'PASSED']);
+  assert.deepEqual(report.source, report.afterSource);
+});
+test('runtime-budget overrides reject increases, noninteger values and accessors before reserving a report or running checks', async t => {
+  const options = await fixture(t);
+  for (const runTimeoutMs of [49, contributionCheckLimits.runTimeoutMs + 1, 50.5, NaN, '2000']) {
+    await assert.rejects(runContributionChecks({ ...options, runTimeoutMs }), /INVALID_OPTIONS/);
+  }
+  let read = false; const accessor = { ...options };
+  Object.defineProperty(accessor, 'runTimeoutMs', { get() { read = true; return 2000; }, enumerable: true });
+  await assert.rejects(runContributionChecks(accessor), /INVALID_OPTIONS/); assert.equal(read, false);
+  await assert.rejects(stat(options.reportPath), error => error.code === 'ENOENT');
+});
+
+
+test('a nonenumerable lower command timeout survives normalization and does not become the shared runtime deadline', async t => {
+  const options = await fixture(t, { test: 'setInterval(()=>{},1000);' });
+  const input = { ...options, runTimeoutMs: 10000 };
+  Object.defineProperty(input, 'commandTimeoutMs', { value: 1000, enumerable: false });
+  const report = await checked(input);
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[0].status, 'TIMED_OUT');
+  assert.equal(report.failureReasons.includes('CHECK_RUN_TIMED_OUT'), false);
+  assert.deepEqual(report.checks.slice(1).map(item => item.status), ['PASSED', 'PASSED', 'PASSED']);
+  assert.deepEqual(report.source, report.afterSource);
+});

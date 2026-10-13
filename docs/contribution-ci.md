@@ -38,12 +38,18 @@ The source is rechecked between commands and after the final command. A failing 
 | Bound | Limit |
 | --- | --- |
 | Fixed checks | 4 |
-| Time per check | 20 minutes |
+| Test command | 75 minutes |
+| Each other command | 20 minutes |
+| Shared metadata/check execution budget | 80 minutes, measured with a monotonic clock |
 | Git metadata operation | 10 seconds |
 | Observed stdout + stderr before termination | 2 MiB per check; a received chunk can cross the threshold |
 | Retained JSON-encoded diagnostic strings | 16 KiB per stream, 32 KiB per check |
 | Report | 256 KiB |
 | Each gate-source file | 256 KiB |
+
+The test allowance accommodates a complete repository suite rather than silently stopping it at the old 20-minute ceiling. These are maximum budgets, not expected durations or a guarantee that a particular machine finishes. Metadata and each check use the lesser of their own limit and the remaining shared budget. Exhaustion retains `CHECK_RUN_TIMED_OUT`, preserves observed outcomes and leaves later checks unrun. The programmatic `commandTimeoutMs` option may only lower all command limits (50 ms through 20 minutes); `runTimeoutMs` may only lower the shared budget (50 ms through 80 minutes). CLI arguments and report version/shape are unchanged.
+
+The shared budget covers metadata/check execution and admission. Report filesystem operations, process termination and cleanup can add time; this local runner is not an OS wall-clock or descendant-containment boundary. The prepared 82-minute hosted step remains an independent outer limit, with hosted execution still unverified. A hard cancellation can prevent a terminal report.
 
 Logs carry truncation flags. Output digests describe the bounded captured prefix; additional output is discarded after `OUTPUT_LIMIT` while the process is terminated. Termination is not proof that a complete stream was captured. Diagnostics remove control sequences and recognized OpenGrail/GitHub credential patterns, including bounded percent decoding. This is a limited redaction rule, not a general secret detector. Do not run contributed code with private data or credentials.
 

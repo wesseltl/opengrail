@@ -1,13 +1,16 @@
 'use client';
 
 import {useEffect, useRef, useState} from 'react';
-import {ArrowRight, ArrowUpRight, Check, Copy, Fingerprint, GitBranch, KeyRound, Plus, RefreshCw, ShieldCheck, Trash2, Users, X} from 'lucide-react';
+import {ArrowRight, ArrowUpRight, Check, Copy, Fingerprint, KeyRound, Plus, RefreshCw, ShieldCheck, Trash2, Users, X} from 'lucide-react';
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle} from '@/components/ui/dialog';
 import {createNetworkToken, networkAgentSchema, networkCommandSchema, networkListSchema, networkWriteSchema} from './network-model';
 import {parseUniqueJson} from './unique-json';
+import NetworkSponsorIdentity from './network-sponsor-identity';
+import {MainNavigation} from './main-navigation';
 import './network.css';
 
 type Agent = ReturnType<typeof networkAgentSchema.parse>;
+type ValidatedList = Readonly<{readId: number; epoch: number; agents: readonly Readonly<Agent>[]}>;
 type Command = ReturnType<typeof networkCommandSchema.parse>;
 type Modal = 'register' | {agent: Agent} | null;
 type Pending = {command: Command; body: string; token: string | null; target: Agent | null};
@@ -78,25 +81,44 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
   const [uncertain, setUncertain] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [credentialCopyError, setCredentialCopyError] = useState('');
+  const [copiedDetails, setCopiedDetails] = useState<string | null>(null);
+  const [detailsCopyError, setDetailsCopyError] = useState<{key: string; message: string} | null>(null);
   const session = useRef({alive: true, signedIn, denied: false, epoch: 0, form: 0, locked: false, modal: null as Modal,
-    pending: null as Pending | null, credential: null as string | null, reads: new Set<AbortController>(), readId: 0});
+    pending: null as Pending | null, credential: null as string | null, confirmedRegistration: null as Agent | null, validatedList: null as ValidatedList | null, reads: new Set<AbortController>(), readId: 0,
+    credentialCopyAttempt: 0, detailsCopyAttempt: 0, detailsCopyKind: null as 'confirmed' | 'retained' | null});
   const current = useRef({agents, loaded, loading, name, days});
+  const dialogTrigger = useRef<HTMLButtonElement | null>(null);
+  const dialogReturnFallback = useRef<HTMLButtonElement | null>(null);
+  const agentHeading = useRef<HTMLHeadingElement | null>(null);
   current.current = {agents, loaded, loading, name, days};
   session.current.signedIn = signedIn;
   const authenticated = signedIn && !authLost;
   const renderForm = session.current.form;
+  const renderSponsorEpoch = session.current.epoch, renderSponsorReadId = session.current.readId;
   const renderPending = session.current.pending;
+  const renderValidatedList = session.current.validatedList;
   const repo = repositoryUrl(githubUrl);
 
   function allowed() { const s = session.current; return s.alive && s.signedIn && !s.denied; }
   function valid(epoch: number) { return allowed() && session.current.epoch === epoch; }
   function abortReads() { session.current.reads.forEach(controller => controller.abort()); session.current.reads.clear(); }
+  function clearDetailsCopyFeedback() {
+    const s = session.current;
+    s.detailsCopyAttempt++; s.detailsCopyKind = null;
+    setCopiedDetails(null); setDetailsCopyError(null);
+  }
+  function clearCopyFeedback() {
+    session.current.credentialCopyAttempt++;
+    setCopied(false); setCredentialCopyError(''); clearDetailsCopyFeedback();
+  }
   function clearIdentity() {
     const s = session.current;
     if (s.pending) s.pending.token = null;
-    s.denied = true; s.epoch++; s.form++; s.pending = null; s.credential = null; s.modal = null; s.locked = false; s.readId++;
+    s.denied = true; s.epoch++; s.form++; s.pending = null; s.credential = null; s.confirmedRegistration = null; s.validatedList = null; s.modal = null; s.locked = false; s.readId++;
     abortReads();
-    setAgents([]); setLoaded(false); setLoading(false); setModal(null); setName(''); setRevealed(false); setCopied(false);
+    clearCopyFeedback();
+    setAgents([]); setLoaded(false); setLoading(false); setModal(null); setName(''); setRevealed(false);
     setBusy(false); setUncertain(false); setNotice(''); setError(''); setAuthLost(true);
   }
   useEffect(() => {
@@ -104,7 +126,8 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
     return () => {
       const s = session.current;
       if (s.pending) s.pending.token = null;
-      s.alive = false; s.epoch++; s.form++; s.pending = null; s.credential = null; s.modal = null; abortReads();
+      s.alive = false; s.epoch++; s.form++; s.pending = null; s.credential = null; s.confirmedRegistration = null; s.validatedList = null; s.modal = null; abortReads();
+      s.credentialCopyAttempt++; s.detailsCopyAttempt++; s.detailsCopyKind = null;
     };
   }, []);
   useEffect(() => {
@@ -117,35 +140,51 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
   async function load() {
     if (!allowed() || session.current.pending || session.current.locked) return;
     const s = session.current, epoch = s.epoch, id = ++s.readId, controller = new AbortController();
+    s.validatedList = null;
+    if (s.detailsCopyKind !== 'confirmed') clearDetailsCopyFeedback();
     s.reads.add(controller); setLoading(true); setError('');
     try {
       const response = await fetch('/api/network/agents', {cache: 'no-store', signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)])});
       if (!valid(epoch) || id !== s.readId || controller.signal.aborted) return;
-      if (response.status === 401 || response.status === 403) { clearIdentity(); return; }
+      if (response.status === 401 || response.status === 403) { s.reads.delete(controller); clearIdentity(); return; }
       if (!response.ok) throw Error('Unavailable.');
       const result = networkListSchema.parse(await responseJson(response));
       if (new Set(result.agents.map(agent => agent.id)).size !== result.agents.length || new Set(result.agents.map(agent => agent.credentialId)).size !== result.agents.length) throw Error('Duplicate registration.');
       if (!valid(epoch) || id !== s.readId || controller.signal.aborted) return;
+      s.validatedList = Object.freeze({readId: id, epoch, agents: Object.freeze(result.agents.map(agent => Object.freeze(structuredClone(agent))))});
       setAgents(result.agents); setLoaded(true);
     } catch {
+      if (valid(epoch) && id === s.readId) s.validatedList = null;
       if (valid(epoch) && id === s.readId && !controller.signal.aborted) { setLoaded(false); setError('Your agent list is unavailable. Refresh before registering or revoking.'); }
     } finally {
       s.reads.delete(controller);
-      if (valid(epoch) && id === s.readId) setLoading(false);
+      if (valid(epoch) && id === s.readId) { if (s.validatedList?.readId !== id) s.validatedList = null; setLoading(false); }
     }
   }
 
-  function open(next: Modal) {
+  function open(next: Modal, trigger?: HTMLButtonElement) {
     const s = session.current;
     const view = current.current;
     if (!allowed() || !view.loaded || view.loading || s.locked || s.pending || s.credential) return;
     if (next !== 'register' && next !== null && !view.agents.some(agent => same(agent, next.agent))) return;
-    s.form++; s.modal = next; setModal(next); setName(''); setDays(7); setError(''); setNotice(''); setUncertain(false); setCopied(false);
+    dialogTrigger.current = trigger ?? null;
+    s.form++; s.modal = next; s.confirmedRegistration = null; clearCopyFeedback(); setModal(next); setName(''); setDays(7); setError(''); setNotice(''); setUncertain(false);
+  }
+  function restoreDialogFocus(event: Event, expectedForm: number) {
+    event.preventDefault();
+    const s = session.current;
+    if (!allowed() || s.modal !== null || s.form !== expectedForm + 1) return;
+    const trigger = dialogTrigger.current;
+    dialogTrigger.current = null;
+    const target = trigger?.isConnected && !trigger.disabled ? trigger : dialogReturnFallback.current;
+    if (target?.isConnected && !target.disabled) { target.focus(); return; }
+    const heading = agentHeading.current;
+    if (heading?.isConnected) heading.focus();
   }
   function close(expectedForm: number) {
     const s = session.current;
     if (expectedForm !== s.form || !allowed() || s.locked || s.pending) return;
-    s.form++; s.modal = null; s.credential = null; setModal(null); setName(''); setRevealed(false); setCopied(false); setError('');
+    s.form++; s.modal = null; s.credential = null; s.confirmedRegistration = null; clearCopyFeedback(); setModal(null); setName(''); setRevealed(false); setError('');
   }
   function changeName(value: string) {
     const s = session.current;
@@ -179,10 +218,11 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
       s.pending = null; setUncertain(false); setError('');
       setLoaded(false);
       if (pending.command.action === 'register') {
+        s.confirmedRegistration = structuredClone(result.agent);
         s.credential = pending.token; pending.token = null;
-        setRevealed(true); setCopied(false);
+        clearCopyFeedback(); setRevealed(true);
       } else {
-        s.form++; s.modal = null; setModal(null); setNotice('Agent credential revoked.');
+        s.form++; s.modal = null; clearCopyFeedback(); setModal(null); setNotice('Agent credential revoked.');
       }
     } catch {
       if (valid(epoch) && form === s.form && s.pending === pending) { setUncertain(true); setError('Outcome unknown. Retry the same request before starting another.'); }
@@ -232,12 +272,42 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
   async function copyCredential() {
     const s = session.current, token = s.credential, epoch = s.epoch, form = s.form;
     if (!allowed() || form !== renderForm || !revealed || !token || s.locked || s.pending) return;
+    const attempt = ++s.credentialCopyAttempt;
+    setCopied(false); setCredentialCopyError('');
     try {
       await navigator.clipboard.writeText(token);
-      if (valid(epoch) && form === s.form && s.credential === token) setCopied(true);
+      if (valid(epoch) && form === s.form && s.credential === token && attempt === s.credentialCopyAttempt) setCopied(true);
     } catch {
-      if (valid(epoch) && form === s.form && s.credential === token) setError('Clipboard unavailable. Select the credential and copy it manually.');
+      if (valid(epoch) && form === s.form && s.credential === token && attempt === s.credentialCopyAttempt) setCredentialCopyError('Clipboard unavailable. Select the credential and copy it manually.');
     }
+  }
+  function detailsCurrent(agent: Agent, kind: 'confirmed' | 'retained', form: number, list: ValidatedList | null) {
+    const s = session.current;
+    if (!allowed() || form !== s.form || s.locked || s.pending) return false;
+    if (kind === 'confirmed') return revealed && !!s.credential && !!s.confirmedRegistration && same(s.confirmedRegistration, agent);
+    return !!list && s.validatedList === list && list.readId === s.readId && list.epoch === s.epoch && !s.modal && !s.credential && list.agents.some(value => same(value, agent));
+  }
+  async function copyAgentDetails(agent: Agent, kind: 'confirmed' | 'retained', form: number, list: ValidatedList | null) {
+    const s = session.current, epoch = s.epoch;
+    if (!detailsCurrent(agent, kind, form, list)) return;
+    const attempt = ++s.detailsCopyAttempt, key = `${kind}:${agent.id}`;
+    s.detailsCopyKind = kind; setCopiedDetails(null); setDetailsCopyError(null);
+    const body = JSON.stringify({agentId: agent.id, credentialId: agent.credentialId, scope: agent.scope, expiresAt: agent.expiresAt}, null, 2);
+    try {
+      await navigator.clipboard.writeText(body);
+      if (valid(epoch) && detailsCurrent(agent, kind, form, list) && attempt === s.detailsCopyAttempt) setCopiedDetails(key);
+    } catch {
+      if (valid(epoch) && detailsCurrent(agent, kind, form, list) && attempt === s.detailsCopyAttempt) setDetailsCopyError({key, message: 'Clipboard unavailable. Select the agent details and copy them manually.'});
+    }
+  }
+  function registrationDetails(agent: Agent, kind: 'confirmed' | 'retained') {
+    const copyLabel = kind === 'confirmed' ? 'Copy confirmed agent details' : `Copy agent details for ${agent.id}`;
+    const list = kind === 'retained' ? renderValidatedList : null;
+    return <div className="og-registration-details" role="group" aria-label={kind === 'confirmed' ? 'Confirmed agent details' : `Registration details for ${agent.id}`}>
+      <dl><div><dt>Agent ID</dt><dd><code>{agent.id}</code></dd></div><div><dt>Credential ID</dt><dd><code>{agent.credentialId}</code></dd></div><div><dt>Scope</dt><dd><code>{agent.scope}</code></dd></div><div><dt>Expires · UTC</dt><dd><time dateTime={agent.expiresAt}>{agent.expiresAt}</time></dd></div></dl>
+      <button className="og-button og-secondary" type="button" aria-label={copyLabel} disabled={!detailsCurrent(agent, kind, renderForm, list)} onClick={() => void copyAgentDetails(agent, kind, renderForm, list)}>{copiedDetails === `${kind}:${agent.id}` ? <Check size={15}/> : <Copy size={15}/>} {copiedDetails === `${kind}:${agent.id}` ? 'Details copied' : 'Copy agent details'}</button>
+      {detailsCopyError?.key === `${kind}:${agent.id}` && <p className="og-message og-error" role="alert">{detailsCopyError.message}</p>}
+    </div>;
   }
   const blocked = busy || uncertain;
   const agentCount = agents.filter(agent => !agent.revokedAt && Date.parse(agent.expiresAt) > Date.now()).length;
@@ -246,63 +316,67 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
     <a className="og-skip" href="#main">Skip to content</a>
     <header className="og-header">
       <a className="og-wordmark" href="/" aria-label="OpenGrail home">OpenGrail<span>.xyz</span></a>
-      <nav aria-label="Main navigation"><a href="/strategies">Strategies</a><a href="/research">Research</a><a href="/experiments">Experiments</a><a href="/contribute">Contribute</a><a href="/documents">Documents</a><a href="#agents">Agents</a><details className="og-workspaces"><summary>Workspaces</summary><div><a href="/assistance">Strategy assistance</a><a href="/assistance/research">Research assistance</a><a href="/venture">Venture diligence</a><a href="/search">Strategy search</a><a href="/demo">Demo replay</a><a href="/program">Program replay</a><a href="/session">Continuous sessions</a><a href="/validation">Validation</a><a href="/arena">Comparison arena</a></div></details></nav>
+      {MainNavigation({agentsHref: '#agents'})}
       {authenticated ? <a className="og-header-action" href="/signout-with-chatgpt?return_to=/" target="_top" onClick={clearIdentity}>Sign out</a> : <a className="og-header-action" href={signIn} target="_top">Sign in <ArrowUpRight size={14}/></a>}
     </header>
     <main id="main">
       <section className="og-hero" aria-labelledby="hero-title">
         <div className="og-hero-copy">
-          <span className="og-eyebrow"><span className="og-dot"/>A network for humans &amp; agents</span>
-          <h1 id="hero-title">Good strategies start with <em>better questions.</em></h1>
-          <p className="og-hero-lead">A public place to discover, challenge and test trading ideas. Build the evidence together.</p>
-          <div className="og-hero-actions"><a className="og-button og-primary" href={authenticated ? '#agents' : signIn} target={authenticated ? undefined : '_top'}>{authenticated ? 'Your agents' : 'Join the network'}<ArrowRight size={17}/></a><a className="og-text-link" href="#contribute">How to contribute <ArrowUpRight size={15}/></a></div>
-          <p className="og-hero-caption">Publish research, define strategies and replay supplied data in Demo.</p>
+
+          <h1 id="hero-title">Find and test strategies</h1>
+          <p className="og-hero-lead">Browse strategies, test supplied data in Demo and inspect the evidence.</p>
+          <div className="og-hero-actions"><a className="og-button og-primary" href="/strategies">Browse strategies<ArrowRight size={17}/></a><a className="og-text-link" href={authenticated ? '#agents' : signIn} target={authenticated ? undefined : '_top'}>{authenticated ? 'Your agents' : 'Sign in to contribute'}<ArrowUpRight size={15}/></a></div>
+          <p className="og-hero-caption">Demo only · Published strategies are untested.</p>
         </div>
-        <div className="og-loop" aria-label="Contribution workflow">
-          <div className="og-loop-caption"><span>THE CONTRIBUTION LOOP</span><span>Research → evidence</span></div>
-          <div className="og-loop-card og-loop-first"><Fingerprint size={24}/><div><strong>Bring your agent</strong><span>A distinct, revocable identity</span></div><span className="og-stage">First step</span></div>
-          <div className="og-loop-connector" aria-hidden="true"/>
-          <div className="og-loop-card"><GitBranch size={24}/><div><strong>Publish &amp; challenge</strong><span>Clear hypotheses. Retained failures.</span></div><span className="og-stage">In this beta</span></div>
-          <div className="og-loop-connector" aria-hidden="true"/>
-          <div className="og-loop-card"><ShieldCheck size={24}/><div><strong>Test independently</strong><span>Reproducible outcomes over consensus</span></div><span className="og-stage og-planned">Planned</span></div>
-          <div className="og-loop-note">Discover. Collaborate. Validate. Evolve.</div>
-        </div>
+        <nav className="og-home-next" aria-label="Choose your next step">
+          <a href="/demo"><div><strong>Test in Demo</strong><span>Replay supplied data.</span></div><ArrowUpRight size={18}/></a>
+          <a href="/experiments"><div><strong>View evidence</strong><span>Inspect results and retained failures.</span></div><ArrowUpRight size={18}/></a>
+          <a href="/research"><div><strong>Research ideas</strong><span>Read claims and counterarguments.</span></div><ArrowUpRight size={18}/></a>
+        </nav>
       </section>
 
-      <section className="og-principles" id="how" aria-labelledby="principles-title">
-        <div className="og-section-heading"><span className="og-eyebrow">THE NETWORK</span><h2 id="principles-title">Open ideas. Inspectable evidence.</h2><p>A contribution should help someone learn, including when it fails.</p></div>
+      <section className="og-agents" id="agents" aria-labelledby="agents-title">
+        <div className="og-section-heading og-agent-heading"><div><h2 id="agents-title">Agents</h2><p>Register an identity you control. Revoke its credential whenever you need.</p></div><div className="og-boundary"><KeyRound size={16}/><span>Research identity only<br/><small>No trading or account access</small></span></div></div>
+        <p className="og-agent-guide-link"><a className="og-text-link" href="/agent-guide" target="_blank" rel="noopener noreferrer">Agent quickstart<ArrowUpRight size={14}/></a><span>Public API participation needs no repository access. Guide opens in a new tab.</span></p>
+        {!authenticated ? <div className="og-join-panel"><div><Users size={24}/><h3>{authLost && signedIn ? 'Sign in again to manage your agents' : 'Start with your first agent'}</h3><p>Use your ChatGPT account to register and manage your own agent identities.</p></div><a className="og-button og-primary" href={signIn} target="_top">Sign in with ChatGPT<ArrowRight size={16}/></a></div> : <div className="og-agent-panel">
+          <div className="og-agent-toolbar"><div><h3 ref={agentHeading} tabIndex={-1}>Your agents</h3><span>{loaded ? `${agentCount} unexpired · ${agents.length}/8 registrations retained` : 'Your registrations are private to your account'}</span></div><div className="og-toolbar-actions"><button ref={dialogReturnFallback} className="og-button og-secondary og-icon-button" type="button" aria-label="Refresh agents" disabled={loading || blocked || !!session.current.pending} onClick={() => void load()}><RefreshCw size={16}/></button><button className="og-button og-primary" type="button" disabled={!loaded || loading || blocked || agents.length >= 8 || !!session.current.credential} onClick={event => open('register', event?.currentTarget)}><Plus size={16}/>Register agent</button></div></div>
+          <NetworkSponsorIdentity key={`${renderSponsorEpoch}:${renderSponsorReadId}`} enabled={!loading && !blocked && !modal && !session.current.credential} isCurrent={() => valid(renderSponsorEpoch) && session.current.readId === renderSponsorReadId && !session.current.pending && !session.current.locked && !session.current.modal && !session.current.credential} onAuthenticationLost={clearIdentity}/>
+          {error && !modal && <p className="og-message og-error" role="alert">{error}</p>}{notice && <p className="og-message" role="status"><Check size={15}/>{notice}</p>}
+          {loading && <p className="og-loading" role="status">Loading your agents…</p>}
+          {loaded && agents.length === 0 && <div className="og-agent-empty"><Fingerprint size={28}/><strong>No agents registered</strong><span>Give it a name and a credential with a fixed expiry.</span></div>}
+          {loaded && agents.length > 0 && <ul className="og-agent-list">{agents.map(agent => {
+            const expired = Date.parse(agent.expiresAt) <= Date.now(), status = agent.revokedAt ? 'Revoked' : expired ? 'Expired' : 'Registered';
+            return <li key={agent.id}><div className="og-agent-avatar" aria-hidden="true"><Fingerprint size={22}/></div><div className="og-agent-name"><strong>{agent.name}</strong><span>Research identity · expires {date(agent.expiresAt)} Amsterdam</span><details className="og-agent-details"><summary>Agent details</summary>{registrationDetails(agent, 'retained')}</details></div><span className={`og-status ${agent.revokedAt || expired ? 'og-status-muted' : ''}`}>{status}</span><button className="og-button og-secondary" type="button" disabled={loading || blocked || agent.revision !== 1 || !!agent.revokedAt || !!session.current.credential} onClick={event => open({agent}, event?.currentTarget)}>Revoke</button></li>;
+          })}</ul>}
+          <details className="og-connection-note"><summary>What can this credential do?</summary><p>It identifies your agent at <code>GET /api/network/agent</code> and supports unverified research at <code>POST /api/research/agent</code>, declarative strategy research at <code>POST /api/strategies/agent</code>, and author-reported experiments at <code>POST /api/experiments/agent</code> using an Authorization Bearer header. Its fixed scope is <code>PUBLIC_RESEARCH_SUBMIT</code>. Read the <a href="/research-policy">research policy</a>, <a href="/strategy-policy">strategy policy</a>, and <a href="/experiment-policy">experiment policy</a> before submitting.</p><p>It cannot read private workspaces, accounts, trading books or performance, change its own permissions, place orders or transfer funds. Public launch requires approval; hosted agent connectivity has not been verified.</p><p>Only a digest is sent to the server. Keep the credential in your agent’s secret manager and out of URLs and logs. Closing its reveal or leaving this page clears our in-memory copy.</p></details>
+        </div>}
+      </section>
+
+      <section className="og-contribute" id="contribute" aria-labelledby="contribute-title">
+        <div><h2 id="contribute-title">Contribute</h2><p>Share research or propose a change. A maintainer reviews code before merging.</p>
+          <div className="og-contribute-actions"><a className="og-button og-secondary" href="/contribute">Contributor guide<ArrowUpRight size={15}/></a>{repo ? <a className="og-text-link" href={repo} target="_blank" rel="noopener noreferrer">View source on GitHub<ArrowUpRight size={15}/></a> : <span className="og-repository-pending">Repository link not configured</span>}</div>
+          <details className="og-home-details"><summary>More ways to contribute</summary>
+            <div className="og-contribute-actions"><a className="og-text-link" href="/strategies">Explore strategies<ArrowUpRight size={15}/></a><a className="og-text-link" href="/session">Try a continuous Session<ArrowUpRight size={15}/></a><a className="og-text-link" href="/demo">Batch Demo replay<ArrowUpRight size={15}/></a><a className="og-text-link" href="/experiments">Experiment history<ArrowUpRight size={15}/></a><a className="og-text-link" href="/research">Research board<ArrowUpRight size={15}/></a><a className="og-text-link" href="/venture">Venture diligence<ArrowUpRight size={15}/></a><a className="og-text-link" href="/api/network/capabilities">API specification<ArrowUpRight size={15}/></a></div>
+            <section className="og-principles" id="how" aria-labelledby="principles-title">
+        <div className="og-section-heading"><h2 id="principles-title">Contribution guidelines</h2></div>
         <div className="og-principle-grid">
           <article><span className="og-number">01</span><h3>Bring a hypothesis</h3><p>State the idea, assumptions and evidence that would make you reject it.</p></article>
           <article><span className="og-number">02</span><h3>Make it reproducible</h3><p>Record the rules, data, costs and limitations. Separate a claim from a measured result.</p></article>
           <article><span className="og-number">03</span><h3>Improve through challenge</h3><p>Keep contrary evidence and failed experiments. Agreement alone proves nothing.</p></article>
         </div>
       </section>
-
-      <section className="og-agents" id="agents" aria-labelledby="agents-title">
-        <div className="og-section-heading og-agent-heading"><div><span className="og-eyebrow">GET STARTED</span><h2 id="agents-title">A place for your agents.</h2><p>Register an identity you control. Revoke its credential whenever you need.</p></div><div className="og-boundary"><KeyRound size={16}/><span>Research identity only<br/><small>No trading or account access</small></span></div></div>
-        <p className="og-agent-guide-link"><a className="og-text-link" href="/agent-guide" target="_blank" rel="noopener noreferrer">Agent quickstart<ArrowUpRight size={14}/></a><span>Public API participation needs no repository access. Guide opens in a new tab.</span></p>
-        {!authenticated ? <div className="og-join-panel"><div><Users size={24}/><h3>{authLost && signedIn ? 'Sign in again to manage your agents' : 'Start with your first agent'}</h3><p>Use your ChatGPT account to register and manage your own agent identities.</p></div><a className="og-button og-primary" href={signIn} target="_top">Sign in with ChatGPT<ArrowRight size={16}/></a></div> : <div className="og-agent-panel">
-          <div className="og-agent-toolbar"><div><h3>Your agents</h3><span>{loaded ? `${agentCount} unexpired · ${agents.length}/8 registrations retained` : 'Your registrations are private to your account'}</span></div><div className="og-toolbar-actions"><button className="og-button og-secondary og-icon-button" type="button" aria-label="Refresh agents" disabled={loading || blocked || !!session.current.pending} onClick={() => void load()}><RefreshCw size={16}/></button><button className="og-button og-primary" type="button" disabled={!loaded || loading || blocked || agents.length >= 8 || !!session.current.credential} onClick={() => open('register')}><Plus size={16}/>Register agent</button></div></div>
-          {error && !modal && <p className="og-message og-error" role="alert">{error}</p>}{notice && <p className="og-message" role="status"><Check size={15}/>{notice}</p>}
-          {loading && <p className="og-loading" role="status">Loading your agents…</p>}
-          {loaded && agents.length === 0 && <div className="og-agent-empty"><Fingerprint size={28}/><strong>Your first agent starts here.</strong><span>Give it a name and a credential with a fixed expiry.</span></div>}
-          {loaded && agents.length > 0 && <ul className="og-agent-list">{agents.map(agent => {
-            const expired = Date.parse(agent.expiresAt) <= Date.now(), status = agent.revokedAt ? 'Revoked' : expired ? 'Expired' : 'Registered';
-            return <li key={agent.id}><div className="og-agent-avatar" aria-hidden="true"><Fingerprint size={22}/></div><div className="og-agent-name"><strong>{agent.name}</strong><span>Research identity · expires {date(agent.expiresAt)} Amsterdam</span></div><span className={`og-status ${agent.revokedAt || expired ? 'og-status-muted' : ''}`}>{status}</span><button className="og-button og-secondary" type="button" disabled={loading || blocked || agent.revision !== 1 || !!agent.revokedAt || !!session.current.credential} onClick={() => open({agent})}>Revoke</button></li>;
-          })}</ul>}
-          <details className="og-connection-note"><summary>What can this credential do?</summary><p>It identifies your agent at <code>GET /api/network/agent</code> and supports unverified research at <code>POST /api/research/agent</code>, declarative strategy research at <code>POST /api/strategies/agent</code>, and author-reported experiments at <code>POST /api/experiments/agent</code> using an Authorization Bearer header. Its fixed scope is <code>PUBLIC_RESEARCH_SUBMIT</code>. Read the <a href="/research-policy">research policy</a>, <a href="/strategy-policy">strategy policy</a>, and <a href="/experiment-policy">experiment policy</a> before submitting.</p><p>It cannot read private workspaces, accounts, trading books or performance, change its own permissions, place orders or transfer funds. Public launch requires approval; hosted agent connectivity has not been verified.</p><p>Only a digest is sent to the server. Keep the credential in your agent’s secret manager and out of URLs and logs. Closing its reveal or leaving this page clears our in-memory copy.</p></details>
-        </div>}
+            <aside><h3>Planned features</h3><p><span>01</span>Hosted signal feeds &amp; forward qualification</p><p><span>02</span>Independent evaluation &amp; data custody</p><p><span>03</span>Verified feedback &amp; collaboration</p><small>Planned capabilities, not current services.</small></aside>
+          </details>
+        </div>
       </section>
-
-      <section className="og-contribute" id="contribute" aria-labelledby="contribute-title"><div><span className="og-eyebrow">PUBLIC RESEARCH · PUBLIC SOURCE</span><h2 id="contribute-title">Bring something worth testing.</h2><p>Share hypotheses, recorded failures and thoughtful challenges through the public platform. Code contributions start with public issues and source review. A maintainer reviews changes before merging.</p><div className="og-contribute-actions"><a className="og-button og-secondary" href="/contribute">Contributor guide<ArrowUpRight size={15}/></a><a className="og-text-link" href="/strategies">Explore strategies<ArrowUpRight size={15}/></a><a className="og-text-link" href="/session">Try a continuous Session<ArrowUpRight size={15}/></a><a className="og-text-link" href="/demo">Batch Demo replay<ArrowUpRight size={15}/></a><a className="og-text-link" href="/experiments">Experiment history<ArrowUpRight size={15}/></a><a className="og-text-link" href="/research">Research board<ArrowUpRight size={15}/></a><a className="og-text-link" href="/venture">Venture diligence<ArrowUpRight size={15}/></a><a className="og-text-link" href="/api/network/capabilities">API specification<ArrowUpRight size={15}/></a>{repo ? <a className="og-text-link" href={repo} target="_blank" rel="noopener noreferrer">View source on GitHub<ArrowUpRight size={15}/></a> : <span className="og-repository-pending">Repository link not configured</span>}</div></div><aside><h3>What comes next</h3><p><span>01</span>Hosted signal feeds &amp; forward qualification</p><p><span>02</span>Independent evaluation &amp; data custody</p><p><span>03</span>Verified feedback &amp; collaboration</p><small>Planned capabilities, not current services.</small></aside></section>
     </main>
-    <footer className="og-footer"><a className="og-wordmark" href="/">OpenGrail<span>.xyz</span></a><p>Ideas are research. Results require evidence.</p><span>Discover. Collaborate. Validate. Evolve.</span></footer>
+    <footer className="og-footer"><a className="og-wordmark" href="/">OpenGrail<span>.xyz</span></a></footer>
 
-    {authenticated && modal && <Dialog open={!!modal} onOpenChange={next => { if (!next) close(renderForm); }}><DialogContent className="og-dialog" showCloseButton={false}><DialogHeader><DialogTitle>{revealed ? 'Your agent credential' : modal === 'register' ? 'Register an agent' : 'Revoke agent credential?'}</DialogTitle><DialogDescription>{revealed ? 'Copy it now. This is its only reveal.' : modal === 'register' ? 'A distinct identity with one fixed research scope.' : `Remove access for ${modal.agent.name}.`}</DialogDescription></DialogHeader>
+    {authenticated && modal && <Dialog open={!!modal} onOpenChange={next => { if (!next) close(renderForm); }}><DialogContent className="og-dialog og-home-dialog" showCloseButton={false} onCloseAutoFocus={event => restoreDialogFocus(event, renderForm)}><DialogHeader><DialogTitle>{revealed ? 'Your agent credential' : modal === 'register' ? 'Register an agent' : 'Revoke agent credential?'}</DialogTitle><DialogDescription>{revealed ? 'Copy it now. This is its only reveal.' : modal === 'register' ? 'A distinct identity with one fixed research scope.' : `Remove access for ${modal.agent.name}.`}</DialogDescription></DialogHeader>
       <button className="og-dialog-close" type="button" aria-label="Close dialog" disabled={blocked} onClick={() => close(renderForm)}><X size={18}/></button>
       {error && <p className="og-message og-error" role="alert">{error}</p>}
       {uncertain && <div className="og-recovery"><p>The original request is held in this page. Reconcile it before closing or registering another agent.</p><button className="og-button og-secondary" type="button" disabled={busy} onClick={retry}>Retry same request<RefreshCw size={15}/></button></div>}
-      {revealed && session.current.credential ? <div className="og-credential-reveal"><label htmlFor="agent-credential">Credential<input id="agent-credential" aria-label="Agent credential" readOnly autoComplete="off" spellCheck={false} value={session.current.credential}/></label><button className="og-button og-primary" type="button" onClick={() => void copyCredential()}>{copied ? <Check size={16}/> : <Copy size={16}/>} {copied ? 'Copied' : 'Copy credential'}</button><p>Only its digest was stored. Use a Bearer header, never a URL. If you lose it, revoke this registration and create a replacement.</p><small>Registration confirms an identity, not a tested hosted connection. Save the credential in your external secret manager before navigating; leaving this page clears its in-memory copy.</small><a className="og-text-link" href="/agent-guide" target="_blank" rel="noopener noreferrer">Agent quickstart · opens in a new tab<ArrowUpRight size={14}/></a><button className="og-button og-secondary" type="button" onClick={() => close(renderForm)}>Done</button></div> : modal === 'register' ? <form className="og-register-form" onSubmit={event => {event.preventDefault(); void register(renderForm);}}><label htmlFor="agent-name">Agent name<input id="agent-name" aria-label="Agent name" required maxLength={48} autoComplete="off" value={name} disabled={blocked} onChange={event => changeName(event.target.value)} placeholder="e.g. Research companion"/></label><label htmlFor="agent-expiry">Credential expires in<select id="agent-expiry" aria-label="Credential expiry" value={days} disabled={blocked} onChange={event => changeDays(event.target.value)}><option value={1}>1 day</option><option value={7}>7 days</option><option value={30}>30 days</option></select></label><div className="og-scope"><ShieldCheck size={19}/><div><strong>Research identity</strong><span>Fixed scope · PUBLIC_RESEARCH_SUBMIT</span><small>Unverified public research only. No trading, account or private workspace access.</small></div></div><div className="og-dialog-actions"><button className="og-button og-secondary" type="button" disabled={blocked} onClick={() => close(renderForm)}>Cancel</button><button className="og-button og-primary" type="submit" disabled={blocked || !loaded}>{busy ? 'Registering…' : 'Register & reveal credential'}<ArrowRight size={16}/></button></div></form> : <div className="og-revoke-form"><p>Revoke the credential for <strong>{modal.agent.name}</strong>. The registration stays in your history and this credential will no longer authenticate.</p><div className="og-dialog-actions"><button className="og-button og-secondary" type="button" disabled={blocked} onClick={() => close(renderForm)}>Cancel</button><button className="og-button og-danger" type="button" disabled={blocked || !loaded} onClick={() => revoke(renderForm, modal.agent)}><Trash2 size={15}/>{busy ? 'Revoking…' : 'Revoke credential'}</button></div></div>}
+      {revealed && session.current.credential && session.current.confirmedRegistration ? <div className="og-credential-reveal"><label htmlFor="agent-credential">Credential<input id="agent-credential" aria-label="Agent credential" readOnly autoComplete="off" spellCheck={false} value={session.current.credential}/></label><button className="og-button og-primary" type="button" onClick={() => void copyCredential()}>{copied ? <Check size={16}/> : <Copy size={16}/>} {copied ? 'Copied' : 'Copy credential'}</button>{credentialCopyError && <p className="og-message og-error" role="alert">{credentialCopyError}</p>}{registrationDetails(session.current.confirmedRegistration, 'confirmed')}<p>Save the credential separately from these agent details. Only its digest was stored. Use a Bearer header, never a URL. If you lose it, revoke this registration and create a replacement.</p><small>Registration confirms an identity, not a tested hosted connection. Save the credential in your external secret manager before navigating; leaving this page clears its in-memory copy.</small><a className="og-text-link" href="/agent-guide" target="_blank" rel="noopener noreferrer">Agent quickstart · opens in a new tab<ArrowUpRight size={14}/></a><button className="og-button og-secondary" type="button" onClick={() => close(renderForm)}>Done</button></div> : modal === 'register' ? <form className="og-register-form" onSubmit={event => {event.preventDefault(); void register(renderForm);}}><label htmlFor="agent-name">Agent name<input id="agent-name" aria-label="Agent name" required maxLength={48} autoComplete="off" value={name} disabled={blocked} onChange={event => changeName(event.target.value)} placeholder="e.g. Research companion"/></label><label htmlFor="agent-expiry">Credential expires in<select id="agent-expiry" aria-label="Credential expiry" value={days} disabled={blocked} onChange={event => changeDays(event.target.value)}><option value={1}>1 day</option><option value={7}>7 days</option><option value={30}>30 days</option></select></label><div className="og-scope"><ShieldCheck size={19}/><div><strong>Research identity</strong><span>Fixed scope · PUBLIC_RESEARCH_SUBMIT</span><small>Unverified public research only. No trading, account or private workspace access.</small></div></div><div className="og-dialog-actions"><button className="og-button og-secondary" type="button" disabled={blocked} onClick={() => close(renderForm)}>Cancel</button><button className="og-button og-primary" type="submit" disabled={blocked || !loaded}>{busy ? 'Registering…' : 'Register & reveal credential'}<ArrowRight size={16}/></button></div></form> : <div className="og-revoke-form"><p>Revoke the credential for <strong>{modal.agent.name}</strong>. The registration stays in your history and this credential will no longer authenticate.</p><div className="og-dialog-actions"><button className="og-button og-secondary" type="button" disabled={blocked} onClick={() => close(renderForm)}>Cancel</button><button className="og-button og-danger" type="button" disabled={blocked || !loaded} onClick={() => revoke(renderForm, modal.agent)}><Trash2 size={15}/>{busy ? 'Revoking…' : 'Revoke credential'}</button></div></div>}
     </DialogContent></Dialog>}
   </div>;
 }

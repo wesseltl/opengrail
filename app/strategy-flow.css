@@ -1,0 +1,14 @@
+.og-strategy-header .og-strategy-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style-position:inside;margin:18px 0 0;padding:0}
+.og-strategy-header .og-strategy-steps li{min-width:0;font-size:12px;line-height:1.6;color:var(--og-ink)}
+.og-strategy-steps li::marker{color:var(--og-accent);font-weight:700}
+.og-strategy-steps strong{font-weight:600}
+.og-strategy-steps small{display:block;margin-top:3px;color:var(--og-muted);font-size:11px;line-height:1.6}
+.og-strategy-header .og-strategy-boundary{margin-top:14px;font-size:11px;line-height:1.6}
+.og-strategy-layout.og-strategy-catalog-layout{grid-template-columns:minmax(0,1fr);gap:18px}
+.og-strategy-catalog-layout .og-strategy-sidebar{display:block;padding-top:0}
+.og-strategy-testing-notes{border-bottom:1px solid var(--og-line);padding-bottom:14px}
+.og-strategy-sidebar .og-strategy-testing-notes>summary{display:list-item;list-style:revert;cursor:pointer;color:var(--og-ink);font-size:11px;font-weight:600}
+.og-strategy-sidebar .og-strategy-testing-notes>summary:focus-visible{outline:2px solid var(--og-accent);outline-offset:4px;border-radius:3px}
+.og-strategy-testing-notes[open]>summary{margin-bottom:14px}
+.og-strategy-testing-notes section{max-width:75ch}
+@media(max-width:420px){.og-strategy-header .og-strategy-steps{grid-template-columns:minmax(0,1fr);gap:9px}.og-strategy-steps small{margin-left:15px}}

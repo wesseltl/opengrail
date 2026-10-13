@@ -272,3 +272,153 @@ test('claim history retains known current lease when paging into older terminal 
   const final = (await lifecycle(task, olderClaim, {...releaseCommand, requestId: uid(), claim: ref(olderClaim)}, human(3))).claim;
   server(task, {get: path => path.includes('?task=') ? history(task, path.includes('&cursor=') ? [final] : page, path.includes('&cursor=') ? null : cursor) : undefined}); const h = harness(); await ready(h, task); assert(!button(h.render(), 'Claim task')); h.click('Older claims'); await h.until(tree => text(tree).includes(final.id)); assert(!button(h.render(), 'Claim task'));
 });
+
+
+// Real open response streams exercise resource closure without awaiting the sink.
+function rejectedBody(status) {
+  let cancellations = 0, settle, reject;
+  const settlement = new Promise((yes, no) => {settle = yes; reject = no;});
+  const response = new Response(new ReadableStream({
+    start(controller) {controller.enqueue(new TextEncoder().encode('Untrusted rejected-body text must stay absent.'));},
+    cancel() {cancellations++; return settlement;},
+  }), {status});
+  return {response, cancellations: () => cancellations, settle, reject};
+}
+async function assertRejectedBodyClosed(body) {
+  assert.equal(body.cancellations(), 1);
+  assert.equal(body.response.bodyUsed, true);
+  const reader = body.response.body.getReader();
+  try {assert.deepEqual(await reader.read(), {value: undefined, done: true});} finally {reader.releaseLock();}
+}
+
+test('rejected public list and selected-task bodies close without accepting error content or aborting the operation signal', async () => {
+  for (const target of ['list', 'selected']) {
+    const task = await taskFixture(), body = rejectedBody(503); let armed = target === 'list', request;
+    const s = server(task, {get: (path, _state, init) => {
+      if (armed && (target === 'list' ? path === '/api/contributions' : path.includes('?task='))) {armed = false; request = init; return body.response;}
+    }}), h = harness(false);
+    try {
+      if (target === 'selected') {await h.until(tree => button(tree, 'Inspect task ' + task.id) && !button(tree, 'Inspect task ' + task.id).props.disabled); armed = true; h.click('Inspect task ' + task.id);}
+      await h.until(target === 'list' ? 'No page was accepted.' : 'No other task was substituted.');
+      await assertRejectedBodyClosed(body);
+      assert.equal(request.signal.aborted, false);
+      assert(!text(h.render()).includes('Untrusted rejected-body text'));
+      assert.equal(posts(s).length, 0);
+      assert(!text(h.render()).includes('Acceptance criteria'));
+    } finally {body.settle(); h.unmount();}
+  }
+});
+
+test('an unread identity outage closes while preserving the unsent original command for explicit recovery', async () => {
+  const task = await taskFixture(), body = rejectedBody(503); let armed = false;
+  const s = server(task, {get: path => {if (armed && path === '/api/contributions/me') {armed = false; return body.response;}}}), h = harness();
+  try {
+    await ready(h, task); h.click('Claim task'); await h.flush(); armed = true; await confirm(h);
+    await h.until('The request was not sent'); await assertRejectedBodyClosed(body);
+    assert.equal(posts(s).length, 0); assert(button(h.render(), 'Retry identical request'));
+    assert(!text(h.render()).includes('Untrusted rejected-body text'));
+    h.click('Retry identical request'); await h.until('Claim recorded with its original');
+    assert.equal(posts(s).length, 1);
+  } finally {body.settle(); h.unmount();}
+});
+
+test('delayed or rejected cancellation cannot change known rejection or uncertain committed replay decisions', async () => {
+  for (const status of [409, 503]) {
+    const task = await taskFixture(), body = rejectedBody(status); let attempts = 0;
+    const s = server(task, {post: async (command, state) => {
+      if (++attempts === 1) {if (status === 503) await state.accept(command); return body.response;}
+    }}), h = harness();
+    try {
+      await ready(h, task); h.click('Claim task'); await h.flush(); await confirm(h);
+      await h.until(status === 409 ? 'Request rejected:' : 'Outcome unknown.'); await assertRejectedBodyClosed(body);
+      assert.equal(posts(s).length, 1); assert(!text(h.render()).includes('Untrusted rejected-body text'));
+      if (status === 409) {assert(!button(h.render(), 'Retry identical request')); assert.equal(walk(h.render(), node => node.type === 'form').length, 0);}
+      else {
+        const first = posts(s)[0]; body.reject(Error('Synthetic cancellation settlement rejected')); await h.flush();
+        assert(button(h.render(), 'Retry identical request')); h.click('Retry identical request'); await h.until('Claim recorded with its original');
+        assert.equal(posts(s).length, 2); assert.equal(posts(s)[1].init.body, first.init.body); assert.deepEqual(posts(s)[1].init.headers, first.init.headers); assert.equal(s.claims.length, 1);
+      }
+    } finally {body.settle(); h.unmount();}
+  }
+});
+
+test('one confirmation stays beside its exact task before claim history and keeps explicit consent', async () => {
+  const task = await taskFixture(), s = server(task), h = harness(); await ready(h, task);
+  h.click('Claim task'); await h.flush();
+  const tree = h.render(), detail = walk(tree, node => node.props?.className === 'og-cd-detail')[0];
+  const forms = walk(tree, node => node.type === 'form'); assert.equal(forms.length, 1);
+  assert.equal(walk(detail, node => node.type === 'form')[0], forms[0]);
+  assert.deepEqual(walk(detail, node => node.type === 'form' || node.props?.className === 'og-cd-claims').map(node => node.type === 'form' ? 'confirmation' : 'history'), ['confirmation', 'history']);
+  const target = walk(forms[0], node => node.props?.['aria-label'] === 'Intended contribution target')[0];
+  assert.equal(target.props.role, 'group'); assert(text(target).includes(task.record.content.title));
+  assert(text(target).includes(task.id) && text(target).includes(task.digest));
+  assert(button(tree, 'Confirm claim').props.disabled); assert.equal(posts(s).length, 0);
+  await confirm(h); await h.until('Claim recorded with its original 72-hour deadline');
+  assert.deepEqual(JSON.parse(posts(s)[0].init.body).task, ref(task));
+});
+
+test('registration has one usable detail-pane form without inventing a selected target', async () => {
+  const task = await taskFixture(), s = server(task, {me: identity(maintainer, true)}); s.tasks = [];
+  const h = harness(); await h.until(tree => !!button(tree, 'Register task') && !button(tree, 'Register task').props.disabled);
+  h.click('Register task'); await h.flush();
+  const tree = h.render(), detail = walk(tree, node => node.props?.className === 'og-cd-detail')[0];
+  assert.equal(walk(tree, node => node.type === 'form').length, 1);
+  assert.equal(walk(detail, node => node.type === 'form').length, 1);
+  assert(field(tree, 'Task title') && !field(tree, 'Task title').props.disabled);
+  assert.equal(walk(tree, node => node.props?.['aria-label'] === 'Intended contribution target').length, 0);
+  assert(button(tree, 'Confirm register').props.disabled); assert.equal(posts(s).length, 0);
+  h.click('Cancel action'); await h.flush(); assert.equal(walk(h.render(), node => node.type === 'form').length, 0);
+});
+
+test('labelled task scrolling retains all eighteen returned tasks and their normal exact-read controls', async () => {
+  const tasks = []; for (let n = 0; n < 18; n++) tasks.push(await taskFixture());
+  const s = server(tasks[0]); s.tasks = tasks; const h = harness(false); await ready(h, tasks[0]);
+  const tree = h.render(), region = walk(tree, node => node.props?.['aria-label'] === 'Public contribution tasks')[0];
+  assert.equal(region.props.role, 'region'); assert.equal(region.props.tabIndex, 0);
+  assert.equal(walk(region, node => node.type === 'li').length, 18);
+  for (const task of tasks) assert(button(region, 'Inspect task ' + task.id));
+  assert.equal(button(region, 'Inspect task ' + tasks[0].id).props['aria-current'], true);
+  assert(!walk(region, node => node.type === 'form').length); assert.equal(posts(s).length, 0);
+});
+
+test('hidden-task release keeps reference-only confirmation in the same pane without restored authored content', async () => {
+  const task = await taskFixture(), claim = await claimFixture(task), concealed = await hidden(task, claim);
+  const s = server(concealed.task, {claims: [concealed.claim], post: async (command, state) => {
+    const clock = '2026-10-11T10:01:00.000Z', record = m.contributionEventRecordForCommand(command, participant, clock), digest = await m.contributionDigest(JSON.stringify(record));
+    const released = await m.validateContributionClaimItem({...concealed.claim, status: 'RELEASED', sequence: record.sequence, checkedAt: clock, record: null, handoffDigest: null, reason: null, events: []});
+    const receipt = {version: 1, action: 'release', requestId: command.requestId, task: concealed.task, claim: released, acknowledgement: {action: 'release', requestId: command.requestId, actor: participant, task: ref(concealed.task), claim: ref(released), sequence: record.sequence, createdAt: clock, commandDigest: await m.contributionDigest(m.boundedContributionCommand(command).payload), digest}, executionEnabled: false};
+    await m.validateContributionWrite(receipt, command, participant); state.claims = [released]; return receipt;
+  }}), h = harness();
+  await h.until(tree => !!button(tree, 'Inspect task ' + task.id) && !button(tree, 'Inspect task ' + task.id).props.disabled);
+  h.click('Inspect task ' + task.id); await h.until('Authored task and dependent claim payloads are suppressed');
+  h.click('Release claim'); await h.flush();
+  const tree = h.render(), detail = walk(tree, node => node.props?.className === 'og-cd-detail')[0];
+  assert.equal(walk(detail, node => node.type === 'form').length, 1);
+  const target = walk(detail, node => node.props?.['aria-label'] === 'Intended contribution target')[0];
+  assert(text(target).includes('Task content unavailable') && text(target).includes(task.id) && text(target).includes(claim.id));
+  assert(!text(tree).includes(task.record.content.title) && !text(tree).includes(task.record.content.summary));
+  await confirm(h); await h.until('Original request confirmed. Current task content is hidden');
+  assert.equal(JSON.parse(posts(s)[0].init.body).action, 'release');
+  assert.deepEqual(JSON.parse(posts(s)[0].init.body).task, ref(task));
+  assert.deepEqual(JSON.parse(posts(s)[0].init.body).claim, ref(claim));
+  assert.equal(s.claims[0].status, 'RELEASED'); assert.equal(s.claims[0].reason, null); assert.deepEqual(s.claims[0].events, []);
+});
+
+test('uncertain retry stays outside forms and scroll disclosures while an account swap removes confirmation context', async () => {
+  const task = await taskFixture(); let attempt = 0;
+  const s = server(task, {post: async (command, state) => {const receipt = await state.accept(command); return ++attempt === 1 ? new Response(null, {status: 503}) : receipt;}}), h = harness();
+  await ready(h, task); h.click('Claim task'); await h.flush(); await confirm(h);
+  const tree = await h.until('Outcome unknown.'), retry = button(tree, 'Retry identical request'), body = posts(s)[0].init.body;
+  assert(retry && !retry.props.disabled);
+  const containers = walk(tree, node => node.type === 'form' || node.type === 'details' || node.props?.role === 'region');
+  assert(containers.every(node => walk(node, child => child === retry).length === 0));
+  assert(button(tree, 'Cancel action').props.disabled && button(tree, 'Refresh exact task').props.disabled);
+  s.me = identity(human(3)); h.click('Retry identical request');
+  const changed = await h.until('The original participant is required');
+  assert.equal(walk(changed, node => node.type === 'form').length, 0);
+  assert.equal(walk(changed, node => node.props?.['aria-label'] === 'Intended contribution target').length, 0);
+  assert(button(changed, 'Retry identical request').props.disabled); assert.equal(posts(s).length, 1);
+  s.me = identity(); h.click('Check original identity'); await h.until(tree => !button(tree, 'Retry identical request').props.disabled);
+  h.click('Retry identical request'); await h.until('Claim recorded with its original 72-hour deadline');
+  assert.equal(posts(s)[1].init.body, body); assert.equal(s.claims.length, 1);
+});

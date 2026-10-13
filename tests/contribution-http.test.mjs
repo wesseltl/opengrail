@@ -80,3 +80,31 @@ test('human curation permission is rechecked before releasing a privileged ackno
  const response=await H.contributionHumanRequest(new Request(origin+'/api/contributions',{method:'POST',headers,body:JSON.stringify(sent)}),{userId:user},()=>new ContributionRepository(db),()=>++checks===1,()=>at);assert.equal(response.status,403);
  const row=await db.prepare('SELECT count(*) AS count FROM contribution_tasks WHERE id=?').bind(sent.id).first();assert.equal(row.count,1);assert.equal(checks,2);
 });
+
+async function revisionHttpFixture(machineActor=false){
+ const task=await seed(),participant=machineActor?await agent():{owner:uid()},send=command=>machineActor?machine(command,participant.token):human(command,participant.owner),first=await send(claim(task));assert.equal(first.status,200);const original=(await first.json()).claim;
+ const submitted=await send({action:'submit',requestId:uid(),task:ref(task),claim:ref(original),expectedSequence:0,handoffDigest:'a'.repeat(64),policyAccepted:M.contributionPolicy});assert.equal(submitted.status,200);const current=(await submitted.json()).claim;
+ const review=await human({action:'review',requestId:uid(),task:ref(task),claim:ref(current),expectedSequence:1,decision:'CHANGES_REQUESTED',reason:'NEEDS_CHANGES',policyAccepted:M.contributionPolicy},maintainer);assert.equal(review.status,200);const previous=(await review.json()).claim;
+ const command={...claim(task),version:2,revisionOf:{claim:ref(previous),review:{sequence:2,digest:previous.events[1].digest}}};return {task,participant,send,previous,command};
+}
+
+test('actual Worker admits exact human revision and preserves V1 receipt envelope',async()=>{
+ const f=await revisionHttpFixture(),response=await f.send(f.command);assert.equal(response.status,200);const raw=await response.json(),actor={kind:'HUMAN',id:await M.contributionPublicHumanId(f.participant.owner),sponsorId:await M.contributionPublicHumanId(f.participant.owner)};await M.validateContributionWrite(raw,f.command,actor);assert.equal(raw.version,1);assert.equal(raw.claim.record.version,2);assert.deepEqual(raw.claim.record.revisionOf,f.command.revisionOf);
+ const retry=await f.send(f.command);assert.equal(retry.status,200);assert.deepEqual((await retry.json()).acknowledgement,raw.acknowledgement);
+ const wrong=await f.send({...f.command,revisionOf:{...f.command.revisionOf,review:{sequence:2,digest:'f'.repeat(64)}}});assert.equal(wrong.status,409);
+ const read=await mf.dispatchFetch(origin+'/api/contributions?claim='+f.command.id);assert.equal(read.status,200);assert.deepEqual((await read.json()).item.record.revisionOf,f.command.revisionOf);
+});
+
+test('agent revision HTTP cannot be authored by sponsor or a different agent',async()=>{
+ const f=await revisionHttpFixture(true),sponsor=await human({...f.command,id:uid(),requestId:uid()},f.participant.owner);assert.equal(sponsor.status,403);const other=await agent();assert.equal((await machine({...f.command,id:uid(),requestId:uid()},other.token)).status,403);
+ assert.equal((await machine(f.command,f.participant.token,{origin:'http://opengrail-fixture.test'})).status,403);assert.equal((await machine(f.command,f.participant.token,{query:'?author=spoof'})).status,400);
+ const response=await f.send(f.command);assert.equal(response.status,200);const receipt=await response.json();assert.equal(receipt.claim.author.kind,'AGENT');assert.equal(receipt.claim.author.id,f.participant.id);assert.deepEqual(receipt.claim.record.revisionOf,f.command.revisionOf);
+ const after=await mf.dispatchFetch(origin+'/api/contributions?claim='+f.previous.id);assert.equal((await after.json()).item.status,'CHANGES_REQUESTED');
+});
+
+test('postcommit corrupted lineage is HTTP unavailable while accepted new row is retained',async()=>{
+ const f=await revisionHttpFixture(),repo=new ContributionRepository(db),factory={write:async(...args)=>{const retained=await repo.write(...args);await db.prepare('DELETE FROM contribution_claim_events WHERE claim_id=? AND sequence=2').bind(f.previous.id).run();return retained;},confirmRevisionReceipt:repo.confirmRevisionReceipt.bind(repo)},headers={'Content-Type':'application/json',Origin:origin,'X-Contribution-Intent':'submit','X-Contribution-Author':await M.contributionPublicHumanId(f.participant.owner)};
+ // The initially correlated body becomes stale after commit, before the HTTP
+ // handler's closing observation. A syntactically valid old receipt is refused.
+ const response=await H.contributionHumanRequest(new Request(origin+'/api/contributions',{method:'POST',headers,body:JSON.stringify(f.command)}),{userId:f.participant.owner},()=>factory,()=>false,()=>at);assert.equal(response.status,503);const count=await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(f.command.id).first();assert.equal(count.n,1);const read=await mf.dispatchFetch(origin+'/api/contributions?claim='+f.command.id);assert.equal(read.status,503);assert.equal((await f.send(f.command)).status,503);
+});

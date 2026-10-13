@@ -87,6 +87,14 @@ function server(initial = [], post, options = {}) {
   return {requests, records};
 }
 async function ready(h) { await h.until(tree => button(tree, 'Publish research')?.props.disabled === false); }
+async function settledDiscussion(h, target, expectedTitle) {
+  // A retained title alone does not establish completion of an asynchronous exact read.
+  return h.until(tree => {
+    const discussion = walk(tree, node => node.type === 'section' && node.props?.['aria-label'] === 'Exact research discussion')[0];
+    const retained = walk(discussion, node => node.props?.['aria-label'] === 'Research ' + target.id)[0];
+    return button(discussion, 'Refresh discussion')?.props.disabled === false && !!retained && text(retained).includes(expectedTitle);
+  });
+}
 async function fill(h, overrides = {}) {
   const values = {...content, ...overrides};
   for (const [name, value] of [['Research title', values.title], ['Research statement', values.statement], ['Research assumptions', values.assumptions], ['Research falsification', values.falsification]]) { h.field(name, value); await h.flush(); }
@@ -279,10 +287,69 @@ test('exact public permalink resolves a target outside the board and renders dir
 test('board discussion links preserve exact ID/digest, support outgoing parent navigation and selected-record writes', async () => {
   const selected = await item({}, {title: 'Inspect this exact record'}), reply = await child(selected, {}, {title: 'A fork to inspect'}), {requests} = server([selected, reply]), h = harness(); await ready(h);
   const link = walk(h.card(selected.id), node => node.type === 'a' && label(node) === 'Open discussion')[0]; assert.equal(link.props.href, href(selected));
-  h.link('Open discussion', h.card(selected.id)); await h.until('Exact contribution & discussion'); await h.until(tree => walk(tree, node => node.props?.['aria-label'] === 'Research ' + selected.id).length > 1);
+  h.link('Open discussion', h.card(selected.id)); await h.until('Exact contribution & discussion'); await settledDiscussion(h, selected, selected.record.content.title); assert(walk(h.render(), node => node.props?.['aria-label'] === 'Research ' + selected.id).length > 1);
   const selectedCard = walk(h.render(), node => node.props?.['aria-label'] === 'Research ' + selected.id)[0]; h.click('Challenge', selectedCard); await h.flush(); await fill(h); h.submit(); await h.until('Research recorded');
   const command = JSON.parse(requests.find(value => value.init.method === 'POST').init.body); assert.deepEqual(command.relation, {type: 'CHALLENGE', id: selected.id, digest: selected.digest});
-  h.click('Done'); await h.flush(); h.link('Open referenced contribution', h.card(reply.id)); await h.until('Exact contribution & discussion'); assert(requests.filter(value => value.path.includes('?target=')).length >= 2);
+  h.click('Done'); await settledDiscussion(h, selected, selected.record.content.title); await ready(h);
+  const replyCard = h.card(reply.id); assert(replyCard, 'The verified reply card is available after both reloads settle.');
+  const parent = walk(replyCard, node => node.type === 'a' && label(node) === 'Open referenced contribution')[0]; assert(parent); assert.equal(parent.props.href, href(selected));
+  const targetPath = '/api/research?target=' + selected.id + '&digest=' + selected.digest;
+  const beforeNavigation = requests.filter(value => value.path === targetPath && value.init.method !== 'POST').length;
+  h.link('Open referenced contribution', replyCard); await settledDiscussion(h, selected, selected.record.content.title);
+  assert.equal(requests.filter(value => value.path === targetPath && value.init.method !== 'POST').length, beforeNavigation + 1);
+});
+
+
+test('post-publication board and discussion EOFs settle independently before exact parent navigation', async t => {
+  const selected = await item({}, {title: 'Parent retained across independently held reloads'}), reply = await child(selected, {}, {title: 'Reply whose exact parent survives both reloads'});
+  const {requests, records} = server([selected, reply]), fixtureFetch = globalThis.fetch;
+  const targetPath = '/api/research?target=' + selected.id + '&digest=' + selected.digest;
+  const releases = {board: null, discussion: null}, heldReads = {board: 0, discussion: 0}; let holdAfterPublication = false, h;
+  t.after(() => { h?.unmount(); releases.board?.(); releases.discussion?.(); });
+  globalThis.fetch = async (path, init = {}) => {
+    const response = await fixtureFetch(path, init);
+    // The synthetic registry stores the publication before returning its correlated receipt.
+    if (init.method === 'POST') { holdAfterPublication = response.ok; return response; }
+    if (!holdAfterPublication || path !== '/api/research' && path !== targetPath) return response;
+    const kind = path === '/api/research' ? 'board' : 'discussion';
+    assert.equal(++heldReads[kind], 1, 'One held response per post-publication reload; never replace an original EOF.');
+    assert.equal(releases[kind], null);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    return new Response(new ReadableStream({start(controller) {
+      controller.enqueue(bytes);
+      releases[kind] = () => { releases[kind] = null; controller.close(); };
+    }}), {status: response.status, headers: response.headers});
+  };
+  h = harness(); await ready(h); h.link('Open discussion', h.card(selected.id)); await settledDiscussion(h, selected, selected.record.content.title);
+  const selectedCard = h.card(selected.id); h.click('Challenge', selectedCard); await h.flush(); await fill(h, {title: 'A synthetic challenge retained before reload EOF'}); h.submit(); await h.until('Research recorded');
+  const posts = requests.filter(value => value.init.method === 'POST'); assert.equal(posts.length, 1);
+  const command = JSON.parse(posts[0].init.body); assert.deepEqual(command.relation, {type: 'CHALLENGE', id: selected.id, digest: selected.digest});
+  assert(records.some(value => value.id === command.id && value.record?.content.title === 'A synthetic challenge retained before reload EOF'));
+  h.click('Done');
+  await h.until(tree => typeof releases.board === 'function' && typeof releases.discussion === 'function' && text(tree).includes('Loading public research') && text(tree).includes('Loading exact research discussion'));
+  assert.equal(h.card(reply.id), undefined);
+  assert.equal(walk(h.render(), node => node.type === 'a' && label(node) === 'Open referenced contribution').length, 0);
+  assert.throws(() => h.link('Open referenced contribution'), /missing link Open referenced contribution/);
+  assert.throws(() => h.click('Refresh research'), /Refresh research disabled/);
+  assert.throws(() => h.click('Refresh discussion'), /Refresh discussion disabled/);
+  assert.deepEqual(heldReads, {board: 1, discussion: 1});
+  const boardReads = () => requests.filter(value => value.path === '/api/research' && value.init.method !== 'POST');
+  const discussionReads = () => requests.filter(value => value.path === targetPath && value.init.method !== 'POST');
+  assert.equal(boardReads().length, 2); assert.equal(discussionReads().length, 2);
+  // A verified discussion can return while the independently held board is still unavailable.
+  releases.discussion(); await settledDiscussion(h, selected, selected.record.content.title);
+  assert.equal(releases.discussion, null); assert.equal(typeof releases.board, 'function');
+  assert.equal(button(h.render(), 'Refresh research').props.disabled, true); assert.equal(button(h.render(), 'Publish research').props.disabled, true);
+  assert(text(h.render()).includes('Loading public research')); assert(!text(h.render()).includes('Loading exact research discussion'));
+  assert.equal(discussionReads().length, 2); assert.equal(requests.filter(value => value.init.method === 'POST').length, 1);
+  releases.board(); await ready(h); await settledDiscussion(h, selected, selected.record.content.title);
+  assert.equal(releases.board, null); holdAfterPublication = false;
+  const board = walk(h.render(), node => node.type === 'section' && node.props?.['aria-label'] === 'Public research board')[0];
+  const replyCard = walk(board, node => node.props?.['aria-label'] === 'Research ' + reply.id)[0]; assert(replyCard);
+  const parent = walk(replyCard, node => node.type === 'a' && label(node) === 'Open referenced contribution')[0]; assert(parent); assert.equal(parent.props.href, href(selected));
+  const beforeNavigation = discussionReads().length; h.link('Open referenced contribution', replyCard); await settledDiscussion(h, selected, selected.record.content.title);
+  assert.equal(discussionReads().length, beforeNavigation + 1); assert.equal(boardReads().length, 2);
+  assert.equal(requests.filter(value => value.init.method === 'POST').length, 1); assert.deepEqual(heldReads, {board: 1, discussion: 1});
 });
 
 test('malformed exact links show a visible error without silently selecting a board record', async () => {
@@ -338,13 +405,53 @@ test('hidden children redact board and history copies and old visible refreshes 
 test('WITHDRAWN is terminal and deliberate HIDDEN restoration requires a newer extending RESTORED event', async () => {
   for (const state of ['HIDDEN', 'WITHDRAWN']) {
     const selected = await item({}, {title: 'Suppressed content ' + state}), hidden = tombstone(selected, state); let value = hidden;
-    globalThis.fetch = async path => Response.json(path.includes('?target=') ? threadResponse(value) : list([])); const h = harness({signedIn: false}, new URL(href(selected), 'https://local').search); await h.until(state === 'HIDDEN' ? 'Hidden research' : 'Withdrawn research');
-    value = selected; h.click('Refresh discussion'); await h.flush(); assert(!text(h.render()).includes(selected.record.content.title));
+    globalThis.fetch = async path => Response.json(path.includes('?target=') ? threadResponse(value) : list([])); const h = harness({signedIn: false}, new URL(href(selected), 'https://local').search); await settledDiscussion(h, selected, state === 'HIDDEN' ? 'Hidden research' : 'Withdrawn research');
+    value = selected; h.click('Refresh discussion'); await settledDiscussion(h, selected, state === 'HIDDEN' ? 'Hidden research' : 'Withdrawn research'); assert(!text(h.render()).includes(selected.record.content.title));
     if (state === 'HIDDEN') {
       value = {...selected, moderation: [...hidden.moderation, {sequence: 2, requestId: crypto.randomUUID(), createdAt: T, actor: {kind: 'HUMAN', id: authorId, sponsorId: authorId}, state: 'VISIBLE', reason: 'RESTORED'}], reason: 'RESTORED'};
-      h.click('Refresh discussion'); await h.until(selected.record.content.title); value = hidden; h.click('Refresh discussion'); await h.flush(); assert(text(h.render()).includes(selected.record.content.title)); assert(!text(h.render()).includes('Hidden research'));
+      h.click('Refresh discussion'); await settledDiscussion(h, selected, selected.record.content.title); value = hidden; h.click('Refresh discussion'); await settledDiscussion(h, selected, selected.record.content.title); assert(text(h.render()).includes(selected.record.content.title)); assert(!text(h.render()).includes('Hidden research'));
     }
   }
+});
+
+test('held exact research response EOF keeps refresh disabled until suppression settles and an explicit restoration verifies', async t => {
+  const selected = await item({}, {title: 'Held restoration must preserve exact research identity'}), hidden = tombstone(selected, 'HIDDEN');
+  const restored = {...selected, moderation: [...hidden.moderation, {sequence: 2, requestId: crypto.randomUUID(), createdAt: T, actor: {kind: 'HUMAN', id: authorId, sponsorId: authorId}, state: 'VISIBLE', reason: 'RESTORED'}], reason: 'RESTORED'};
+  const requests = []; let value = hidden, hold = false, release = null, h;
+  t.after(() => { h?.unmount(); release?.(); });
+  globalThis.fetch = async (path, init = {}) => {
+    requests.push({path, init});
+    if (!path.includes('?target=')) return Response.json(list([]));
+    const bytes = new TextEncoder().encode(JSON.stringify(threadResponse(value)));
+    if (!hold) return new Response(bytes, {headers: {'content-type': 'application/json'}});
+    assert.equal(release, null, 'A second response must not replace the original held EOF.');
+    return new Response(new ReadableStream({start(controller) {
+      controller.enqueue(bytes);
+      release = () => { release = null; controller.close(); };
+    }}), {headers: {'content-type': 'application/json'}});
+  };
+  h = harness({signedIn: false}, new URL(href(selected), 'https://local').search);
+  await settledDiscussion(h, selected, 'Hidden research');
+  const reads = () => requests.filter(request => request.path.includes('?target='));
+  assert.equal(reads().length, 1);
+  hold = true; value = selected; h.click('Refresh discussion');
+  await h.until(tree => typeof release === 'function' && button(tree, 'Refresh discussion')?.props.disabled === true && text(tree).includes('Loading exact research discussion'));
+  assert.equal(reads().length, 2); assert.equal(h.card(selected.id), undefined);
+  assert(!text(h.render()).includes(selected.record.content.title));
+  assert.throws(() => h.click('Refresh discussion'), /Refresh discussion disabled/);
+  await h.flush(); assert.equal(reads().length, 2);
+  // The held bytes remain the original stale record even when the next fixture value changes.
+  value = restored; release(); await settledDiscussion(h, selected, 'Hidden research');
+  assert(!text(h.render()).includes(selected.record.content.title)); assert.equal(reads().length, 2);
+  h.click('Refresh discussion');
+  await h.until(tree => typeof release === 'function' && button(tree, 'Refresh discussion')?.props.disabled === true && text(tree).includes('Loading exact research discussion'));
+  assert.equal(reads().length, 3); assert.equal(h.card(selected.id), undefined);
+  assert(!text(h.render()).includes(selected.record.content.title));
+  assert.throws(() => h.click('Refresh discussion'), /Refresh discussion disabled/);
+  await h.flush(); assert.equal(reads().length, 3);
+  release(); await settledDiscussion(h, selected, selected.record.content.title);
+  assert(text(h.render()).includes(selected.record.content.title)); assert(!text(h.render()).includes('Hidden research'));
+  assert.equal(reads().length, 3); assert.equal(requests.filter(request => request.init.method === 'POST').length, 0); assert.equal(release, null);
 });
 
 test('lost-ACK exact writes retain original bytes while a pending thread read suppresses the parent and display draft', async () => {

@@ -122,12 +122,29 @@ test('one work page cannot mix visible and suppressed snapshots of the same exac
  const time=at(),sponsor=human(),t=await task(time),author=await publicHuman(sponsor);await seedClaim(t,author,time);await seedClaim(t,author,time);const visible=await repo().work(sponsor,null,time);await parentEvent(t,'hide',time);const hidden=await repo().work(sponsor,null,time),mixed={...hidden,items:[hidden.items[0],visible.items[1]]};await assert.rejects(()=>W.validateContributionWorkPage(mixed),status(400));assert.deepEqual(await W.validateContributionWorkPage(hidden),hidden);
 });
 
-test('three actual failed scoped-cursor fences bound an agent read to 22 D1 queries and preserve retained attempts',async()=>{
+test('three actual failed scoped-cursor fences bound an agent read to 19 D1 queries and preserve retained attempts',async()=>{
  const time=at(),a=await agent(human(),'Bounded work read',time),tasks=[];let cursor;
  for(let n=0;n<3;n++){const t=await task(time),clock=plus(time,n+1),owned=await write(a.actor,claim(t.item),clock);await write(a.actor,release(t.item,owned.claim),clock);tasks.push(t);cursor=owned.claim.id;}
  const before=(await db.prepare('SELECT * FROM contribution_claims ORDER BY id').all()).results,events=(await db.prepare('SELECT * FROM contribution_claim_events ORDER BY claim_id,sequence').all()).results;let queries=0,fences=0;
  const racing=new ContributionRepository(wrapper(async({sql,phase})=>{if(phase!=='before')return;queries++;if(sql.startsWith('SELECT 1 AS contribution_work_stable')){const target=tasks[fences++];await parentEvent(target,'hide',plus(time,100));}}));
- await assert.rejects(()=>racing.work(a.actor,cursor,plus(time,200)),status(503));assert.equal(fences,3);assert.equal(W.contributionWorkLimits.reconciliationAttempts,3);assert.equal(queries,22);assert(2*queries+2<=50);
+ await assert.rejects(()=>racing.work(a.actor,cursor,plus(time,200)),status(503));assert.equal(fences,3);assert.equal(W.contributionWorkLimits.reconciliationAttempts,3);assert.equal(queries,19);assert(2*queries+2<=50);
  assert.deepEqual((await db.prepare('SELECT * FROM contribution_claims ORDER BY id').all()).results,before);assert.deepEqual((await db.prepare('SELECT * FROM contribution_claim_events ORDER BY claim_id,sequence').all()).results,events);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_task_events').first()).n,3);
  const current=await repo().work(a.actor,cursor,plus(time,200));assert.equal(current.items.length,2);assert(current.items.every(item=>item.task.state==='HIDDEN'&&item.claim.record===null));
+});
+
+test('mixed-version work validates revision predecessor beyond its bounded visible page',async()=>{
+ const time=at(),owner=human(),t=await task(time),first=await write(owner,claim(t.item),time),submitted=await write(owner,submit(t.item,first.claim),plus(time,10)),prior=await write(t.actor,review(t.item,submitted.claim),plus(time,20));
+ for(let n=0;n<2;n++){const ordinary=await write(owner,claim(t.item),plus(time,30+n*2));await write(owner,release(t.item,ordinary.claim),plus(time,31+n*2));}
+ const command={...claim(t.item),version:2,revisionOf:{claim:ref(prior.claim),review:{sequence:2,digest:prior.claim.events[1].digest}}},linked=await write(owner,command,plus(time,40));
+ for(let n=0;n<4;n++){const other=await task(time),ordinary=await write(owner,claim(other.item),plus(time,100+n*10));await write(owner,release(other.item,ordinary.claim),plus(time,101+n*10));}
+ const page=await repo().work(owner,null,plus(time,150));assert.equal(page.items.length,5);assert(page.items.some(item=>item.claim.id===linked.claim.id&&item.claim.record.version===2));assert(!page.items.some(item=>item.claim.id===prior.claim.id));assert(page.nextCursor);assert.equal(page.version,1);assert.equal(page.executionEnabled,false);
+ let changed=false;const guarded=new ContributionRepository(wrapper(async({sql,phase})=>{if(!changed&&sql.startsWith('SELECT 1 AS contribution_work_stable')&&phase==='before'){changed=true;await db.prepare('DELETE FROM contribution_claim_events WHERE claim_id=? AND sequence=2').bind(prior.claim.id).run();}}));await assert.rejects(()=>guarded.work(owner,null,plus(time,150)),status(503));assert(changed);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(linked.claim.id).first()).n,1);
+});
+
+
+test('the final exhausted reconciliation observation still returns401 for a revoked agent',async()=>{
+ const time=at(),a=await agent(human(),'Last-fence revocation',time),tasks=[];let cursor;
+ for(let n=0;n<3;n++){const t=await task(time),owned=await write(a.actor,claim(t.item),plus(time,n+1));await write(a.actor,release(t.item,owned.claim),plus(time,n+1));tasks.push(t);cursor=owned.claim.id;}
+ let fences=0;const guarded=new ContributionRepository(wrapper(async({sql,phase})=>{if(phase==='before'&&sql.startsWith('SELECT 1 AS contribution_work_stable')){await parentEvent(tasks[fences],'hide',plus(time,100));if(++fences===3)await revoke(a,plus(time,100));}}));
+ await assert.rejects(()=>guarded.work(a.actor,cursor,plus(time,200)),status(401));assert.equal(fences,3);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims').first()).n,3);
 });

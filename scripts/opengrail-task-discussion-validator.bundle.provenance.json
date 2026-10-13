@@ -1,0 +1,449 @@
+{
+  "version": 1,
+  "kind": "OPENGRAIL_TASK_DISCUSSION_VALIDATOR_BUILD_NOT_RUNTIME_ACCEPTANCE",
+  "status": "BUILT_TWICE_IDENTICAL_RUNTIME_NOT_TESTED",
+  "sourceSnapshot": {
+    "sourceDigest": "ebf6ddb3ab4a19d8fb29783a83e60b1ab9e417c5e5ad96bb8f6ec42266827d7d",
+    "sourceHead": "347b7115b2397462247ae2be18beab4d95c4801e",
+    "files": 935,
+    "freezeSha256": "05fa83367f97f9394cac17dd5054ff1014e747f31484f8254ea557922a6ebfdd"
+  },
+  "buildInputsSha256": "22397f272e93086bf57c647ae5e926345aab49edcb295c54d7064e25ba19c39e",
+  "recipeSha256": "81c3fa8fcade1184e25d128cb9986880fa2e3ed87c5534bd33d459421ffcc1ce",
+  "runtimeInputs": [
+    {
+      "path": "app/task-discussion-model.ts",
+      "bytes": 23611,
+      "sha256": "76f7acdd822db58bf1da2feb599e0327577382fe7fee4d0102d84ec5d62bbbb1",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/contribution-model.ts",
+      "bytes": 30448,
+      "sha256": "44466c03e831ae355ecbc40dfa1c0ade3528c670ae242c911c985db2789bf9d0",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/research-model.ts",
+      "bytes": 18070,
+      "sha256": "ccbc1f0e0861e1e24586209757e1296b98e28e48e30ac32330fcd8ce6cd2e8e0",
+      "mode": "0o644"
+    },
+    {
+      "path": "app/venture-model.ts",
+      "bytes": 10902,
+      "sha256": "5e712118b85642c04d06a6946003b5432c2bb661b7eebdaf02f084ae0f2f7ada",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/index.js",
+      "bytes": 105,
+      "sha256": "6419c4ac0e637ff08463083e31886d10354f74cbcc4e584400b2b837e39ac881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/external.js",
+      "bytes": 205,
+      "sha256": "5d26d2e47e2352def36f89a3e8bf8581da22b7f857e07ef3114cd52cf4813445",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/errors.js",
+      "bytes": 243,
+      "sha256": "d40831f478288d76e82bbbcc3b7e95c8513b6e76471f2d49a37c979bc57d492d",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/parseUtil.js",
+      "bytes": 3601,
+      "sha256": "b57484013bb360bac2e334d58fcd5f6cbfa63ffcc7d8ff3dbbb3380ca659b956",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/typeAliases.js",
+      "bytes": 11,
+      "sha256": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/util.js",
+      "bytes": 4055,
+      "sha256": "906ef685e5853d496e293ee8f8a2bb8b1ed2d078a1bcdfedb2dfd61d75b6330c",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/types.js",
+      "bytes": 131212,
+      "sha256": "9763a2938f0e7f983363ef4bf6530e7583e3f2d54f8a4a6684efad58febc6e8e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/ZodError.js",
+      "bytes": 4349,
+      "sha256": "f5ac9e86b92e201d41e294d7aa35986a2aa28829e1bcc8ac25f7c8dce0674b99",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/helpers/errorUtil.js",
+      "bytes": 300,
+      "sha256": "68589c0cf44c8b4ad19b77418f53caad2cd1dbc8d714f526e1876ebdee4828c5",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/v3/locales/en.js",
+      "bytes": 5602,
+      "sha256": "51a6dcc5d4bd52a64da127c012c6c963395c1d9a343ad75d4a8eca662fc8b205",
+      "mode": "0o644"
+    }
+  ],
+  "packageMetadata": [
+    {
+      "path": "node_modules/zod/package.json",
+      "bytes": 3284,
+      "sha256": "70eedbe34fd52385a4ae2f3e5759b19682189f0118ea73a6e7c32c677f61668e",
+      "mode": "0o644"
+    },
+    {
+      "path": "node_modules/zod/LICENSE",
+      "bytes": 1072,
+      "sha256": "3f1189b28e3866e0d979968d466b78f813f76827cfdca1fbb124cc0a5c8841f8",
+      "mode": "0o644"
+    }
+  ],
+  "compiler": {
+    "path": "node_modules/@esbuild/linux-x64/bin/esbuild",
+    "bytes": 11366512,
+    "sha256": "aafacdf135322bf47c882a4ea4db33d0375583f5b9c3fd2d4e12258e470568be",
+    "mode": "0o755",
+    "allowedHardLinks": 2
+  },
+  "nodeUsed": "v26.8.2",
+  "compilerArgs": [
+    "entry.mjs",
+    "--bundle",
+    "--format=esm",
+    "--platform=browser",
+    "--target=es2022",
+    "--charset=utf8",
+    "--legal-comments=inline",
+    "--log-level=error",
+    "--tsconfig-raw={\"compilerOptions\":{}}",
+    "--metafile=metafile.json",
+    "--outfile=bundle.mjs"
+  ],
+  "entrySha256": "2aff388d729b03efe9bddafc0453f5b6f3d7db2aecacc45b99ee090587de4334",
+  "output": {
+    "path": "opengrail-task-discussion-validator.bundle.mjs",
+    "bytes": 196328,
+    "sha256": "77c5d590b73e87456b63688fec5481b6a7719e590350cc251bcdf3cc5c8da347"
+  },
+  "exports": [
+    "boundedTaskDiscussionCommand",
+    "validateContributionTaskItem",
+    "validateTaskDiscussionGet",
+    "validateTaskDiscussionWrite"
+  ],
+  "metafile": {
+    "inputs": {
+      "node_modules/zod/v3/helpers/util.js": {
+        "bytes": 4055,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/ZodError.js": {
+        "bytes": 4349,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/locales/en.js": {
+        "bytes": 5602,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "../ZodError.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "../helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/errors.js": {
+        "bytes": 243,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/locales/en.js",
+            "kind": "import-statement",
+            "original": "./locales/en.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/parseUtil.js": {
+        "bytes": 3601,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "../errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/locales/en.js",
+            "kind": "import-statement",
+            "original": "../locales/en.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/typeAliases.js": {
+        "bytes": 11,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/helpers/errorUtil.js": {
+        "bytes": 300,
+        "imports": [],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/types.js": {
+        "bytes": 131212,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "./ZodError.js"
+          },
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "./errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/errorUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/errorUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/parseUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/parseUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/v3/external.js": {
+        "bytes": 205,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/errors.js",
+            "kind": "import-statement",
+            "original": "./errors.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/parseUtil.js",
+            "kind": "import-statement",
+            "original": "./helpers/parseUtil.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/typeAliases.js",
+            "kind": "import-statement",
+            "original": "./helpers/typeAliases.js"
+          },
+          {
+            "path": "node_modules/zod/v3/helpers/util.js",
+            "kind": "import-statement",
+            "original": "./helpers/util.js"
+          },
+          {
+            "path": "node_modules/zod/v3/types.js",
+            "kind": "import-statement",
+            "original": "./types.js"
+          },
+          {
+            "path": "node_modules/zod/v3/ZodError.js",
+            "kind": "import-statement",
+            "original": "./ZodError.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "node_modules/zod/index.js": {
+        "bytes": 105,
+        "imports": [
+          {
+            "path": "node_modules/zod/v3/external.js",
+            "kind": "import-statement",
+            "original": "./v3/external.js"
+          },
+          {
+            "path": "node_modules/zod/v3/external.js",
+            "kind": "import-statement",
+            "original": "./v3/external.js"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/venture-model.ts": {
+        "bytes": 10902,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/research-model.ts": {
+        "bytes": 18070,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/venture-model.ts",
+            "kind": "import-statement",
+            "original": "./venture-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/contribution-model.ts": {
+        "bytes": 30448,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/research-model.ts",
+            "kind": "import-statement",
+            "original": "./research-model"
+          },
+          {
+            "path": "app/venture-model.ts",
+            "kind": "import-statement",
+            "original": "./venture-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "app/task-discussion-model.ts": {
+        "bytes": 23611,
+        "imports": [
+          {
+            "path": "node_modules/zod/index.js",
+            "kind": "import-statement",
+            "original": "zod"
+          },
+          {
+            "path": "app/contribution-model.ts",
+            "kind": "import-statement",
+            "original": "./contribution-model"
+          },
+          {
+            "path": "app/venture-model.ts",
+            "kind": "import-statement",
+            "original": "./venture-model"
+          }
+        ],
+        "format": "esm"
+      },
+      "entry.mjs": {
+        "bytes": 207,
+        "imports": [
+          {
+            "path": "app/task-discussion-model.ts",
+            "kind": "import-statement",
+            "original": "./app/task-discussion-model.ts"
+          },
+          {
+            "path": "app/contribution-model.ts",
+            "kind": "import-statement",
+            "original": "./app/contribution-model.ts"
+          }
+        ],
+        "format": "esm"
+      }
+    },
+    "outputs": {
+      "bundle.mjs": {
+        "imports": [],
+        "exports": [
+          "boundedTaskDiscussionCommand",
+          "validateContributionTaskItem",
+          "validateTaskDiscussionGet",
+          "validateTaskDiscussionWrite"
+        ],
+        "entryPoint": "entry.mjs",
+        "inputs": {
+          "node_modules/zod/v3/external.js": {
+            "bytesInOutput": 3282
+          },
+          "node_modules/zod/v3/helpers/util.js": {
+            "bytesInOutput": 3409
+          },
+          "node_modules/zod/v3/ZodError.js": {
+            "bytesInOutput": 3148
+          },
+          "node_modules/zod/v3/locales/en.js": {
+            "bytesInOutput": 4803
+          },
+          "node_modules/zod/v3/errors.js": {
+            "bytesInOutput": 145
+          },
+          "node_modules/zod/v3/helpers/parseUtil.js": {
+            "bytesInOutput": 3016
+          },
+          "node_modules/zod/v3/helpers/errorUtil.js": {
+            "bytesInOutput": 265
+          },
+          "node_modules/zod/v3/types.js": {
+            "bytesInOutput": 102758
+          },
+          "node_modules/zod/index.js": {
+            "bytesInOutput": 0
+          },
+          "app/venture-model.ts": {
+            "bytesInOutput": 9410
+          },
+          "app/research-model.ts": {
+            "bytesInOutput": 17928
+          },
+          "app/contribution-model.ts": {
+            "bytesInOutput": 23286
+          },
+          "app/task-discussion-model.ts": {
+            "bytesInOutput": 22818
+          },
+          "entry.mjs": {
+            "bytesInOutput": 0
+          }
+        },
+        "bytes": 194991
+      }
+    }
+  },
+  "noRuntimePackageImports": true,
+  "applicationExecution": false,
+  "hostedAvailability": "UNKNOWN",
+  "qualification": "NONE",
+  "executionEnabled": false
+}

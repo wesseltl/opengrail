@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const contributionCheckLimits = Object.freeze({ commandTimeoutMs: 1200000, metadataTimeoutMs: 10000, outputBytes: 2097152, retainedBytesPerStream: 16384, reportBytes: 262144, sourceBytes: 262144 });
+export const contributionCheckLimits = Object.freeze({ commandTimeoutMs: 1200000, testTimeoutMs: 4500000, runTimeoutMs: 4800000, metadataTimeoutMs: 10000, outputBytes: 2097152, retainedBytesPerStream: 16384, reportBytes: 262144, sourceBytes: 262144 });
 export const contributionScriptPins = Object.freeze({ 'install:ci': 'node scripts/install-ci.mjs', test: 'node --test tests/*.test.mjs', typecheck: 'tsc --noEmit', build: 'node scripts/run-framework.mjs build' });
 const sha = /^[0-9a-f]{40}$/;
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
@@ -47,14 +47,17 @@ async function boundedFile(path, maximumBytes = contributionCheckLimits.sourceBy
 }
 function plainOptions(raw) {
   if (!raw || Object.getPrototypeOf(raw) !== Object.prototype) fail('INVALID_OPTIONS');
-  const keys = ['root', 'baseSha', 'headSha', 'testedSha', 'reportPath', 'signal', 'commandTimeoutMs'];
+  const keys = ['root', 'baseSha', 'headSha', 'testedSha', 'reportPath', 'signal', 'commandTimeoutMs', 'runTimeoutMs'];
   for (const key of Reflect.ownKeys(raw)) { const descriptor = Object.getOwnPropertyDescriptor(raw, key); if (typeof key !== 'string' || !keys.includes(key) || !('value' in descriptor)) fail('INVALID_OPTIONS'); }
   for (const key of ['root', 'reportPath']) if (typeof raw[key] !== 'string' || !isAbsolute(raw[key]) || raw[key].length > 4096 || /[\x00-\x1f]/.test(raw[key])) fail('INVALID_OPTIONS');
   for (const key of ['baseSha', 'headSha', 'testedSha']) if (typeof raw[key] !== 'string' || !sha.test(raw[key])) fail('INVALID_IDENTITY');
   if (raw.signal !== undefined && !(raw.signal instanceof AbortSignal)) fail('INVALID_OPTIONS');
-  const timeout = raw.commandTimeoutMs ?? contributionCheckLimits.commandTimeoutMs;
-  if (!Number.isInteger(timeout) || timeout < 50 || timeout > contributionCheckLimits.commandTimeoutMs) fail('INVALID_OPTIONS');
-  return { ...raw, commandTimeoutMs: timeout };
+  // An explicit command override still lowers every check, including the longer test allowance.
+  const commandTimeoutMs = raw.commandTimeoutMs;
+  if (commandTimeoutMs !== undefined && (!Number.isInteger(commandTimeoutMs) || commandTimeoutMs < 50 || commandTimeoutMs > contributionCheckLimits.commandTimeoutMs)) fail('INVALID_OPTIONS');
+  const runTimeoutMs = raw.runTimeoutMs ?? contributionCheckLimits.runTimeoutMs;
+  if (!Number.isInteger(runTimeoutMs) || runTimeoutMs < 50 || runTimeoutMs > contributionCheckLimits.runTimeoutMs) fail('INVALID_OPTIONS');
+  return { ...raw, commandTimeoutMs, runTimeoutMs };
 }
 function githubContext(baseSha, headSha, testedSha) {
   if (process.env.GITHUB_ACTIONS !== 'true') return null;
@@ -103,7 +106,23 @@ async function command(argv, { root, env, timeoutMs, signal, maximumBytes = cont
     timer = setTimeout(() => kill('TIMED_OUT'), timeoutMs); timer.unref(); signal?.addEventListener('abort', aborted, { once: true }); if (signal?.aborted) aborted();
   });
 }
-async function metadata(argv, options) { const result = await command(['git', '-c', 'core.hooksPath=/dev/null', ...argv], { ...options, timeoutMs: contributionCheckLimits.metadataTimeoutMs, maximumBytes: contributionCheckLimits.sourceBytes }); if (result.status !== 'PASSED' || result.stdout.truncated || result.stderr.truncated) fail('SOURCE_UNAVAILABLE'); return result.stdout.text.trim(); }
+function remainingBudget(options) {
+  const remainingMs = Math.floor(options.deadline - performance.now());
+  if (remainingMs < 1) fail('CHECK_RUN_TIMED_OUT');
+  return remainingMs;
+}
+function commandBudget(options, maximumMs) {
+  const remainingMs = remainingBudget(options);
+  return { timeoutMs: Math.min(maximumMs, remainingMs), runBudgetLimited: remainingMs <= maximumMs };
+}
+async function metadata(argv, options) {
+  const budget = commandBudget(options, contributionCheckLimits.metadataTimeoutMs);
+  const result = await command(['git', '-c', 'core.hooksPath=/dev/null', ...argv], { ...options, timeoutMs: budget.timeoutMs, maximumBytes: contributionCheckLimits.sourceBytes });
+  if (result.status === 'TIMED_OUT' && budget.runBudgetLimited) fail('CHECK_RUN_TIMED_OUT');
+  if (result.status !== 'PASSED' || result.stdout.truncated || result.stderr.truncated) fail('SOURCE_UNAVAILABLE');
+  remainingBudget(options);
+  return result.stdout.text.trim();
+}
 async function snapshot(options, includeFiles = true) {
   const commitSha = await metadata(['rev-parse', '--verify', 'HEAD'], options);
   const treeSha = await metadata(['rev-parse', '--verify', 'HEAD^{tree}'], options);
@@ -138,15 +157,15 @@ async function createReportWriter(path) {
   };
 }
 
-/** Fixed commands only; timeout override may only lower the public bound (used by isolated fixtures). */
+/** Fixed commands only; optional timeouts may only lower the fixed public budgets. */
 export async function runContributionChecks(raw) {
-  const options = plainOptions(raw); options.root = await realpath(options.root);
+  const options = plainOptions(raw); const deadline = performance.now() + options.runTimeoutMs; options.root = await realpath(options.root);
   const reportParent = await realpath(dirname(options.reportPath)); const rel = relative(options.root, reportParent);
   if (rel === '' || !rel.startsWith('..') && !isAbsolute(rel)) fail('REPORT_MUST_BE_OUTSIDE_CHECKOUT');
   const write = await createReportWriter(options.reportPath);
   const scratch = await mkdtemp(resolve(tmpdir(), 'opengrail-contribution-'));
   await writeFile(resolve(scratch, 'npm-user-config'), '', { mode: 0o600 }); await writeFile(resolve(scratch, 'npm-global-config'), '', { mode: 0o600 });
-  const env = childEnvironment(scratch); const execution = { root: options.root, env, signal: options.signal };
+  const env = childEnvironment(scratch); const execution = { root: options.root, env, signal: options.signal, deadline };
   const commands = [{ id: 'test', command: ['npm', 'test'] }, { id: 'typecheck', command: ['npm', 'run', 'typecheck'] }, { id: 'build', command: ['npm', 'run', 'build'] }, { id: 'diffcheck', command: ['git', '-c', 'core.hooksPath=/dev/null', 'diff', '--check', options.baseSha, options.testedSha] }];
   const body = { version: 1, kind: 'LOCAL_CHECK_REPORT', classification: 'AUTHOR_REPORTED', qualification: 'NONE', status: 'RUNNING', startedAt: new Date().toISOString(), finishedAt: null, declared: { baseSha: options.baseSha, headSha: options.headSha, testedSha: options.testedSha }, providerContext: null, runtime: { node: process.version, platform: process.platform, architecture: process.arch }, source: null, afterSource: null, checks: commands.map(v => ({ ...v, status: 'NOT_RUN', exitCode: null, signal: null, durationMs: 0, stdout: emptyOutput(), stderr: emptyOutput() })), failureReasons: [] };
   let report;
@@ -159,14 +178,22 @@ export async function runContributionChecks(raw) {
     for (let n = 0; n < commands.length; n++) {
       if (options.signal?.aborted) { body.failureReasons.push('INTERRUPTED'); break; }
       if (!sameSource(body.source, await snapshot(execution))) fail('SOURCE_CHANGED');
+      const publicMaximum = commands[n].id === 'test' ? contributionCheckLimits.testTimeoutMs : contributionCheckLimits.commandTimeoutMs;
+      const commandMaximum = Math.min(publicMaximum, options.commandTimeoutMs ?? publicMaximum);
+      remainingBudget(execution);
       body.checks[n].status = 'RUNNING'; await write(body);
-      Object.assign(body.checks[n], await command(commands[n].command, { ...execution, timeoutMs: options.commandTimeoutMs }));
+      let budget;
+      try { budget = commandBudget(execution, commandMaximum); }
+      catch (error) { body.checks[n].status = 'NOT_RUN'; throw error; }
+      Object.assign(body.checks[n], await command(commands[n].command, { ...execution, timeoutMs: budget.timeoutMs }));
       await write(body);
       if (body.checks[n].status === 'INTERRUPTED') { body.failureReasons.push('INTERRUPTED'); break; }
+      if (body.checks[n].status === 'TIMED_OUT' && budget.runBudgetLimited) fail('CHECK_RUN_TIMED_OUT');
       if (!sameSource(body.source, await snapshot(execution))) fail('SOURCE_CHANGED');
     }
     body.afterSource = await snapshot({ ...execution, signal: undefined });
     if (!sameSource(body.source, body.afterSource)) fail('SOURCE_CHANGED');
+    remainingBudget(execution);
   } catch (error) { body.failureReasons.push(error instanceof ContributionCheckError ? error.code : 'LOCAL_CHECK_FAILURE'); }
   finally {
     body.finishedAt = new Date().toISOString();

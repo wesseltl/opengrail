@@ -30,7 +30,11 @@ export type ContributionReference=z.infer<typeof contributionReferenceSchema>;
 const taskFields={title:text(120),summary:text(2000),kind:z.enum(['CODE','DOCS','TESTS']),acceptance:criterion,rejection:criterion};
 const common={requestId:uuid,policyAccepted:policy};
 export const contributionRegisterSchema=z.object({action:z.literal('register'),...common,id:uuid,...taskFields}).strict();
-export const contributionClaimSchema=z.object({action:z.literal('claim'),...common,id:uuid,task:contributionReferenceSchema,expectedTaskSequence:taskSequence}).strict().refine(value=>value.id!==value.task.id);
+const contributionClaimV1Schema=z.object({action:z.literal('claim'),...common,id:uuid,task:contributionReferenceSchema,expectedTaskSequence:taskSequence}).strict().refine(value=>value.id!==value.task.id);
+export const contributionRevisionReferenceSchema=z.object({claim:contributionReferenceSchema,review:z.object({sequence:z.number().int().min(1).max(contributionLimits.claimEvents),digest:hash}).strict()}).strict();
+export type ContributionRevisionReference=z.infer<typeof contributionRevisionReferenceSchema>;
+const contributionClaimV2Schema=z.object({version:z.literal(2),action:z.literal('claim'),...common,id:uuid,task:contributionReferenceSchema,expectedTaskSequence:taskSequence,revisionOf:contributionRevisionReferenceSchema}).strict().refine(value=>value.id!==value.task.id&&value.id!==value.revisionOf.claim.id&&value.task.id!==value.revisionOf.claim.id);
+export const contributionClaimSchema=z.union([contributionClaimV1Schema,contributionClaimV2Schema]);
 export const contributionCloseSchema=z.object({action:z.literal('close'),...common,task:contributionReferenceSchema,expectedSequence:taskSequence,reason:z.enum(contributionCloseReasons)}).strict();
 export const contributionHideSchema=z.object({action:z.literal('hide'),...common,task:contributionReferenceSchema,expectedSequence:taskSequence,reason:z.enum(contributionHideReasons)}).strict();
 const claimOperation={...common,task:contributionReferenceSchema,claim:contributionReferenceSchema,expectedSequence:claimSequence};
@@ -44,10 +48,12 @@ export type ContributionClaimCommand=z.infer<typeof contributionClaimSchema>;
 export function contributionTaskContent(command:ContributionRegisterCommand){return {title:command.title,summary:command.summary,kind:command.kind,acceptance:command.acceptance,rejection:command.rejection};}
 export const contributionTaskRecordSchema=z.object({version:z.literal(1),id:uuid,requestId:uuid,createdAt:clock,author:human,content:z.object(taskFields).strict(),policyAccepted:policy,executionEnabled:z.literal(false)}).strict();
 export type ContributionTaskRecord=z.infer<typeof contributionTaskRecordSchema>;
-export const contributionClaimRecordSchema=z.object({version:z.literal(1),id:uuid,requestId:uuid,createdAt:clock,expiresAt:clock,author:contributionAuthorSchema,task:contributionReferenceSchema,policyAccepted:policy,executionEnabled:z.literal(false)}).strict().refine(value=>value.id!==value.task.id&&Date.parse(value.expiresAt)-Date.parse(value.createdAt)===contributionLimits.leaseHours*3600000);
+const contributionClaimRecordV1Schema=z.object({version:z.literal(1),id:uuid,requestId:uuid,createdAt:clock,expiresAt:clock,author:contributionAuthorSchema,task:contributionReferenceSchema,policyAccepted:policy,executionEnabled:z.literal(false)}).strict().refine(value=>value.id!==value.task.id&&Date.parse(value.expiresAt)-Date.parse(value.createdAt)===contributionLimits.leaseHours*3600000);
+const contributionClaimRecordV2Schema=z.object({version:z.literal(2),id:uuid,requestId:uuid,createdAt:clock,expiresAt:clock,author:contributionAuthorSchema,task:contributionReferenceSchema,policyAccepted:policy,executionEnabled:z.literal(false),revisionOf:contributionRevisionReferenceSchema}).strict().refine(value=>value.id!==value.task.id&&value.id!==value.revisionOf.claim.id&&value.task.id!==value.revisionOf.claim.id&&Date.parse(value.expiresAt)-Date.parse(value.createdAt)===contributionLimits.leaseHours*3600000);
+export const contributionClaimRecordSchema=z.union([contributionClaimRecordV1Schema,contributionClaimRecordV2Schema]);
 export type ContributionClaimRecord=z.infer<typeof contributionClaimRecordSchema>;
 export function contributionTaskCommandForRecord(record:ContributionTaskRecord){return contributionRegisterSchema.parse({action:'register',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});}
-export function contributionClaimCommandForRecord(record:ContributionClaimRecord,expectedTaskSequence=0){return contributionClaimSchema.parse({action:'claim',requestId:record.requestId,id:record.id,task:record.task,expectedTaskSequence,policyAccepted:record.policyAccepted});}
+export function contributionClaimCommandForRecord(record:ContributionClaimRecord,expectedTaskSequence=0){return contributionClaimSchema.parse(record.version===2?{version:2,action:'claim',requestId:record.requestId,id:record.id,task:record.task,expectedTaskSequence,policyAccepted:record.policyAccepted,revisionOf:record.revisionOf}:{action:'claim',requestId:record.requestId,id:record.id,task:record.task,expectedTaskSequence,policyAccepted:record.policyAccepted});}
 const eventFields={version:z.literal(1),requestId:uuid,createdAt:clock,actor:contributionAuthorReferenceSchema,task:contributionReferenceSchema,expectedSequence:taskSequence,sequence:z.number().int().min(1).max(contributionLimits.taskEvents),policyAccepted:policy,executionEnabled:z.literal(false)};
 export const contributionTaskEventRecordSchema=z.object({...eventFields,actor:human,action:z.enum(['close','hide']),state:z.enum(['CLOSED','HIDDEN']),reason:z.enum([...contributionCloseReasons,...contributionHideReasons])}).strict().superRefine((value,ctx)=>{
  if(value.sequence!==value.expectedSequence+1||value.state!==(value.action==='close'?'CLOSED':'HIDDEN'))ctx.addIssue({code:z.ZodIssueCode.custom,message:'Task event sequence and action must agree.'});
@@ -104,6 +110,15 @@ export const contributionClaimItemSchema=z.object({...identityFields,expiresAt:c
  if(item.status!==current||item.handoffDigest!==handoff||item.reason!==reason)bad();
 });
 export type ContributionClaimItem=z.infer<typeof contributionClaimItemSchema>;
+/** Correlates checked records/history, not execution, feedback correctness or authority. */
+export function validateContributionRevision(record:ContributionClaimRecord,predecessor:ContributionClaimItem){
+ if(record.version!==2)return;
+ const link=record.revisionOf,last=predecessor.events.at(-1);
+ if(!same(record.author,predecessor.author))throw new ContributionError('Only the actual predecessor author may create a linked revision.',403);
+ if(!predecessor.record||predecessor.id!==link.claim.id||predecessor.digest!==link.claim.digest||!same(record.task,predecessor.task))throw new ContributionError('Exact same-task revision predecessor is unavailable.');
+ if(predecessor.status!=='CHANGES_REQUESTED'||!last||last.action!=='review'||last.state!=='CHANGES_REQUESTED'||last.decision!=='CHANGES_REQUESTED'||last.sequence!==link.review.sequence||last.digest!==link.review.digest)throw new ContributionError('Revision requires the exact final changes-requested review.');
+ if(record.createdAt<last.createdAt)throw new ContributionError('Revision admission precedes the retained review.',400);
+}
 const envelope={version:z.literal(1),executionEnabled:z.literal(false)};
 function pageRules(items:{id:string;createdAt:string}[],nextCursor:string|null){return new Set(items.map(item=>item.id)).size===items.length&&items.every((item,n)=>!n||item.createdAt<items[n-1].createdAt||item.createdAt===items[n-1].createdAt&&item.id<items[n-1].id)&&(nextCursor===null||items.length===contributionLimits.page&&nextCursor===items.at(-1)?.id);}
 export const contributionListSchema=z.object({...envelope,items:z.array(contributionTaskItemSchema).max(contributionLimits.page),nextCursor:uuid.nullable()}).strict().refine(value=>pageRules(value.items,value.nextCursor));
@@ -141,7 +156,7 @@ export const contributionRecordSchema=z.union([contributionTaskRecordSchema,cont
 export function boundedContributionRecord(raw:unknown){return bounded(raw,contributionRecordSchema,contributionLimits.recordBytes);}
 /** Canonical builders accept already authorized context. They grant no role. */
 export function contributionTaskRecordForCommand(command:ContributionRegisterCommand,author:ContributionAuthor,createdAt:string){return boundedContributionTaskRecord({version:1,id:command.id,requestId:command.requestId,createdAt,author,content:contributionTaskContent(command),policyAccepted:command.policyAccepted,executionEnabled:false}).record;}
-export function contributionClaimRecordForCommand(command:ContributionClaimCommand,author:ContributionAuthor,createdAt:string){clock.parse(createdAt);return boundedContributionClaimRecord({version:1,id:command.id,requestId:command.requestId,createdAt,expiresAt:new Date(Date.parse(createdAt)+contributionLimits.leaseHours*3600000).toISOString(),author,task:command.task,policyAccepted:command.policyAccepted,executionEnabled:false}).record;}
+export function contributionClaimRecordForCommand(command:ContributionClaimCommand,author:ContributionAuthor,createdAt:string){clock.parse(createdAt);const fields={id:command.id,requestId:command.requestId,createdAt,expiresAt:new Date(Date.parse(createdAt)+contributionLimits.leaseHours*3600000).toISOString(),author,task:command.task,policyAccepted:command.policyAccepted,executionEnabled:false};return boundedContributionClaimRecord('version'in command?{version:2,...fields,revisionOf:command.revisionOf}:{version:1,...fields}).record;}
 export function contributionEventRecordForCommand(command:ContributionCommand,actor:ContributionAuthor,createdAt:string){
  if(command.action==='register'||command.action==='claim')throw new ContributionError('This command does not create a lifecycle event.',400);
  const common={version:1,requestId:command.requestId,createdAt,actor,task:command.task,expectedSequence:command.expectedSequence,sequence:command.expectedSequence+1,policyAccepted:command.policyAccepted,executionEnabled:false};

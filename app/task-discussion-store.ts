@@ -1,6 +1,7 @@
 import {networkAgentSchema,networkLimits} from './network-model';
 import {researchDigest,researchPublicHumanId,researchAuthorReferenceSchema,type ResearchAuthorReference} from './research-model';
 import * as C from './contribution-model';
+import {ContributionRepository} from './contribution-store';
 import * as M from './task-discussion-model';
 
 type Row=Record<string,string|number|null> & {payload:string|null;digest:string;command_digest:string;author_key:string;sponsor_key:string;request_id:string;created_at:string};
@@ -8,7 +9,7 @@ type Values=(string|number)[];
 type Context={actor:M.TaskDiscussionActor;author:ResearchAuthorReference;key:string;sponsor:string};
 type Task={row:Row;rows:Row[];item:C.ContributionTaskItem};
 type Message={row:Row;record:M.TaskDiscussionRecord;rows:Row[];events:M.TaskDiscussionEvent[]};
-type Claim={row:Row;rows:Row[]};
+type Claim={row:Row;rows:Row[];dependencies?:{row:Row;rows:Row[]}[]};
 const tables=['task_discussion_messages','task_discussion_events','task_discussion_reports'] as const;
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
 const nowSql="strftime('%Y-%m-%dT%H:%M:%fZ','now')";
@@ -74,7 +75,8 @@ export class TaskDiscussionRepository{
    if(!same(event.task,record.task)||event.claim.id!==row.id||event.claim.digest!==row.digest||event.sequence!==e.sequence||event.state!==e.state||(event.reason??'')!==e.reason||future(event.createdAt,at))throw inconsistent();events.push({...event,digest:e.digest});}
   const last=events.at(-1),base=last?.state??'ACTIVE',status=(base==='ACTIVE'||base==='SUBMITTED')&&at>=record.expiresAt?'EXPIRED':base;
   try{await C.validateContributionClaimItem({id:row.id,digest:row.digest,requestId:record.requestId,createdAt:record.createdAt,expiresAt:record.expiresAt,checkedAt:at,author:record.author,task:record.task,taskState:task.item.state==='HIDDEN'?'CLOSED':task.item.state,sequence:events.length,status,handoffDigest:events.find(e=>e.action==='submit')?.handoffDigest??null,reason:last?.reason??null,record,events});}catch{throw inconsistent();}
-  if(record.createdAt<task.item.createdAt||future(record.createdAt,at)||task.rows.some(e=>String(e.created_at)<record.createdAt)||events.some(e=>e.action!=='release'&&task.rows.some(p=>String(p.created_at)<e.createdAt)))throw inconsistent();return {row,rows:history};
+  if(record.createdAt<task.item.createdAt||future(record.createdAt,at)||task.rows.some(e=>String(e.created_at)<record.createdAt)||events.some(e=>e.action!=='release'&&task.rows.some(p=>String(p.created_at)<e.createdAt)))throw inconsistent();
+  let dependencies:NonNullable<Claim['dependencies']>=[];if(record.version===2){try{dependencies=await new ContributionRepository(this.db).revisionDependencies(record,at);}catch{throw inconsistent();}}return {row,rows:history,dependencies};
  }
  private async messageRow(row:Row,at:string):Promise<Message>{
   const record=await this.canonical(row,M.boundedTaskDiscussionRecord,r=>M.boundedTaskDiscussionCommand(M.taskDiscussionCommandForRecord(r,Number(row.expected_task_sequence))).command);
@@ -100,7 +102,8 @@ export class TaskDiscussionRepository{
   await this.project(message,task);return {claims,replies};
  }
  private headsPin(table:string,column:string,heads:{id:string;sequence:number}[],values:Values){if(!heads.length)return '1=1';return `NOT EXISTS(SELECT 1 FROM json_each(${add(values,JSON.stringify(heads))}) expected WHERE (SELECT COUNT(*) FROM ${table} WHERE ${column}=json_extract(expected.value,'$.id'))<>json_extract(expected.value,'$.sequence'))`;}
- private snapshotPins(task:Task,messages:Message[],claims:Claim[],values:Values){return [this.taskPin(task,values),this.pin(tables[0],messages.map(m=>m.row),values),this.pin(tables[1],messages.flatMap(m=>m.rows),values),this.headsPin(tables[1],'message_id',messages.map(m=>({id:m.record.id,sequence:m.rows.length})),values),this.pin('contribution_claims',claims.map(c=>c.row),values),this.pin('contribution_claim_events',claims.flatMap(c=>c.rows),values),this.headsPin('contribution_claim_events','claim_id',claims.map(c=>({id:String(c.row.id),sequence:c.rows.length})),values)];}
+ private snapshotPins(task:Task,messages:Message[],claims:Claim[],values:Values){const closure=claims.flatMap(claim=>[claim,...(claim.dependencies??[])]);return [this.taskPin(task,values),this.pin(tables[0],messages.map(m=>m.row),values),this.pin(tables[1],messages.flatMap(m=>m.rows),values),this.headsPin(tables[1],'message_id',messages.map(m=>({id:m.record.id,sequence:m.rows.length})),values),this.pin('contribution_claims',closure.map(c=>c.row),values),this.pin('contribution_claim_events',closure.flatMap(c=>c.rows),values),this.headsPin('contribution_claim_events','claim_id',closure.map(c=>({id:String(c.row.id),sequence:c.rows.length})),values)];}
+ private revisionClaimsPin(claims:Claim[],values:Values){const linked=claims.filter(claim=>claim.dependencies?.length),closure=linked.flatMap(claim=>[claim,...(claim.dependencies??[])]);return closure.length?[this.pin('contribution_claims',closure.map(c=>c.row),values),this.pin('contribution_claim_events',closure.flatMap(c=>c.rows),values),this.headsPin('contribution_claim_events','claim_id',closure.map(c=>({id:String(c.row.id),sequence:c.rows.length})),values)]:[];}
  private async publicSnapshot(before:Message[],parent:Task,at:string){
   // One final SELECT observes all visibility heads and immutable dependencies
   // together. Bounded read reconciliation never performs another write.
@@ -201,8 +204,8 @@ export class TaskDiscussionRepository{
   const saved=await this.replay(context,command,commandDigest,at);if(saved)return saved;
   try{const task=await this.exactTask(command.task,at);if(at<(task.rows.at(-1)?.created_at??task.item.createdAt))throw conflict();
    if(command.action==='publish')await this.publish(context,command,commandDigest,at,task);
-   else{const message=await this.message(command.message.id,at);if(message.row.digest!==command.message.digest||!same(message.record.task,command.task))throw new M.TaskDiscussionError('Exact same-task message not found.',404);await this.dependencies(message,task,at);
-    if(command.action==='report')await this.report(context,command,commandDigest,at,task,message);else await this.event(context,command,commandDigest,at,task,message);}
+   else{const message=await this.message(command.message.id,at);if(message.row.digest!==command.message.digest||!same(message.record.task,command.task))throw new M.TaskDiscussionError('Exact same-task message not found.',404);const dependencies=await this.dependencies(message,task,at);
+    if(command.action==='report')await this.report(context,command,commandDigest,at,task,message,dependencies.claims);else await this.event(context,command,commandDigest,at,task,message,dependencies.claims);}
   }catch(error){const retained=await this.replay(context,command,commandDigest,at);if(retained)return retained;throw error;}
   const receipt=await this.replay(context,command,commandDigest,at);if(receipt)return receipt;await this.requireCredential(context,at);
   if(command.action==='publish')await this.quota(tables[0],context,at,command.task.id);if(command.action==='report')await this.quota(tables[2],context,at);throw conflict();
@@ -211,18 +214,20 @@ export class TaskDiscussionRepository{
  private async publish(context:Context,command:Extract<M.TaskDiscussionCommand,{action:'publish'}>,commandDigest:string,at:string,task:Task){
   if(task.item.state!=='OPEN'||task.item.sequence!==command.expectedTaskSequence)throw conflict();await this.quota(tables[0],context,at,command.task.id);
   const checked=M.boundedTaskDiscussionRecord(M.taskDiscussionRecordForCommand(command,context.author,at)),record=checked.record,values:Values=[],clauses=[this.namespace(context,command.requestId,values),this.credential(context,at,values),this.taskPin(task,values),...this.quotaClauses(tables[0],context,at,values,command.task.id),`${add(values,at)}<=${nowSql}`];
-  if(command.claim){const claim=await this.claim(command.claim,task,at);if(String(claim.row.created_at)>at||claim.rows.some(e=>String(e.created_at)>at))throw conflict();clauses.push(this.pin('contribution_claims',[claim.row],values),this.historyPin('contribution_claim_events','claim_id',command.claim.id,claim.rows,values));}
-  if(command.replyTo){const reply=await this.message(command.replyTo.id,at);if(reply.row.digest!==command.replyTo.digest||!same(reply.record.task,command.task))throw new M.TaskDiscussionError('Exact same-task reply not found.',404);await this.dependencies(reply,task,at);if(reply.events.length||reply.record.createdAt>at)throw conflict();clauses.push(this.messagePin(reply,values));}
+  if(command.claim){const claim=await this.claim(command.claim,task,at);if(String(claim.row.created_at)>at||claim.rows.some(e=>String(e.created_at)>at))throw conflict();clauses.push(this.pin('contribution_claims',[claim.row],values),this.historyPin('contribution_claim_events','claim_id',command.claim.id,claim.rows,values));if(claim.dependencies?.length)clauses.push(this.pin('contribution_claims',claim.dependencies.map(c=>c.row),values),this.pin('contribution_claim_events',claim.dependencies.flatMap(c=>c.rows),values),this.headsPin('contribution_claim_events','claim_id',claim.dependencies.map(c=>({id:String(c.row.id),sequence:c.rows.length})),values));}
+  if(command.replyTo){const reply=await this.message(command.replyTo.id,at);if(reply.row.digest!==command.replyTo.digest||!same(reply.record.task,command.task))throw new M.TaskDiscussionError('Exact same-task reply not found.',404);const dependencies=await this.dependencies(reply,task,at);if(reply.events.length||reply.record.createdAt>at)throw conflict();clauses.push(this.messagePin(reply,values),...this.revisionClaimsPin(dependencies.claims,values));}
   await this.insert(tables[0],{id:record.id,task_id:record.task.id,task_digest:record.task.digest,expected_task_sequence:command.expectedTaskSequence,claim_id:record.claim?.id??null,claim_digest:record.claim?.digest??null,reply_id:record.replyTo?.id??null,reply_digest:record.replyTo?.digest??null,kind:record.kind,author_key:context.key,sponsor_key:context.sponsor,request_id:record.requestId,command_digest:commandDigest,payload:checked.payload,digest:await researchDigest(checked.payload),created_at:at},clauses,values);
  }
- private async event(context:Context,command:Extract<M.TaskDiscussionCommand,{action:'withdraw'|'hide'}>,commandDigest:string,at:string,task:Task,message:Message){
+ private async event(context:Context,command:Extract<M.TaskDiscussionCommand,{action:'withdraw'|'hide'}>,commandDigest:string,at:string,task:Task,message:Message,claims:Claim[]){
   const state=message.events.at(-1)?.state??'VISIBLE';if(command.expectedSequence!==message.events.length||state==='WITHDRAWN'||command.action==='hide'&&state!=='VISIBLE'||at<(message.events.at(-1)?.createdAt??message.record.createdAt))throw conflict();
   if(command.action==='withdraw'&&context.key!==message.row.author_key)throw new M.TaskDiscussionError('Only the original author may withdraw this message.',403);
   const checked=M.boundedTaskDiscussionEvent(M.taskDiscussionEventRecordForCommand(command,context.author,at)),record=checked.record,values:Values=[],clauses=[this.namespace(context,command.requestId,values),this.credential(context,at,values),this.taskPin(task,values),this.messagePin(message,values),`${add(values,at)}<=${nowSql}`];
+  clauses.push(...this.revisionClaimsPin(claims,values));
   await this.insert(tables[1],{message_id:message.record.id,sequence:record.sequence,task_id:record.task.id,task_digest:record.task.digest,message_digest:record.message.digest,author_key:context.key,sponsor_key:context.sponsor,request_id:record.requestId,command_digest:commandDigest,payload:checked.payload,digest:await researchDigest(checked.payload),action:record.action,state:record.state,reason:record.reason,created_at:at},clauses,values);
  }
- private async report(context:Context,command:Extract<M.TaskDiscussionCommand,{action:'report'}>,commandDigest:string,at:string,task:Task,message:Message){
+ private async report(context:Context,command:Extract<M.TaskDiscussionCommand,{action:'report'}>,commandDigest:string,at:string,task:Task,message:Message,claims:Claim[]){
   if(at<message.record.createdAt)throw conflict();await this.quota(tables[2],context,at);const checked=M.boundedTaskDiscussionReport(M.taskDiscussionReportForCommand(command,context.author,at)),record=checked.record,values:Values=[],clauses=[this.namespace(context,command.requestId,values),this.credential(context,at,values),this.taskPin(task,values),this.messagePin(message,values),...this.quotaClauses(tables[2],context,at,values),`${add(values,at)}<=${nowSql}`];
+  clauses.push(...this.revisionClaimsPin(claims,values));
   await this.insert(tables[2],{task_id:record.task.id,task_digest:record.task.digest,message_id:record.message.id,message_digest:record.message.digest,category:record.category,author_key:context.key,sponsor_key:context.sponsor,request_id:record.requestId,command_digest:commandDigest,payload:checked.payload,digest:await researchDigest(checked.payload),created_at:at},clauses,values);
  }
 }

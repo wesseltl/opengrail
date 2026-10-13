@@ -1,5 +1,55 @@
 # OpenGrail product goal
 
+Current owner-approved objective, updated 13 October 2026. This delivery order supersedes the earlier objective retained below.
+
+Build OpenGrail.xyz into an open, self-hostable, collaborative platform where humans and independent AI agents discover opportunities, research markets, create and test strategies, share verifiable evidence, and improve the platform itself. OpenGrail provides the picks and shovels—not investment advice or guaranteed returns.
+
+PRODUCT PRINCIPLES
+
+* Open core: Keep the strategy engine, backtesting, agent APIs, contribution workflow, and essential collaboration usable without a paid subscription. Prefer a permissive open-source license, after legal review. Protect the OpenGrail name and trademarks.
+* Bring your own agent, model, data, and infrastructure. Support secure, model-independent interfaces and self-hosting. Avoid vendor lock-in.
+* Trust through evidence: Make assumptions, data provenance, code versions, fees, slippage, out-of-sample results, paper-trading outcomes, failures, and risk metrics transparent. Never treat agent consensus or backtests as proof of profitability.
+* Users control their tools and decisions. Keep research, simulation, and execution authority separate.
+
+BUILD PRIORITIES
+
+1. Preserve and audit existing Capital Desk/Stratbook functionality. Avoid rewrites unless necessary.
+2. Deliver one reliable end-to-end workflow: signal -> reproducible backtest -> forward paper trade -> inspectable report. Include tests, logs, realistic costs, risk limits, and rollback.
+3. Enable secure public onboarding for people and external agents: authentication, scoped API keys, quotas, abuse controls, documentation, and isolation.
+4. Build a strategy registry for publishing, versioning, forking, comparing, and reusing strategies. Support programmable and no-code workflows where useful.
+5. Enable GitHub-based agent contribution using issues, AGENTS.md, branches, pull requests, CI, reviews, and maintainer approval.
+6. Add evidence-based research collaboration, independent evaluations, agent reputation, and reproducible benchmarks.
+7. Preserve the venture research module for early-stage crypto, tokenomics, valuation, liquidity, catalysts, and risks. Add webhooks and exchange connector designs only when needed; keep live orders disabled.
+
+BUSINESS & VALIDATION
+
+* Build an accessible open ecosystem and a sustainable commercial service around optional managed hosting, private workspaces, compute, and advanced collaboration/analytics. Do not paywall basic self-hosted functionality.
+* Validate real user problems before building paid features. Seek feedback and measure activation, repeat usage, useful contributions, retention, and willingness to pay. External outreach requires approval.
+* Prefer external agents and user-supplied compute. Set explicit cost ceilings; require approval for paid APIs, infrastructure, contracts, or other financial commitments.
+* Prioritize reliability, UX, security, documentation, and distribution over speculative feature count. Ship small, working increments with acceptance tests and measurable outcomes.
+
+GOVERNANCE & SAFETY
+
+* Untrusted agents and code operate only in isolated, resource-limited environments without production secrets, private user data, or privileged execution.
+* Only trusted maintainers approve merges, deployment, access changes, and production configuration. Agents never elevate their own privileges.
+* Maintain audit trails, deterministic signal processing, reconciliation, risk controls, and emergency stops. Separate AI suggestions from authorized actions.
+* Preserve existing capital limits. No live trading, investments, transfers, paid services, external outreach, or irreversible commitments without explicit authorization. Never bypass safeguards or promise profits, institutional parity, or zero defects.
+
+SUCCESS
+A growing network of active humans and agents producing reliable, reusable, independently verifiable research and strategy tools, with demonstrable product demand and a viable path to recurring revenue.
+
+MISSION: Discover. Collaborate. Validate. Evolve.
+
+## Current delivery boundaries
+
+Open-core and self-hosting are delivery requirements, not current license or deployment claims. License selection remains pending legal review; this documentation update does not change licensing or trademark rights. The owner controls whether source, deployment, access, costs and outside outreach are authorized. The existing website publication hold remains active.
+
+Prioritize one reliable signal-to-backtest-to-forward-Demo-to-report journey, secure onboarding and useful outside participation. The UI calls simulated trading Demo. Describe local evidence separately from authentic data, public operation, independent evaluation and actual product demand. Do not infer completed delivery from a feature list or passing local tests.
+
+## Historical goal and implementation checkpoints
+
+The following records the previous objective and snapshot-specific evidence. Its original capability ordering was superseded by the owner on 13 October 2026. Historical source/status claims remain dated checkpoints, not claims about the current release. Existing financial, permission, private-data and publication boundaries remain binding unless the owner explicitly authorizes a change.
+
 The owner permits public OpenGrail source, superseding the earlier private-only preference. The owner-created repository [wesseltl/opengrail](https://github.com/wesseltl/opengrail), ID 1414301089, was verified PUBLIC on 11 October 2026. Its last accepted source snapshot before task 038 is [task 037](https://github.com/wesseltl/opengrail/tree/19128a1a3422690709250725aad41168b7f9e240) on `source/opengrail-foundation`, tree `15572f9aa8cc9e3e1f287d5ca3c3abea28400f5a`, with all 853 file contents and modes verified on 12 October 2026. Default `main` contains a README directory. Actual starter issues #1–#3 are published; accepted external contributions, hosted CI and public API availability remain unverified. Source publication grants no production, private-data or merge authority. Visibility/protection administration is unavailable through this connection.
 
 Build OpenGrail.xyz into a public collaborative platform where humans and independent agents research markets, discover opportunities, create and test strategies, share evidence and develop OpenGrail itself. The network should make useful contributions traceable and results reproducible.

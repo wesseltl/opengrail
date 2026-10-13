@@ -69,7 +69,7 @@ function harness(authenticated = true) {
   const props = {authenticated}, render = () => {hooks.si = hooks.ri = hooks.ei = 0; return Contributions(props);};
   const flush = async () => {for (let n = 0; n < 8; n++) {render(); while (hooks.effects.length) hooks.effects.shift()(); await new Promise(resolve => setImmediate(resolve));} return render();};
   const until = async predicate => {const end = Date.now() + 5000; do {const tree = await flush(); if (predicate(tree)) return tree;} while (Date.now() < end); assert.fail('Timed out: ' + text(render()));};
-  return {props, render, flush, until, click(name) {const b = button(render(), name); assert(b, 'missing ' + name); assert(!b.props.disabled, name + ' disabled'); b.props.onClick();}, field(name, value) {const f = walk(render(), node => node.props?.['aria-label'] === name)[0]; assert(f); assert(!f.props.disabled); f.props.onChange({target: {value, checked: value}});}, submit() {const form = walk(render(), node => node.type === 'form')[0]; assert(form); form.props.onSubmit({preventDefault() {}});}, visibility(hidden) {doc.hidden = hidden; for (const fn of listeners.get('visibilitychange') ?? []) fn();}, unmount() {hooks.cleanup.forEach(cleanup => cleanup?.());}};
+  return {props, render, flush, until, pending() {return hooks.refs[0].current.pending;}, click(name) {const b = button(render(), name); assert(b, 'missing ' + name); assert(!b.props.disabled, name + ' disabled'); b.props.onClick();}, field(name, value) {const f = walk(render(), node => node.props?.['aria-label'] === name)[0]; assert(f); assert(!f.props.disabled); f.props.onChange({target: {value, checked: value}});}, submit() {const form = walk(render(), node => node.type === 'form')[0]; assert(form); form.props.onSubmit({preventDefault() {}});}, visibility(hidden) {doc.hidden = hidden; for (const fn of listeners.get('visibilitychange') ?? []) fn();}, unmount() {hooks.cleanup.forEach(cleanup => cleanup?.());}};
 }
 function server(rows, {work, exact, post, me} = {}) {
   const state = {rows: [...rows], requests: [], who: identity(), writes: [], pages: 0, accepted: new Map()};
@@ -195,4 +195,208 @@ test('retained writer uncertainty blocks inbox refresh and stale saved handlers 
 
 test('unmount invalidates deferred inbox work without later state writes or automatic publication', async () => {
   const task = await taskFixture(), claim = await claimFixture(task), wait = deferred(), s = server([{task, claim}], {work: async () => wait.promise}), h = harness(); await h.until(() => s.pages === 1); h.unmount(); const count = hooks.sets; wait.resolve(Response.json(page([{task, claim}]))); await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve)); assert.equal(hooks.sets, count); assert.equal(s.writes.length, 0);
+});
+
+test('revision control belongs only to the exact changes-requested HUMAN author while agent rows keep unlinked human attempts', async () => {
+  const task = await taskFixture(), own = await reviewed(task, await claimFixture(task)), sponsored = await reviewed(task, await claimFixture(task, agent)), accepted = await reviewed(task, await claimFixture(task), 'ACCEPTED');
+  const s = server([{task, claim: own}, {task, claim: sponsored}, {task, claim: accepted}]), h = harness();
+  await h.until(tree => !!button(tree, 'Revise my claim ' + own.id) && !button(tree, 'Revise my claim ' + own.id).props.disabled);
+  assert(!button(h.render(), 'Revise my claim ' + sponsored.id)); assert(!button(h.render(), 'Revise my claim ' + accepted.id));
+  assert(button(h.render(), 'Start new human attempt after ' + sponsored.id)); assert(button(h.render(), 'Start new human attempt after ' + own.id)); assert.equal(s.writes.length, 0);
+});
+
+test('explicit revision publishes a fresh V2 claim pinned to exact final feedback without changing the predecessor', async () => {
+  const task = await taskFixture(), old = await reviewed(task, await claimFixture(task)), original = structuredClone(old), review = old.events.at(-1), s = server([{task, claim: old}]), h = harness();
+  await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled);
+  h.click('Revise my claim ' + old.id); await h.until(tree => !!walk(tree, node => node.props?.['aria-label'] === 'Exact revision feedback')[0]);
+  assert(text(h.render()).includes(review.digest)); assert(text(h.render()).includes('Retained maintainer disposition: CHANGES_REQUESTED'));
+  assert(walk(h.render(), node => node.type === 'a').some(node => node.props.href === '/contribute/discussion?task=' + task.id + '&digest=' + task.digest)); assert.equal(s.writes.length, 0);
+  const before = s.requests.filter(row => row.path === '/api/contributions?claim=' + old.id).length;
+  h.field('Accept contribution policy', true); h.submit(); await h.until(tree => text(tree).includes('Claim recorded with its original 72-hour deadline'));
+  assert.equal(s.writes.length, 1); const command = s.writes[0].command;
+  assert.equal(command.version, 2); assert.deepEqual(command.revisionOf, {claim: ref(old), review: {sequence: review.sequence, digest: review.digest}});
+  assert.notEqual(command.id, old.id); assert.equal(command.expectedTaskSequence, task.sequence); assert.equal(s.writes[0].init.headers['X-Contribution-Author'], participant.id);
+  assert.equal(s.requests.filter(row => row.path === '/api/contributions?claim=' + old.id).length, before + 2);
+  assert.deepEqual(s.rows.find(row => row.claim.id === old.id).claim, original);
+  const revised = s.rows.find(row => row.claim.id === command.id).claim; assert.equal(revised.status, 'ACTIVE'); assert.equal(Date.parse(revised.expiresAt) - Date.parse(revised.createdAt), 72 * 3600000);
+  assert(text(h.render()).includes('Revision of')); assert(walk(h.render(), node => node.type === 'a').some(node => node.props.href === '/api/contributions?claim=' + old.id));
+});
+
+test('revision draft refuses a changed canonical terminal review and retains the old attempt without a write', async () => {
+  const task = await taskFixture(), initial = await claimFixture(task), old = await reviewed(task, initial), changed = await reviewed(task, initial, 'ACCEPTED');
+  const s = server([{task, claim: old}], {exact: async row => Response.json({version: 1, task: row.task, item: changed, executionEnabled: false})}), h = harness();
+  await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled); h.click('Revise my claim ' + old.id);
+  await h.until(tree => text(panel(tree)).includes('The exact attempt and current participant could not be confirmed'));
+  assert.equal(s.writes.length, 0); assert.equal(walk(h.render(), node => node.type === 'form').length, 0); assert(text(panel(h.render())).includes(old.id));
+});
+
+test('source hiding after revision consent scrubs draft feedback and stops the first POST', async () => {
+  const task = await taskFixture('Revision source to suppress'), old = await reviewed(task, await claimFixture(task)), s = server([{task, claim: old}]), h = harness();
+  await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled); h.click('Revise my claim ' + old.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1);
+  s.rows = [await hide(task, old)]; h.field('Accept contribution policy', true); h.submit(); await h.until(tree => text(tree).includes('Revision dependencies changed or became unavailable'));
+  assert.equal(s.writes.length, 0); assert.equal(walk(h.render(), node => node.type === 'form').length, 0); assert(!text(h.render()).includes('Revision source to suppress')); assert(!text(h.render()).includes(old.events.at(-1).digest)); assert(!text(h.render()).includes('a'.repeat(64)));
+});
+
+test('unsent V2 revision retains original bytes, request and participant through unavailable exact preflight, account swap and explicit recovery', async () => {
+  for (const failureAt of [1, 2]) {
+    const task = await taskFixture(), old = await reviewed(task, await claimFixture(task)); let unavailable = false, attemptReads = 0;
+    const s = server([{task, claim: old}], {exact: async row => {
+      if (unavailable && ++attemptReads === failureAt) return Response.json({error: 'Synthetic exact revision dependency unavailable'}, {status: 503});
+      return Response.json({version: 1, task: row.task, item: row.claim, executionEnabled: false});
+    }}), h = harness();
+    await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled);
+    const savedOpen = button(h.render(), 'Revise my claim ' + old.id).props.onClick, savedRefresh = button(h.render(), 'Refresh my work').props.onClick;
+    h.click('Revise my claim ' + old.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1);
+    const savedSubmit = walk(h.render(), node => node.type === 'form')[0].props.onSubmit, savedConsent = walk(h.render(), node => node.props?.['aria-label'] === 'Accept contribution policy')[0].props.onChange;
+    const exactPath = '/api/contributions?claim=' + old.id, reads = s.requests.filter(row => row.path === exactPath).length, pages = s.pages;
+    unavailable = true; h.field('Accept contribution policy', true); h.submit();
+    const held = h.pending(), body = held.body, command = structuredClone(held.command), author = structuredClone(held.author), hash = await m.contributionDigest(body);
+    assert.equal(command.version, 2); assert.deepEqual(command.revisionOf, {claim: ref(old), review: {sequence: old.sequence, digest: old.events.at(-1).digest}}); assert.equal(body, m.boundedContributionCommand(command).payload); assert.deepEqual(author, identity());
+    await h.until(tree => text(tree).includes('The request was not sent because exact revision dependencies could not be confirmed'));
+    assert.equal(s.writes.length, 0, 'unavailable exact preflight must stop the first POST'); assert.equal(s.requests.filter(row => row.path === exactPath).length, reads + failureAt); assert.equal(held.submitted, false); assert.equal(h.pending(), held); assert.equal(h.pending().body, body); assert.deepEqual(h.pending().command, command); assert.deepEqual(h.pending().author, author);
+    assert.equal(walk(h.render(), node => node.type === 'form').length, 0); assert.equal(walk(h.render(), node => node.props?.['aria-label'] === 'Exact revision feedback').length, 0); assert(button(h.render(), 'Refresh my work').props.disabled); assert(!button(h.render(), 'Retry identical request').props.disabled);
+    savedOpen(); savedRefresh(); savedConsent({target: {checked: false, value: false}}); savedSubmit({preventDefault() {}}); await h.flush();
+    assert.equal(s.writes.length, 0); assert.equal(s.pages, pages); assert.equal(h.pending(), held); assert.equal(h.pending().body, body); assert.equal(h.pending().command.requestId, command.requestId); assert.equal(walk(h.render(), node => node.type === 'form').length, 0);
+    attemptReads = 0; h.click('Retry identical request'); await h.until(tree => text(tree).includes('The request was not sent because exact revision dependencies could not be confirmed'));
+    assert.equal(s.writes.length, 0); assert.equal(s.requests.filter(row => row.path === exactPath).length, reads + 2 * failureAt); assert.equal(h.pending(), held); assert.equal(held.submitted, false);
+    const beforeSwap = s.requests.filter(row => row.path === exactPath).length; s.who = identity(human(3)); h.click('Retry identical request'); await h.until(tree => text(tree).includes('The original participant is required'));
+    assert.equal(s.writes.length, 0); assert.equal(s.requests.filter(row => row.path === exactPath).length, beforeSwap); assert.equal(h.pending(), held); assert.equal(held.body, body); assert.deepEqual(held.author, author); assert.equal(held.submitted, false); assert(button(h.render(), 'Retry identical request').props.disabled);
+    s.who = identity(); h.click('Check original identity'); await h.until(tree => !button(tree, 'Retry identical request').props.disabled); assert.equal(s.writes.length, 0); assert.equal(s.requests.filter(row => row.path === exactPath).length, beforeSwap);
+    unavailable = false; const recoveryStart = s.requests.length; h.click('Retry identical request'); await h.until(tree => text(tree).includes('Claim recorded with its original 72-hour deadline'));
+    assert.equal(s.writes.length, 1); assert.equal(s.writes[0].init.body, body); assert.equal(await m.contributionDigest(s.writes[0].init.body), hash); assert.deepEqual(s.writes[0].command, command); assert.equal(s.writes[0].command.requestId, command.requestId); assert.equal(s.writes[0].init.headers['X-Contribution-Author'], author.authorId); assert.equal(s.requests.filter(row => row.path === exactPath).length, beforeSwap + 2);
+    const recovery = s.requests.slice(recoveryStart), firstPost = recovery.findIndex(row => row.init.method === 'POST');
+    assert.deepEqual(recovery.slice(0, firstPost).map(row => row.path), ['/api/contributions/me', exactPath, '/api/contributions/me', exactPath], 'an unsent retry must recheck exact dependencies and original identity before its first POST'); assert.equal(recovery[firstPost].path, '/api/contributions'); assert.equal(h.pending(), null); assert.equal(s.rows.filter(row => row.claim.record?.version === 2).length, 1); assert.equal(s.rows.find(row => row.claim.id === old.id).claim.status, 'CHANGES_REQUESTED');
+    h.unmount();
+  }
+});
+
+test('V2 uncertainty and account swap preserve original revision bytes and block all dependent work until original identity returns', async () => {
+  const task = await taskFixture(), old = await reviewed(task, await claimFixture(task)), s = server([{task, claim: old}]), normalFetch = globalThis.fetch; let first = true;
+  globalThis.fetch = async (path, init = {}) => {const response = await normalFetch(path, init); if (init.method === 'POST' && first) {first = false; throw Error('Synthetic lost revision ACK');} return response;};
+  const h = harness(); await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled); h.click('Revise my claim ' + old.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1);
+  h.field('Accept contribution policy', true); h.submit(); await h.until(tree => text(tree).includes('Outcome unknown.')); const body = s.writes[0].init.body, reads = s.requests.filter(row => row.path === '/api/contributions?claim=' + old.id).length, held = h.pending(), command = structuredClone(held.command), author = structuredClone(held.author);
+  assert.equal(held.submitted, true); assert.equal(held.body, body);
+  assert(button(h.render(), 'Refresh my work').props.disabled); s.who = identity(human(3)); h.click('Retry identical request'); await h.until(tree => text(tree).includes('The original participant is required'));
+  assert.equal(s.writes.length, 1); assert(button(h.render(), 'Retry identical request').props.disabled); assert.equal(walk(h.render(), node => node.type === 'form').length, 0); assert.equal(h.pending(), held); assert.equal(held.body, body); assert.deepEqual(held.author, author); assert.equal(held.submitted, true);
+  s.who = identity(); h.click('Check original identity'); await h.until(tree => !button(tree, 'Retry identical request').props.disabled); h.click('Retry identical request'); await h.until(tree => text(tree).includes('Claim recorded with its original 72-hour deadline'));
+  assert.equal(s.writes.length, 2); assert.equal(s.writes[1].init.body, body); assert.equal(s.writes[1].command.requestId, command.requestId); assert.deepEqual(s.writes[1].command.revisionOf, command.revisionOf); assert.equal(s.writes[1].init.headers['X-Contribution-Author'], author.authorId); assert.equal(s.requests.filter(row => row.path === '/api/contributions?claim=' + old.id).length, reads, 'dispatched retry must reconcile the held request without fresh admission reads'); assert.equal(h.pending(), null);
+  assert.equal(s.rows.filter(row => row.claim.record?.version === 2).length, 1); assert.equal(s.rows.find(row => row.claim.id === old.id).claim.status, 'CHANGES_REQUESTED');
+});
+
+test('hidden-parent visibility floor suppresses visible V2 lineage and prevents stale inbox restoration', async () => {
+  const task = await taskFixture('Hidden lineage source'), old = await reviewed(task, await claimFixture(task)), review = old.events.at(-1), command = m.boundedContributionCommand({version: 2, action: 'claim', requestId: uid(), policyAccepted: m.contributionPolicy, id: uid(), task: ref(task), expectedTaskSequence: 0, revisionOf: {claim: ref(old), review: {sequence: review.sequence, digest: review.digest}}}).command;
+  const createdAt = '2026-10-11T10:00:30.000Z', record = m.contributionClaimRecordForCommand(command, participant, createdAt), claim = await m.validateContributionClaimItem({id: record.id, digest: await m.contributionDigest(JSON.stringify(record)), requestId: record.requestId, createdAt, expiresAt: record.expiresAt, checkedAt, author: participant, task: ref(task), taskState: 'OPEN', sequence: 0, status: 'ACTIVE', handoffDigest: null, reason: null, record, events: []});
+  const visibleRows = [{task, claim}], s = server(visibleRows), h = harness(); await h.until(tree => text(panel(tree)).includes('Revision of')); assert(text(panel(h.render())).includes(review.digest));
+  s.rows = [await hide(task, claim)]; h.click('Refresh tasks'); await h.until(tree => !text(panel(tree)).includes('Revision of')); s.rows = visibleRows; h.click('Refresh my work'); await h.until(() => s.pages === 2); await h.flush();
+  assert(!text(h.render()).includes(review.digest)); assert(!text(h.render()).includes('Revision of')); assert(!text(panel(h.render())).includes('Hidden lineage source')); assert.equal(s.writes.length, 0);
+});
+
+
+function rejectedWorkBody(status, onCancel = () => {}) {
+  let cancellations = 0, settle;
+  const settlement = new Promise(resolve => settle = resolve);
+  const response = new Response(new ReadableStream({
+    start(controller) {controller.enqueue(new TextEncoder().encode('Untrusted rejected work-body text.'));},
+    cancel() {cancellations++; onCancel(); return settlement;},
+  }), {status});
+  return {response, cancellations: () => cancellations, settle};
+}
+async function assertRejectedWorkBodyClosed(body) {
+  assert.equal(body.cancellations(), 1); assert.equal(body.response.bodyUsed, true);
+  const reader = body.response.body.getReader();
+  try {assert.deepEqual(await reader.read(), {value: undefined, done: true});} finally {reader.releaseLock();}
+}
+
+test('rejected inbox, exact-claim and task-history bodies close while existing work error fences remain active', async () => {
+  for (const target of ['inbox', 'claim', 'history']) {
+    const task = await taskFixture(), old = await reviewed(task, await claimFixture(task)), body = rejectedWorkBody(503);
+    const s = server([{task, claim: old}]), normalFetch = globalThis.fetch; let armed = false, request;
+    globalThis.fetch = async (path, init = {}) => {
+      const url = new URL(path, 'https://synthetic.invalid');
+      const matches = target === 'inbox' ? url.pathname === '/api/contributions/work' : url.searchParams.has(target === 'claim' ? 'claim' : 'task');
+      if (armed && matches) {armed = false; request = init; return body.response;}
+      return normalFetch(path, init);
+    };
+    const h = harness();
+    try {
+      await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled);
+      armed = true; h.click(target === 'inbox' ? 'Refresh my work' : 'Revise my claim ' + old.id);
+      await h.until(tree => text(panel(tree)).includes(target === 'inbox' ? 'Your work is unavailable' : 'The exact attempt and current participant could not be confirmed'));
+      await assertRejectedWorkBodyClosed(body); assert.equal(request.signal.aborted, false);
+      assert.equal(s.writes.length, 0); assert.equal(walk(h.render(), node => node.type === 'form').length, 0);
+      assert(!text(h.render()).includes('Untrusted rejected work-body text'));
+      assert(button(h.render(), 'Revise my claim ' + old.id).props.disabled);
+    } finally {body.settle(); h.unmount();}
+  }
+});
+
+test('each rejected V2 exact preflight body closes without replacing held bytes or skipping dependency checks on retry', async () => {
+  for (const failureAt of [1, 2]) {
+    const task = await taskFixture(), old = await reviewed(task, await claimFixture(task)), body = rejectedWorkBody(503); let armed = false, attempts = 0;
+    const s = server([{task, claim: old}], {exact: async row => {
+      if (armed && ++attempts === failureAt) return body.response;
+      return Response.json({version: 1, task: row.task, item: row.claim, executionEnabled: false});
+    }}), h = harness();
+    try {
+      await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled);
+      h.click('Revise my claim ' + old.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1);
+      armed = true; h.field('Accept contribution policy', true); h.submit(); const held = h.pending(), originalBody = held.body, command = structuredClone(held.command), author = structuredClone(held.author);
+      await h.until(tree => text(tree).includes('The request was not sent because exact revision dependencies could not be confirmed')); await assertRejectedWorkBodyClosed(body);
+      assert.equal(s.writes.length, 0); assert.equal(h.pending(), held); assert.equal(held.body, originalBody); assert.equal(held.submitted, false); assert.deepEqual(held.command, command); assert.deepEqual(held.author, author);
+      assert.equal(walk(h.render(), node => node.props?.['aria-label'] === 'Exact revision feedback').length, 0);
+      armed = false; const start = s.requests.length; h.click('Retry identical request'); await h.until(tree => text(tree).includes('Claim recorded with its original'));
+      const retry = s.requests.slice(start), exactPath = '/api/contributions?claim=' + old.id;
+      assert.deepEqual(retry.slice(0, 4).map(row => row.path), ['/api/contributions/me', exactPath, '/api/contributions/me', exactPath]);
+      assert.equal(s.writes.length, 1); assert.equal(s.writes[0].init.body, originalBody); assert.equal(s.writes[0].command.requestId, command.requestId); assert.deepEqual(s.writes[0].command.revisionOf, command.revisionOf); assert.equal(h.pending(), null);
+    } finally {body.settle(); h.unmount();}
+  }
+});
+
+test('401 and403 clear private identity, work and forms synchronously before delayed rejected-body disposal can settle', async () => {
+  for (const status of [401, 403]) for (const target of ['identity', 'inbox', 'post']) {
+    const task = await taskFixture('Private work must clear immediately'), old = await reviewed(task, await claimFixture(task)); let observed, armed = false;
+    const body = rejectedWorkBody(status, () => {
+      const state = hooks.refs[0].current, view = hooks.refs[2].current;
+      observed = {epoch: state.epoch, me: view.me, work: view.work.length, form: view.form, fields: {...view.fields}, pending: state.pending};
+    });
+    const s = server([{task, claim: old}]), normalFetch = globalThis.fetch; let intercepted;
+    globalThis.fetch = async (path, init = {}) => {
+      const matches = target === 'identity' ? path === '/api/contributions/me' : target === 'inbox' ? path === '/api/contributions/work' : init.method === 'POST';
+      if (armed && matches) {armed = false; intercepted = {path, init}; return body.response;}
+      return normalFetch(path, init);
+    };
+    const h = harness(); let held = null, originalHeld = null;
+    try {
+      await h.until(tree => !!button(tree, 'Revise my claim ' + old.id) && !button(tree, 'Revise my claim ' + old.id).props.disabled);
+      const before = hooks.refs[0].current.epoch;
+      if (target === 'post') {h.click('Revise my claim ' + old.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1); armed = true; h.field('Accept contribution policy', true); h.submit(); held = h.pending(); originalHeld = {body: held.body, command: structuredClone(held.command), author: structuredClone(held.author)};}
+      else {armed = true; h.click('Refresh my work');}
+      await h.until(tree => text(tree).includes(target === 'post' ? 'The original participant is required' : 'Sign in to participate. Public tasks remain available.'));
+      await assertRejectedWorkBodyClosed(body);
+      assert(observed.epoch > before); assert.equal(observed.me, null); assert.equal(observed.work, 0); assert.equal(observed.form, null); assert.equal(observed.fields.consent, false); assert.equal(observed.fields.handoff, '');
+      assert.equal(walk(panel(h.render()), node => node.type === 'li').length, 0); assert(!text(h.render()).includes('Untrusted rejected work-body text'));
+      if (held) {assert.equal(observed.pending, held); assert.equal(h.pending(), held); assert.equal(held.submitted, true); assert.equal(held.body, originalHeld.body); assert.deepEqual(held.command, originalHeld.command); assert.deepEqual(held.author, originalHeld.author); assert.equal(intercepted.init.body, originalHeld.body); assert.equal(intercepted.init.headers['X-Contribution-Author'], originalHeld.author.authorId); assert(button(h.render(), 'Retry identical request').props.disabled); assert.equal(s.writes.length, 0, 'the intercept returns the rejection before the fixture publisher');}
+      else {assert.equal(h.pending(), null); assert.equal(s.writes.length, 0);}
+    } finally {body.settle(); h.unmount();}
+  }
+});
+
+test('labelled work scrolling retains five attempts and opens exact revision feedback beside one confirmation', async () => {
+  const rows = [];
+  for (let n = 0; n < 5; n++) {const task = await taskFixture('Browse retained work ' + n); rows.push({task, claim: await reviewed(task, await claimFixture(task))});}
+  const s = server(rows), h = harness();
+  await h.until(tree => rows.every(row => !!button(tree, 'Open work attempt ' + row.claim.id) && !button(tree, 'Open work attempt ' + row.claim.id).props.disabled));
+  const tree = h.render(), region = walk(tree, node => node.props?.['aria-label'] === 'Your contribution attempts')[0];
+  assert.equal(region.props.role, 'region'); assert.equal(region.props.tabIndex, 0);
+  assert.equal(walk(region, node => node.type === 'li').length, 5);
+  for (const row of rows) assert(button(region, 'Open work attempt ' + row.claim.id));
+  assert.equal(s.writes.length, 0);
+  h.click('Revise my claim ' + rows[0].claim.id); await h.until(tree => walk(tree, node => node.type === 'form').length === 1);
+  const opened = h.render(), detail = walk(opened, node => node.props?.className === 'og-cd-detail')[0], form = walk(detail, node => node.type === 'form')[0];
+  assert(form); assert.equal(walk(opened, node => node.type === 'form').length, 1);
+  assert.equal(walk(form, node => node.props?.['aria-label'] === 'Exact revision feedback').length, 1);
+  const target = walk(form, node => node.props?.['aria-label'] === 'Intended contribution target')[0];
+  assert(text(target).includes(rows[0].task.id) && text(target).includes(rows[0].claim.id));
+  assert.deepEqual(walk(detail, node => node.type === 'form' || node.props?.className === 'og-cd-claims').map(node => node.type === 'form' ? 'confirmation' : 'history'), ['confirmation', 'history']);
+  assert(button(opened, 'Confirm revision').props.disabled); assert.equal(s.writes.length, 0);
 });

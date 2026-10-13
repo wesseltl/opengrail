@@ -11,10 +11,62 @@
 @media(max-width:760px){.og-header,.og-network main,.og-footer{padding-left:22px;padding-right:22px}.og-header{min-height:96px;gap:14px;flex-wrap:wrap;padding-top:16px;padding-bottom:14px}.og-header nav{display:flex;order:3;flex-basis:100%;gap:22px;overflow-x:auto;padding-bottom:4px;white-space:nowrap}.og-header nav a{min-height:40px;display:flex;align-items:center}.og-header-action{margin-left:auto}.og-wordmark{font-size:23px}.og-hero{grid-template-columns:1fr;gap:42px;padding:56px 0}.og-hero h1{font-size:clamp(42px,8vw,60px);max-width:570px;letter-spacing:-2px}.og-hero-lead{font-size:16px;max-width:470px}.og-loop{max-width:460px;width:100%;justify-self:center}.og-loop-card strong{font-size:12px}.og-loop-card div span{font-size:10px}.og-loop-caption{font-size:8px}.og-stage{font-size:8px}.og-principles{padding:48px 0}.og-principle-grid{grid-template-columns:1fr;gap:28px;margin-top:30px}.og-principle-grid article{display:grid;grid-template-columns:40px 1fr;column-gap:12px}.og-principle-grid h3{margin-top:3px}.og-principle-grid p{grid-column:2;max-width:500px;margin-top:4px}.og-number{grid-row:1 / span 2}.og-section-heading h2{font-size:31px}.og-agent-heading{align-items:flex-start;flex-direction:column;gap:12px}.og-boundary{padding:0}.og-agents{padding:48px 0}.og-join-panel{align-items:flex-start;flex-direction:column;gap:22px;padding:24px}.og-agent-toolbar{padding:18px;gap:14px;flex-wrap:wrap}.og-agent-toolbar>div>span{font-size:9px}.og-agent-list li{padding:18px;gap:12px;flex-wrap:wrap}.og-agent-name{flex-basis:calc(100% - 64px)}.og-agent-list .og-status{margin-left:54px}.og-agent-list button{margin-left:auto;min-height:34px;padding:8px 12px}.og-connection-note{padding:17px 18px}.og-contribute{grid-template-columns:1fr;gap:36px;padding:48px 0}.og-contribute h2{font-size:32px}.og-footer{flex-wrap:wrap;padding-top:24px;padding-bottom:28px}.og-footer>span{width:100%;font-size:8px}.og-dialog{padding:26px 22px!important}.og-dialog-actions{flex-wrap:wrap}.og-dialog-actions .og-primary{flex:1}}
 /* Keep every workspace destination visible on narrow headers. Home retains its disclosure. */
 @media(max-width:760px){.og-network:not(.og-network-home) .og-header nav{flex-wrap:wrap;overflow:visible;white-space:normal;gap:4px 16px}.og-network:not(.og-network-home) .og-header nav a{min-height:44px;flex-shrink:0;padding:0 2px;white-space:nowrap}}
-@media(prefers-reduced-motion:reduce){.og-network *,.og-dialog *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-motion:reduce){.og-network *,.og-dialog,.og-dialog *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 .og-agent-guide-link{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;margin-top:18px!important;font-size:10px;color:var(--og-muted)}.og-dialog .og-text-link{color:var(--og-accent);text-decoration:none;display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600}.og-dialog a:focus-visible{outline:2px solid var(--og-accent);outline-offset:3px}
 
 /* Native workspace disclosure keeps every tool reachable without crowding the header. */
 .og-network-home .og-header nav{overflow:visible;gap:18px}.og-workspaces{position:relative}.og-workspaces summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;min-height:28px}.og-workspaces summary::-webkit-details-marker{display:none}.og-workspaces summary::after{content:"⌄";font-size:12px}.og-workspaces[open] summary::after{content:"⌃"}.og-workspaces summary:focus-visible,.og-workspaces a:focus-visible{outline:2px solid var(--og-accent);outline-offset:4px}.og-workspaces>div{position:absolute;z-index:30;top:calc(100% + 12px);right:0;min-width:220px;display:grid;gap:2px;padding:10px;border:1px solid var(--og-line);border-radius:10px;background:var(--og-white);box-shadow:0 12px 32px #29232914}.og-workspaces>div a{display:flex;padding:10px 12px;min-height:40px;border-radius:5px}.og-workspaces>div a:hover{background:var(--og-soft)}
 @media(max-width:960px){.og-network-home .og-workspaces{position:static}.og-network-home .og-header{flex-wrap:wrap;padding-top:16px;padding-bottom:14px;gap:14px}.og-network-home .og-header nav{position:relative;order:3;flex-basis:100%;flex-wrap:wrap;gap:8px 18px}.og-network-home .og-header nav>a,.og-workspaces summary{min-height:40px;display:flex;align-items:center}.og-network-home .og-header-action{margin-left:auto}.og-workspaces>div{left:0;right:auto;top:calc(100% + 8px);max-width:calc(100vw - 44px)}}
+
+/* Nonsecret enrollment metadata stays separate from the one-time credential. */
+.og-registration-details{display:grid;gap:12px;min-width:0}.og-registration-details dl{display:grid;gap:9px;margin:0}.og-registration-details dl>div{display:grid;gap:3px;min-width:0}.og-registration-details dt{font-size:10px;color:var(--og-muted);font-weight:600}.og-registration-details dd{margin:0;min-width:0}.og-registration-details code,.og-registration-details time{display:block;overflow-wrap:anywhere;font-family:ui-monospace,monospace;font-size:12px}.og-registration-details button{justify-self:start}.og-agent-details{margin-top:10px;font-size:10px}.og-agent-details summary{cursor:pointer;min-height:28px;display:flex;align-items:center}.og-agent-details summary:focus-visible{outline:2px solid var(--og-accent);outline-offset:3px}.og-agent-details>.og-registration-details{margin-top:10px;max-width:360px}.og-agent-list .og-registration-details button{margin-left:0}.og-dialog .og-registration-details dt{font-size:11px}
+
+/* Explicit current-sponsor read stays separate from credentials and agent records. */
+.og-sponsor-identity{padding:14px 24px;border-bottom:1px solid var(--og-line);font-size:11px}.og-sponsor-identity summary{min-height:28px;display:list-item;cursor:pointer;line-height:28px}.og-sponsor-identity summary:focus-visible{outline:2px solid var(--og-accent);outline-offset:3px}.og-sponsor-identity>div{display:grid;gap:10px;margin-top:10px;max-width:520px}.og-sponsor-identity p{color:var(--og-muted)}.og-sponsor-identity label{display:grid;gap:5px;font-size:10px}.og-sponsor-identity input{width:100%;min-width:0;padding:10px;background:var(--og-paper);border:1px solid var(--og-line);border-radius:5px;font:11px ui-monospace,monospace}.og-sponsor-identity button{justify-self:start}.og-sponsor-identity [role=alert]{color:#823447}
+@media(max-width:760px){.og-sponsor-identity{padding:12px 18px}}
+
+/* Shared primary destinations; native More keeps the full route set reachable. */
+.og-network .og-header nav.og-main-nav{position:relative;align-items:center;flex-wrap:wrap;overflow:visible;white-space:normal;gap:4px 16px}
+.og-network .og-header nav.og-main-nav>a,.og-network .og-header nav.og-main-nav summary{min-height:44px;min-width:44px;display:flex;align-items:center}
+.og-network .og-header nav.og-main-nav>a{padding:0 2px;white-space:nowrap}
+.og-network .og-header nav.og-main-nav a[aria-current=page]{color:var(--og-accent);font-weight:600}
+.og-network .og-header nav.og-main-nav .og-workspaces{position:relative}
+.og-network .og-header nav.og-main-nav .og-workspaces>div{left:auto;right:0;grid-template-columns:repeat(2,minmax(0,1fr));width:360px;min-width:0;max-width:calc(100vw - 44px);max-height:65vh;max-height:min(65vh,max(96px,calc(100dvh - 180px)));overflow-y:auto}
+.og-network .og-header nav.og-main-nav .og-workspaces>div a{min-height:44px;white-space:normal;overflow-wrap:anywhere}
+.og-network-home .og-header-action{min-height:44px;min-width:44px}
+/* The home keeps its existing typography and colors, with actions before background detail. */
+.og-network-home .og-hero{gap:40px;padding:40px 0 36px}
+.og-network-home .og-hero h1{font-family:inherit;font-size:clamp(32px,4vw,48px);font-weight:600;letter-spacing:-1px;line-height:1.15;margin-top:0}
+.og-network-home .og-hero-lead{max-width:500px;line-height:1.65}
+.og-network-home .og-hero-actions{flex-wrap:wrap;gap:12px 22px}
+.og-network-home .og-hero-caption{max-width:none;font-size:12px}
+.og-network-home .og-button,.og-network-home .og-text-link{min-height:44px}
+.og-network-home .og-icon-button{min-width:44px}
+.og-network-home .og-home-next{display:grid;min-width:0;border:1px solid var(--og-line);border-radius:14px;background:var(--og-white);overflow:hidden}
+.og-network-home .og-home-next a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:84px;padding:20px 24px}
+.og-network-home .og-home-next a+a{border-top:1px solid var(--og-line)}
+.og-network-home .og-home-next a:hover{background:var(--og-soft)}
+.og-network-home .og-home-next a:focus-visible{outline-offset:-4px}
+.og-network-home .og-home-next a>div{min-width:0}
+.og-network-home .og-home-next strong{display:block;font-size:14px;font-weight:600}
+.og-network-home .og-home-next span{display:block;font-size:12px;line-height:1.6;color:var(--og-muted);margin-top:4px}
+.og-network-home .og-home-next svg{color:var(--og-accent)}
+.og-network-home .og-agents{padding:40px 0 48px}
+.og-network-home .og-agent-details summary,.og-network-home .og-sponsor-identity summary{min-height:44px;line-height:44px;display:list-item}
+.og-network-home .og-contribute{display:block;padding:36px 0 48px}
+.og-network-home .og-contribute h2{font-size:30px;margin-top:10px}
+.og-network-home .og-contribute-actions{gap:10px 18px;margin-top:18px}
+.og-network-home .og-home-details{margin-top:24px;border-top:1px solid var(--og-line)}
+.og-network-home .og-home-details>summary{min-height:44px;line-height:1.6;padding:12px 0;font-size:13px;font-weight:600}
+.og-network-home .og-home-details>.og-principles{margin-top:24px;padding:24px 0 28px;border-bottom:0}
+.og-network-home .og-home-details .og-section-heading h2{font-size:26px}
+.og-network-home .og-home-details .og-principle-grid{margin-top:24px;gap:24px}
+.og-network-home .og-home-details>aside{max-width:620px;margin-top:24px}
+.og-network-home .og-connection-note summary{min-height:44px;line-height:1.6;padding:12px 0}
+.og-home-dialog :is(button,a,input,select){min-height:44px}
+.og-home-dialog .og-dialog-close{min-width:44px}
+.og-home-dialog [data-slot=dialog-title]{padding-right:44px}
+@media(max-width:960px){.og-network .og-header:has(nav.og-main-nav){flex-wrap:wrap;padding-top:16px;padding-bottom:14px;gap:14px}.og-network .og-header nav.og-main-nav{order:3;flex-basis:100%}.og-network .og-header:has(nav.og-main-nav) .og-header-action{margin-left:auto}.og-network .og-header nav.og-main-nav .og-workspaces[open]{flex-basis:100%;width:100%}.og-network .og-header nav.og-main-nav .og-workspaces>div{position:static;width:100%;max-width:none;margin-top:8px}}
+@media(max-width:760px){.og-network-home .og-hero{gap:28px;padding:40px 0 32px}.og-network-home .og-home-next a{min-height:76px;padding:18px 20px}.og-network-home .og-agents{padding:32px 0}.og-network-home .og-contribute{padding:28px 0 36px}}
+@media(max-width:480px){.og-network .og-header nav.og-main-nav .og-workspaces>div{grid-template-columns:1fr}.og-network-home .og-hero-actions{align-items:flex-start;gap:8px 16px}}

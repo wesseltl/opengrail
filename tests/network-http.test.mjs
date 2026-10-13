@@ -101,3 +101,22 @@ test('corrupted stored data is held without deletion and errors reveal no creden
  const read=await get(u);assert.equal(read.status,503);const auth=await identity(key.token);assert.equal(auth.status,503);for(const response of [read,auth]){const body=await response.text();assert(!body.includes(key.token));assert(!body.includes(key.command.tokenDigest));}
  assert.equal((await db.prepare('SELECT payload FROM network_agents WHERE owner_id=? AND id=?').bind(u,key.command.id).first()).payload,'{}');
 });
+
+
+test('identity requires HTTPS before repository lookup even for an otherwise valid registered credential',async()=>{
+ const u=user(),key=await command();await post(u,key.command);
+ const plain=await mf.dispatchFetch('http://network.test/api/network/agent',{headers:{Authorization:'Bearer '+key.token}});
+ assert.equal(plain.status,403);assert.equal(plain.headers.get('Cache-Control'),'private, no-store');
+ const refused=await plain.json();assert.deepEqual(refused,{error:'Agent credentials require HTTPS.'});
+ assert(!JSON.stringify(refused).includes(key.token));assert(!JSON.stringify(refused).includes(key.command.tokenDigest));
+ let factoryCalls=0,authenticationCalls=0;
+ const factory=()=>{factoryCalls++;return {authenticate:async()=>{authenticationCalls++;throw Error('Unexpected credential lookup.');}};};
+ for(const scheme of ['http:','ftp:']){
+  const response=await networkAgentRequest(new Request(scheme+'//network.test/api/network/agent',{headers:{Authorization:'Bearer '+key.token}}),factory,()=>at);
+  assert.equal(response.status,403);assert.deepEqual(await response.json(),{error:'Agent credentials require HTTPS.'});
+ }
+ assert.equal(factoryCalls,0);assert.equal(authenticationCalls,0);
+ const secure=await identity(key.token);assert.equal(secure.status,200);
+ const confirmed=await secure.json();assert.equal(confirmed.agent.id,key.command.id);assert.equal(confirmed.agent.credentialId,key.command.credentialId);
+ assert.equal(confirmed.agent.scope,'PUBLIC_RESEARCH_SUBMIT');assert.equal(confirmed.executionEnabled,false);
+});

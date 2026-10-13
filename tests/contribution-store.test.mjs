@@ -236,3 +236,129 @@ test('the contribution migration preserves every earlier generated artifact and 
  const journal=JSON.parse(readFileSync('drizzle/meta/_journal.json','utf8')),previous=JSON.parse(readFileSync('drizzle/meta/0006_snapshot.json','utf8')),current=JSON.parse(readFileSync('drizzle/meta/0007_snapshot.json','utf8'));
  assert.equal(journal.entries[7].idx,7);assert.equal(journal.entries[7].tag,'0007_public_contribution_tasks');assert.equal(current.prevId,previous.id);for(const [name,table] of Object.entries(previous.tables))assert.deepEqual(current.tables[name],table);const added=Object.keys(current.tables).filter(name=>!Object.hasOwn(previous.tables,name)).sort();assert.deepEqual(added,['contribution_claim_events','contribution_claims','contribution_task_events','contribution_tasks']);const sql=readFileSync('drizzle/0007_public_contribution_tasks.sql','utf8');assert(!/DROP|ALTER|network_agents/i.test(sql));assert.equal((sql.match(/CREATE TABLE/g)||[]).length,4);
 });
+
+const revisedClaim=(t,previous,extra={})=>claim(t,{version:2,revisionOf:{claim:ref(previous),review:{sequence:previous.events.at(-1).sequence,digest:previous.events.at(-1).digest}},...extra});
+async function requestedChanges(actor=human(),time=at(),decision='CHANGES_REQUESTED'){
+ const t=await task(time),original=await write(actor,claim(t.item),time),submitted=await write(actor,submit(t.item,original.claim),plus(time,10)),disposition=await write(t.actor,review(t.item,submitted.claim,decision),plus(time,20));return {t,actor,original,disposition,time};
+}
+
+test('explicit human revision retains old bytes and starts one ordinary new lease',async()=>{
+ const f=await requestedChanges(),prior=await db.prepare('SELECT * FROM contribution_claims WHERE id=?').bind(f.original.claim.id).first(),events=(await db.prepare('SELECT * FROM contribution_claim_events WHERE claim_id=? ORDER BY sequence').bind(f.original.claim.id).all()).results;
+ const command=revisedClaim(f.t.item,f.disposition.claim),result=await write(f.actor,command,plus(f.time,30));
+ assert.equal(result.claim.record.version,2);assert.deepEqual(result.claim.record.revisionOf,command.revisionOf);assert.equal(result.claim.status,'ACTIVE');assert.equal(result.claim.sequence,0);assert.equal(result.claim.handoffDigest,null);assert.equal(Date.parse(result.claim.expiresAt)-Date.parse(result.claim.createdAt),72*3600000);
+ assert.deepEqual(await db.prepare('SELECT * FROM contribution_claims WHERE id=?').bind(f.original.claim.id).first(),prior);assert.deepEqual((await db.prepare('SELECT * FROM contribution_claim_events WHERE claim_id=? ORDER BY sequence').bind(f.original.claim.id).all()).results,events);
+ assert.equal((await repo().getClaim(f.original.claim.id,plus(f.time,30))).item.status,'CHANGES_REQUESTED');assert.equal(await count('contribution_claims'),2);
+ const oldBefore=JSON.stringify(f.disposition.claim),nextSubmit=await write(f.actor,submit(f.t.item,result.claim),plus(f.time,40));assert.equal(nextSubmit.claim.status,'SUBMITTED');assert.equal(JSON.stringify(f.disposition.claim),oldBefore);
+});
+
+test('revision belongs to actual agent, never its human sponsor or sibling',async()=>{
+ const time=at(),sponsor=human(),a=await agent(sponsor,'Actual revising agent',time),sibling=await agent(sponsor,'Same sponsor is not authorship',time),f=await requestedChanges(a.actor,time),command=revisedClaim(f.t.item,f.disposition.claim);
+ for(const actor of [sponsor,sibling.actor,human(true)])await assert.rejects(()=>write(actor,{...command,requestId:uid(),id:uid()},plus(time,30)),status(403));
+ const result=await write(a.actor,command,plus(time,30));assert.deepEqual(result.claim.author,f.original.claim.author);assert.equal(result.claim.record.version,2);
+ await revoke(sponsor,a,plus(time,40));await assert.rejects(()=>write(a.actor,command,plus(time,40)),status(401));assert.equal(await count('contribution_claims'),2);
+});
+
+test('exact prior task, final review and immutable digests fence revisions',async()=>{
+ const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim),other=await task(f.time);
+ for(const revisionOf of [{...command.revisionOf,claim:{...command.revisionOf.claim,digest:'f'.repeat(64)}},{...command.revisionOf,review:{sequence:1,digest:f.disposition.claim.events[0].digest}},{...command.revisionOf,review:{sequence:2,digest:'f'.repeat(64)}}])await assert.rejects(()=>write(f.actor,{...command,id:uid(),requestId:uid(),revisionOf},plus(f.time,30)),status(409));
+ await assert.rejects(()=>write(f.actor,{...command,task:ref(other.item)},plus(f.time,30)),status(404));await assert.rejects(()=>write(f.actor,{...command,revisionOf:{...command.revisionOf,claim:{id:uid(),digest:'f'.repeat(64)}}},plus(f.time,30)),status(404));
+ assert.equal(await count('contribution_claims'),1);
+});
+
+test('accepted and rejected dispositions cannot become linked revisions, ordinary attempts remain valid',async()=>{
+ for(const decision of ['ACCEPTED','REJECTED']){const f=await requestedChanges(human(),at(),decision);await assert.rejects(()=>write(f.actor,revisedClaim(f.t.item,f.disposition.claim),plus(f.time,30)),status(409));const ordinary=await write(f.actor,claim(f.t.item),plus(f.time,30));assert.equal(ordinary.claim.record.version,1);assert(!('revisionOf'in ordinary.claim.record));}
+});
+
+test('terminal predecessor remains eligible after old expiry without extending original lease',async()=>{
+ const time=at(),old=plus(time,-4*86400000),owner=human(),author={kind:'HUMAN',id:await model.contributionPublicHumanId(owner.userId),sponsorId:await model.contributionPublicHumanId(owner.userId)},curator=await syntheticHuman(9),t=await seedTask(register(),curator,old),first=await seedClaim(t,author,old);
+ await seedEvent(submit(t,first.item),author,plus(old,10));const submitted={...first.item,sequence:1};await seedEvent(review(t,submitted,'CHANGES_REQUESTED'),curator,plus(old,20));const previous=(await repo().getClaim(first.item.id,time)).item;
+ assert(previous.expiresAt<time);assert.equal(previous.status,'CHANGES_REQUESTED');const result=await write(owner,revisedClaim(t,previous),time);assert.equal(result.claim.createdAt,time);assert.equal(result.claim.status,'ACTIVE');assert.equal(result.claim.expiresAt,plus(time,72*3600000));assert.equal((await repo().getClaim(previous.id,time)).item.expiresAt,previous.expiresAt);
+});
+
+test('two linked claims and linked versus ordinary admissions have one active winner',async()=>{
+ for(const ordinary of [false,true]){const f=await requestedChanges(),commands=[revisedClaim(f.t.item,f.disposition.claim),ordinary?claim(f.t.item):revisedClaim(f.t.item,f.disposition.claim)],results=await Promise.allSettled(commands.map(command=>write(f.actor,command,plus(f.time,30))));assert.equal(results.filter(result=>result.status==='fulfilled').length,1);assert.equal(results.filter(result=>result.status==='rejected').length,1);const records=await repo().claims(f.t.item.id,f.t.item.digest,null,plus(f.time,30));assert.equal(records.items.filter(item=>item.status==='ACTIVE').length,1);assert.equal(records.items.length,2);}
+});
+
+test('linked predecessor row and review are pinned in the actual INSERT',async()=>{
+ for(const table of ['contribution_claims','contribution_claim_events']){const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim);let changed=false;const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!changed&&sql.startsWith('INSERT INTO contribution_claims')&&operation==='run'&&phase==='before'){changed=true;if(table==='contribution_claims')await db.prepare('UPDATE contribution_claims SET payload=? WHERE id=?').bind('{}',f.original.claim.id).run();else await db.prepare('DELETE FROM contribution_claim_events WHERE claim_id=? AND sequence=2').bind(f.original.claim.id).run();}}));await assert.rejects(()=>guarded.write(f.actor,command,plus(f.time,30)),error=>[409,503].includes(error.status));assert(changed);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(command.id).first()).n,0);}
+});
+
+test('accepted revision retries retain original identity after lost acknowledgment, closure and hiding',async()=>{
+ const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim),accepted=await write(f.actor,command,plus(f.time,30));
+ // The caller deliberately loses the accepted response; retry only the original bytes.
+ const again=await write(f.actor,command,plus(f.time,40));assert.deepEqual(again.acknowledgement,accepted.acknowledgement);assert.equal(again.claim.expiresAt,accepted.claim.expiresAt);assert.equal(await count('contribution_claims'),2);
+ await assert.rejects(()=>write(f.actor,{...command,revisionOf:{...command.revisionOf,review:{sequence:2,digest:'f'.repeat(64)}}},plus(f.time,40)),status(409));
+ const closed=await write(f.t.actor,taskEvent(f.t.item),plus(f.time,50));const closedRetry=await write(f.actor,command,plus(f.time,60));assert.equal(closedRetry.task.state,'CLOSED');assert.deepEqual(closedRetry.acknowledgement,accepted.acknowledgement);
+ await write(f.t.actor,taskEvent(closed.task,'hide'),plus(f.time,70));const hidden=await write(f.actor,command,plus(f.time,80));assert.equal(hidden.claim.record,null);assert.equal(hidden.claim.events.length,0);assert.deepEqual(hidden.acknowledgement,accepted.acknowledgement);assert.equal(await count('contribution_claims'),2);
+});
+
+test('postcommit predecessor corruption refuses current receipts without removing the admitted revision',async()=>{
+ const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim);let changed=false;const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!changed&&sql.startsWith('INSERT INTO contribution_claims')&&operation==='run'&&phase==='after'){changed=true;await db.prepare('DELETE FROM contribution_claim_events WHERE claim_id=? AND sequence=2').bind(f.original.claim.id).run();}}));await assert.rejects(()=>guarded.write(f.actor,command,plus(f.time,30)),status(503));assert(changed);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(command.id).first()).n,1);await assert.rejects(()=>write(f.actor,command,plus(f.time,40)),status(503));await assert.rejects(()=>repo().getClaim(command.id,plus(f.time,40)),status(503));
+});
+
+test('multi-revision exact reads, work and final snapshots include ancestor dependencies',async()=>{
+ const f=await requestedChanges(),second=await write(f.actor,revisedClaim(f.t.item,f.disposition.claim),plus(f.time,30)),submitted=await write(f.actor,submit(f.t.item,second.claim),plus(f.time,40)),reviewed=await write(f.t.actor,review(f.t.item,submitted.claim,'CHANGES_REQUESTED'),plus(f.time,50)),third=await write(f.actor,revisedClaim(f.t.item,reviewed.claim),plus(f.time,60));
+ assert.equal((await repo().getClaim(third.claim.id,plus(f.time,60))).item.digest,third.claim.digest);assert.equal((await repo().work(f.actor,null,plus(f.time,60))).items.length,3);
+ let changed=false;const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!changed&&sql.startsWith('SELECT 1 AS contribution_work_stable')&&operation==='first'&&phase==='before'){changed=true;await db.prepare('DELETE FROM contribution_claim_events WHERE claim_id=? AND sequence=2').bind(f.original.claim.id).run();}}));await assert.rejects(()=>guarded.work(f.actor,null,plus(f.time,60)),status(503));assert(changed);await assert.rejects(()=>repo().getClaim(third.claim.id,plus(f.time,60)),status(503));assert.equal(await count('contribution_claims'),3);
+});
+
+test('linked claims use ordinary sponsor daily and retained task capacity without resets',async()=>{
+ const f=await requestedChanges();for(let n=0;n<8;n++){const fresh=await write(f.actor,claim(f.t.item),plus(f.time,40+n*100));await write(f.actor,release(f.t.item,fresh.claim),plus(f.time,50+n*100));}
+ const tenth=await write(f.actor,revisedClaim(f.t.item,f.disposition.claim),plus(f.time,900)),submitted=await write(f.actor,submit(f.t.item,tenth.claim),plus(f.time,910)),reviewed=await write(f.t.actor,review(f.t.item,submitted.claim,'CHANGES_REQUESTED'),plus(f.time,920));await assert.rejects(()=>write(f.actor,revisedClaim(f.t.item,reviewed.claim),plus(f.time,930)),status(429));assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE sponsor_key=?').bind(tenth.claim.author.sponsorId).first()).n,10);
+ const g=await requestedChanges();for(let n=0;n<31;n++){const author=await syntheticHuman(100+n),seeded=await seedClaim(g.t.item,author,g.time);await seedEvent(release(g.t.item,seeded.item),author,plus(g.time,5));}await assert.rejects(()=>write(g.actor,revisedClaim(g.t.item,g.disposition.claim),plus(g.time,30)),status(429));assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE task_id=?').bind(g.t.item.id).first()).n,32);
+});
+
+test('task visibility and current credential changes at revision INSERT prevent admission',async()=>{
+ for(const action of ['close','hide','revoke']){const time=at(),sponsor=human(),a=await agent(sponsor,'Atomic revision actor',time),f=await requestedChanges(a.actor,time),command=revisedClaim(f.t.item,f.disposition.claim);let changed=false;const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!changed&&sql.startsWith('INSERT INTO contribution_claims')&&operation==='run'&&phase==='before'){changed=true;if(action==='revoke')await revoke(sponsor,a,plus(time,25));else await write(f.t.actor,taskEvent(f.t.item,action),plus(time,25));}}));await assert.rejects(()=>guarded.write(a.actor,command,plus(time,30)),error=>action==='revoke'?error.status===401:[409,503].includes(error.status));assert(changed);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(command.id).first()).n,0);}
+});
+
+test('an accepted revision retry after its own expiry does not renew the lease or quota',async()=>{
+ const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim),first=await write(f.actor,command,plus(f.time,30)),later=plus(first.claim.expiresAt,1),retry=await write(f.actor,command,later);assert.equal(retry.claim.status,'EXPIRED');assert.equal(retry.claim.expiresAt,first.claim.expiresAt);assert.deepEqual(retry.acknowledgement,first.acknowledgement);assert.equal(await count('contribution_claims'),2);assert.equal(retry.claim.sequence,0);
+});
+
+// Add a retained corrupt row below the observed head without changing any
+// canonical row. Sequence0 on an eventless history leaves MAX at0; either
+// sequence0 or-1 beneath a reviewed head leaves its MAX at2.
+async function corruptBelowHead(f,selected,target,sequence){
+ const parent=target==='parent',item=parent?f.t.item:target==='predecessor'?f.disposition.claim:selected.claim,command=parent?taskEvent(f.t.item):submit(f.t.item,{...item,sequence:0}),actor=parent?f.t.item.author:item.author,time=plus(f.time,25),checked=model.boundedContributionRecord(model.contributionEventRecordForCommand(command,actor,time)),event=checked.record,table=parent?'contribution_task_events':'contribution_claim_events',column=parent?'task_id':'claim_id';
+ const head=await db.prepare(`SELECT COALESCE(MAX(sequence),0) AS head FROM ${table} WHERE ${column}=?`).bind(item.id).first();
+ await db.prepare(`INSERT INTO ${table}(${column},sequence,author_key,sponsor_key,request_id,command_digest,payload,digest,state,reason,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(item.id,sequence,actor.kind+':'+actor.id,actor.sponsorId,event.requestId,await model.contributionDigest(model.boundedContributionCommand(command).payload),checked.payload,await model.contributionDigest(checked.payload),event.state,event.reason??'',time).run();
+ const after=await db.prepare(`SELECT COALESCE(MAX(sequence),0) AS head,COUNT(*) AS n FROM ${table} WHERE ${column}=?`).bind(item.id).first();if(sequence===0||head.head>0)assert.equal(after.head,head.head,'the extra row must be invisible to the old MAX fence');return {table,column,id:item.id,sequence};
+}
+async function assertCorruptRetained(row){assert.equal((await db.prepare(`SELECT COUNT(*) AS n FROM ${row.table} WHERE ${row.column}=? AND sequence=?`).bind(row.id,row.sequence).first()).n,1);}
+
+test('below-head predecessor and eventless parent additions prevent a fresh revision INSERT',async()=>{
+ for(const target of ['predecessor','parent'])for(const sequence of [0,-1]){
+  const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim);let injected=null;
+  const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!injected&&sql.startsWith('INSERT INTO contribution_claims')&&operation==='run'&&phase==='before')injected=await corruptBelowHead(f,null,target,sequence);}));
+  await assert.rejects(()=>guarded.write(f.actor,command,plus(f.time,30)),error=>[409,503].includes(error.status));assert(injected,'actual guarded INSERT boundary reached');assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(command.id).first()).n,0);await assertCorruptRetained(injected);
+ }
+});
+
+test('below-head ancestor, eventless selected claim and parent additions prevent lifecycle INSERT',async()=>{
+ for(const target of ['predecessor','selected','parent'])for(const sequence of [0,-1]){
+  const f=await requestedChanges(),selected=await write(f.actor,revisedClaim(f.t.item,f.disposition.claim),plus(f.time,30)),command=submit(f.t.item,selected.claim);let injected=null;
+  const guarded=new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(!injected&&sql.startsWith('INSERT INTO contribution_claim_events')&&operation==='run'&&phase==='before')injected=await corruptBelowHead(f,selected,target,sequence);}));
+  await assert.rejects(()=>guarded.write(f.actor,command,plus(f.time,40)),error=>[409,503].includes(error.status));assert(injected);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claim_events WHERE claim_id=? AND sequence=1').bind(selected.claim.id).first()).n,0);assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE id=?').bind(selected.claim.id).first()).n,1);await assertCorruptRetained(injected);
+ }
+});
+
+test('final exact claim, work and receipt observations refuse added below-head rows without publishing stale evidence',async()=>{
+ for(const operation of ['claim','work','receipt'])for(const target of ['predecessor','selected','parent'])for(const sequence of [0,-1]){
+  const f=await requestedChanges(),command=revisedClaim(f.t.item,f.disposition.claim),selected=await write(f.actor,command,plus(f.time,30));let injected=null;
+  const prefix=operation==='claim'?'SELECT 1 AS contribution_revision_stable':operation==='work'?'SELECT 1 AS contribution_work_stable':'SELECT 1 AS contribution_revision_receipt_stable';
+  const guarded=new ContributionRepository(wrapper(async({sql,operation:sqlOperation,phase})=>{if(!injected&&sql.startsWith(prefix)&&sqlOperation==='first'&&phase==='before')injected=await corruptBelowHead(f,selected,target,sequence);}));
+  const read=operation==='claim'?()=>guarded.getClaim(selected.claim.id,plus(f.time,40)):operation==='work'?()=>guarded.work(f.actor,null,plus(f.time,40)):()=>guarded.confirmRevisionReceipt(f.actor,command,plus(f.time,40));
+  await assert.rejects(read,status(503));assert(injected,'specified final SQL observation reached');assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM contribution_claims WHERE task_id=?').bind(f.t.item.id).first()).n,2);await assertCorruptRetained(injected);
+ }
+});
+
+test('ordinary and revision contenders both finish preflight before competing at their actual INSERT barrier',async()=>{
+ const f=await requestedChanges(),commands=[claim(f.t.item),revisedClaim(f.t.item,f.disposition.claim)],arrived=new Set();let resolveBarrier,rejectBarrier;
+ const barrier=new Promise((resolve,reject)=>{resolveBarrier=resolve;rejectBarrier=reject;}),deadline=setTimeout(()=>rejectBarrier(Error('Both contenders did not reach INSERT after preflight.')),10_000);
+ try{
+  const contenders=commands.map((command,index)=>new ContributionRepository(wrapper(async({sql,operation,phase})=>{if(sql.startsWith('INSERT INTO contribution_claims')&&operation==='run'&&phase==='before'){assert(!arrived.has(index));arrived.add(index);if(arrived.size===2)resolveBarrier();await barrier;}})).write(f.actor,command,plus(f.time,30)));
+  const outcomes=await Promise.allSettled(contenders);assert.equal(arrived.size,2);assert.equal(outcomes.filter(item=>item.status==='fulfilled').length,1);assert.equal(outcomes.filter(item=>item.status==='rejected').length,1);assert.equal(outcomes.find(item=>item.status==='rejected').reason.status,409);
+  const retained=await repo().claims(f.t.item.id,f.t.item.digest,null,plus(f.time,30));assert.equal(retained.items.length,2);assert.equal(retained.items.filter(item=>item.status==='ACTIVE').length,1);assert.equal(commands.filter(command=>retained.items.some(item=>item.id===command.id)).length,1);
+ }finally{clearTimeout(deadline);}
+});

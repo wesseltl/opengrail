@@ -160,3 +160,32 @@ test('review decision reasons and public author identities cannot imply unsuppor
  await submit(f);const invalid=model.contributionEventRecordForCommand(base,f.curator,reviewedAt);assert.throws(()=>model.boundedContributionClaimEventRecord({...invalid,actor:f.author}));
  assert.throws(()=>model.contributionMeSchema.parse({version:1,authorId:human(1).id,sponsorId:human(2).id,maintainer:true,executionEnabled:false}));
 });
+
+// Task040 proposal: retained V1 constants are independently fixed before V2 admission.
+test('revision contract preserves fixed V1 claim bytes and digests without nullable defaults',async()=>{
+ const command={"action":"claim","requestId":"11111111-1111-4111-8111-111111111111","policyAccepted":"public-contributions-v1","id":"22222222-2222-4222-8222-222222222222","task":{"id":"33333333-3333-4333-8333-333333333333","digest":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"expectedTaskSequence":0},expectedCommand="{\"action\":\"claim\",\"requestId\":\"11111111-1111-4111-8111-111111111111\",\"policyAccepted\":\"public-contributions-v1\",\"id\":\"22222222-2222-4222-8222-222222222222\",\"task\":{\"id\":\"33333333-3333-4333-8333-333333333333\",\"digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"expectedTaskSequence\":0}",expectedRecord="{\"version\":1,\"id\":\"22222222-2222-4222-8222-222222222222\",\"requestId\":\"11111111-1111-4111-8111-111111111111\",\"createdAt\":\"2026-10-11T00:01:00.000Z\",\"expiresAt\":\"2026-10-14T00:01:00.000Z\",\"author\":{\"kind\":\"HUMAN\",\"id\":\"human_1111111111111111111111111111111111111111111111111111111111111111\",\"sponsorId\":\"human_1111111111111111111111111111111111111111111111111111111111111111\"},\"task\":{\"id\":\"33333333-3333-4333-8333-333333333333\",\"digest\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"policyAccepted\":\"public-contributions-v1\",\"executionEnabled\":false}";
+ assert.equal(model.boundedContributionCommand(command).payload,expectedCommand);
+ assert.equal(await model.contributionDigest(expectedCommand),'a988eabdfde81f02c006b5601b9a84accb67c1f9a72a7684becb97bebe806f9d');
+ const record=model.contributionClaimRecordForCommand(command,human(1),claimedAt);
+ assert.equal(model.boundedContributionClaimRecord(record).payload,expectedRecord);
+ assert.equal(await model.contributionDigest(expectedRecord),'a751e381e6bd776e8ad013a539a5b082b98a6c5a43022c4e6a988c2ec843a7b9');
+ assert(!('revisionOf'in record));assert(!('version'in model.contributionClaimCommandForRecord(record)));
+ assert.throws(()=>model.boundedContributionCommand({...command,revisionOf:null}));
+});
+
+test('strict V2 revision bytes bind the exact prior review without inheriting acceptance',async()=>{
+ const f=await fixture();await submit(f);await review(f,'CHANGES_REQUESTED','NEEDS_CHANGES');
+ const revisionOf={claim:ref(f.item),review:{sequence:2,digest:f.item.events[1].digest}},command={version:2,action:'claim',requestId:uid(),id:uid(),task:ref(f.task),expectedTaskSequence:0,revisionOf,policyAccepted:policy};
+ const record=model.contributionClaimRecordForCommand(command,f.author,checkedAt);model.validateContributionRevision(record,f.item);
+ assert.equal(record.version,2);assert.deepEqual(record.revisionOf,revisionOf);assert.deepEqual(model.contributionClaimCommandForRecord(record),model.boundedContributionCommand(command).command);
+ assert.equal(Date.parse(record.expiresAt)-Date.parse(record.createdAt),72*3600000);assert.equal(record.executionEnabled,false);
+ for(const patch of [{version:3},{revisionOf:null},{revisionOf:{...revisionOf,review:{sequence:0,digest:hash}}},{revisionOf:{...revisionOf,claim:{...ref(f.item),id:command.id}}},{author:f.author}])assert.throws(()=>model.boundedContributionCommand({...command,...patch}));
+ const changed=model.contributionClaimRecordForCommand({...command,revisionOf:{...revisionOf,review:{sequence:2,digest:'b'.repeat(64)}}},f.author,checkedAt);assert.notEqual(await model.contributionDigest(JSON.stringify(record)),await model.contributionDigest(JSON.stringify(changed)));assert.throws(()=>model.validateContributionRevision(changed,f.item));
+ assert.throws(()=>model.validateContributionRevision({...record,author:human(3)},f.item),error=>error.status===403);
+ for(const patch of [{status:'ACCEPTED'},{record:null},{events:[f.item.events[0]]},{digest:'f'.repeat(64)}])assert.throws(()=>model.validateContributionRevision(record,{...f.item,...patch}));
+ assert.throws(()=>model.validateContributionRevision({...record,createdAt:submittedAt},f.item));
+ const item={id:record.id,digest:await model.contributionDigest(JSON.stringify(record)),requestId:record.requestId,createdAt:record.createdAt,expiresAt:record.expiresAt,checkedAt,author:record.author,task:record.task,taskState:'OPEN',sequence:0,status:'ACTIVE',handoffDigest:null,reason:null,record,events:[]};
+ const context={...f,item};const ack=await receipt(context,command,f.author,checkedAt);await model.validateContributionWrite(ack,command,f.author);
+ await assert.rejects(()=>model.validateContributionWrite(ack,{...command,revisionOf:changed.revisionOf},f.author));
+ assert.equal(ack.version,1);assert.equal(ack.acknowledgement.sequence,0);assert.equal(f.item.status,'CHANGES_REQUESTED');
+});

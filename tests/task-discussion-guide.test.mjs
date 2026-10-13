@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {build} from 'esbuild';
 
-const bundle = await build({stdin: {contents: "export {default as Guide,metadata} from './app/agent-guide/task-discussions/page';export {default as Policy} from './app/task-discussion-policy/page';export {syntheticTaskDiscussionExample} from './app/task-discussion-example';export * from './app/task-discussion-model';export {networkCapabilities} from './app/network-capabilities';export {renderToStaticMarkup} from 'react-dom/server';", resolveDir: process.cwd()}, bundle: true, platform: 'node', format: 'cjs', target: 'es2022', write: false, jsx: 'automatic', loader: {'.css': 'empty'}});
+const bundle = await build({stdin: {contents: "export {default as Guide,metadata} from './app/agent-guide/task-discussions/page';export {default as Policy} from './app/task-discussion-policy/page';export {syntheticTaskDiscussionExample} from './app/task-discussion-example';export * from './app/task-discussion-model';export * from './app/contribution-model';export {default as ContributionPolicy} from './app/contribution-policy/page';export {networkCapabilities} from './app/network-capabilities';export {renderToStaticMarkup} from 'react-dom/server';", resolveDir: process.cwd()}, bundle: true, platform: 'node', format: 'cjs', target: 'es2022', write: false, jsx: 'automatic', loader: {'.css': 'empty'}});
 const module = {exports: {}};
 new Function('require', 'module', 'exports', bundle.outputFiles[0].text)(createRequire(import.meta.url), module, module.exports);
 const m = module.exports;
@@ -65,4 +65,25 @@ test('capabilities distinguish shared authored discussion and published source f
   assert.notEqual(spec.contributions.starterIssueSourceCommit, repository.applicationSourceCommit);
   assert.equal(repository.defaultBranchApplicationSourcePublished, false);
   assert.equal(spec.contributions.platformTaskMapping, 'OPERATOR_DECLARED_NOT_VERIFIED');
+});
+
+test('guide publishes a strict inert V2 revision and preserves the unlinked V1 boundary without automatic writes', async () => {
+  const tree = await m.Guide(), content = text(tree), documents = walk(tree, node => node.type === 'pre').map(text).filter(value => value.trim().startsWith('{')).map(value => JSON.parse(value));
+  const command = documents.find(value => value.version === 2 && value.action === 'claim'); assert(command);
+  assert.deepEqual(m.boundedContributionCommand(command).command, command); assert.deepEqual(Object.keys(command.revisionOf), ['claim', 'review']);
+  assert.deepEqual(Object.keys(command.revisionOf.review), ['sequence', 'digest']); assert(!('requestId' in command.revisionOf.review));
+  const legacy = structuredClone(command); delete legacy.version; delete legacy.revisionOf; assert.deepEqual(m.boundedContributionCommand(legacy).command, legacy);
+  assert.throws(() => m.boundedContributionCommand({...legacy, revisionOf: command.revisionOf}));
+  for (const phrase of ['GET /api/contributions/work/agent', 'POST /api/contributions/agent', 'actual AGENT kind', 'sponsoring human or sibling agent cannot revise', 'untrusted peer feedback', 'unchanged unversioned V1', 'original bytes', 'ordinary capacity', 'NOT_RUN']) assert(content.includes(phrase), phrase);
+  assert.equal(walk(tree, node => ['input', 'textarea', 'form', 'button', 'script', 'iframe'].includes(node.type)).length, 0);
+});
+
+test('revision capabilities and policy expose exact author and retained-review consent without granting authority', () => {
+  const spec = m.networkCapabilities(), revision = spec.contributions.revisionLineage, policy = text(m.ContributionPolicy());
+  assert.equal(spec.contributions.policy, 'public-contributions-v1'); assert.equal(revision.commandVersion, 2); assert.equal(revision.unlinkedCommand, 'UNCHANGED_UNVERSIONED_V1');
+  assert.deepEqual(revision.commandFields, ['version', 'action', 'requestId', 'policyAccepted', 'id', 'task', 'expectedTaskSequence', 'revisionOf']);
+  assert.deepEqual(revision.revisionOf, {claim: ['id', 'digest'], review: ['sequence', 'digest']}); assert.equal(revision.author, 'EXACT_ACTUAL_KIND_ID_AND_SPONSOR_ID');
+  assert.equal(revision.agentWritePath, '/api/contributions/agent'); assert.equal(revision.receiptVersion, 1); assert.equal(revision.lifecycleEventVersion, 1); assert.equal(revision.ancestorValidationBound, 32);
+  for (const field of ['sponsorCanReviseAgent', 'automaticClaims', 'automaticPolling', 'newPermissions', 'executionEnabled', 'acceptanceInherited', 'reputationAwarded', 'hostedAcceptanceVerified']) assert.equal(revision[field], false, field);
+  for (const phrase of ['public-contributions-v1', 'prior claim ID/digest', 'review sequence/digest', 'actual author kind', 'do not permit revising', 'unversioned V1 claims remain valid', 'old claim, original deadline', 'does not certify that feedback was implemented']) assert(policy.includes(phrase), phrase);
 });
