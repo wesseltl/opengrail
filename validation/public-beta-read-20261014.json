@@ -1,0 +1,199 @@
+{
+  "kind": "REAL_PUBLIC_READ_ONLY_UNCHANGED_AGENT_SDK_ACCEPTANCE",
+  "observedAt": "2026-10-13T22:47:16.973Z",
+  "origin": "https://opengrail-network.wesseltl.chatgpt.site",
+  "accepted": true,
+  "phases": [
+    {
+      "mode": "DEFAULT_NODE_FETCH",
+      "calls": [
+        {
+          "path": "/api/network/agent-start",
+          "query": "?focus=ALL",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/network/agent-start",
+          "query": "?focus=RESEARCH",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/network/agent-start",
+          "query": "?focus=STRATEGIES",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/network/agent-start",
+          "query": "?focus=DEVELOPMENT",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/network/agent-start",
+          "query": "?focus=FORWARD_WINDOWS",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/research",
+          "query": "",
+          "status": 200,
+          "contentType": "application/json",
+          "cacheControl": "private, no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/strategies",
+          "query": "",
+          "status": 200,
+          "contentType": "application/json",
+          "cacheControl": "private, no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/experiments",
+          "query": "",
+          "status": 200,
+          "contentType": "application/json",
+          "cacheControl": "private, no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        },
+        {
+          "path": "/api/contributions",
+          "query": "",
+          "status": 200,
+          "contentType": "application/json; charset=utf-8",
+          "cacheControl": "private, no-store",
+          "redirect": "error",
+          "cookies": "omit",
+          "authorizationSent": false
+        }
+      ],
+      "rows": [
+        {
+          "focus": "ALL",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "accepted": true
+        },
+        {
+          "focus": "RESEARCH",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "accepted": true
+        },
+        {
+          "focus": "STRATEGIES",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "accepted": true
+        },
+        {
+          "focus": "DEVELOPMENT",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "accepted": true
+        },
+        {
+          "focus": "FORWARD_WINDOWS",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "accepted": true
+        },
+        {
+          "path": "/api/research",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "items": 0,
+          "accepted": true
+        },
+        {
+          "path": "/api/strategies",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "items": 0,
+          "accepted": true
+        },
+        {
+          "path": "/api/experiments",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "items": 0,
+          "accepted": true
+        },
+        {
+          "path": "/api/contributions",
+          "disposition": "READ",
+          "status": 200,
+          "code": null,
+          "items": 0,
+          "accepted": true
+        }
+      ],
+      "accepted": true
+    }
+  ],
+  "exactSdkAndBoundaryUnchanged": [
+    {
+      "path": "/root/opengrail-network/scripts/opengrail-agent-client.mjs",
+      "bytes": 32568,
+      "sha256": "dca49d4806133e7d03d21bcb7d8089c8fb3b5c8e0571ea4118ed60d4f83c3d43",
+      "mode": "644"
+    },
+    {
+      "path": "/root/opengrail-network/scripts/opengrail-agent-boundary.mjs",
+      "bytes": 8437,
+      "sha256": "00fb89f400819871da86bf5ff4b75e6eab3b89937fe13a589fd9e7e58778dea1",
+      "mode": "644"
+    }
+  ],
+  "sourceChanged": false,
+  "hostedIdentityOrPublicWritesVerified": false,
+  "actualOutsideOperators": 0,
+  "independentValidation": "NOT_ESTABLISHED",
+  "credentialsUsed": false,
+  "cookiesUsed": false,
+  "modelsCalled": false,
+  "marketProvidersCalled": false,
+  "codeFromResponsesExecuted": false,
+  "financialExecutionEnabled": false,
+  "customDomainVerified": false,
+  "wholeGoalComplete": false
+}
