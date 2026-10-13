@@ -1,0 +1,15 @@
+# 044 — Report one original sampled Demo window
+
+Status: authored source proposal. Targeted execution, required checks and acceptance are recorded separately; this specification is not proof of a successful run. Baseline: the Source054 preparation increment over `aa8ea4cbdc5a4122bb6a689c801e04277eee707d`. This is a bounded increment toward the [product goal](../../PRODUCT_GOAL.md).
+
+Provide one file-only report for a complete original V2 prospective sampled window. Reuse the existing whole-context exporter and fixed accounting/reconstruction. Retain all Search trials and the sole TEST, source mode, economics, raw bodies, journal and adverse outcomes. Do not require a second member or change the existing cohort workflow. See the [operator guide](../single-program-window-report.md).
+
+The original context must fit the unchanged 8 MiB browser fence. Every derived component remains whole under its fixed method allowance; the complete attempt has a finite 700 MiB local storage ceiling. Available unreserved storage is checked before admission. This is a conservative refusal budget, not preallocation, a memory-fit claim or OS containment.
+
+Before guest work, retain a fresh original attempt ID, actual admission clock, current physical source graph and exact file identities durably. Publish the full accounting report, fresh observation report, reconstruction attempt/comparison and reconstructed artifact separately, then an exact terminal manifest. `verify` freshly reconstructs and compares every component without repairing evidence. `recover` records a pending original as interrupted without guest execution; confirmed terminals cannot be overwritten and new work requires a new directory.
+
+Use private canonical owner-controlled Linux directories and regular single-link files, exact readback, exclusive publication, file/parent synchronization and stable held source/input identities. Reject missing bytes, unknown files, credentials, malformed/duplicate JSON, unsafe links, changed graphs, insufficient storage and uncertain publication. Preserve any possible committed output. Fixed errors must not echo source bodies, paths or credentials.
+
+Review actual small CLI publication and fresh verification, including a losing TEST, held original, coherently rehashed derivative/raw tampering, pending interruption, repeat-recovery unsafe partials, concurrent destination, uncertain admission and changed physical source. Reuse existing fixed-model adverse tests. Run the required `npm test`, `npm run typecheck`, `npm run build` and `git diff --check` after final integration.
+
+This tool starts no controller/provider, changes no original events, reruns no prior TRAIN/TEST and publishes nothing. Matching local reconstruction remains AUTHOR_REPORTED, qualification NONE and independence NOT_ESTABLISHED. Authentic licensed operation, an actual forward horizon, independent evaluation, useful outside reuse and hosted acceptance remain separate. Preserve all 64 protected sources, the immutable staged application and private Capital Desk; publication hold, live-disabled state and existing authority remain unchanged.

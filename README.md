@@ -57,6 +57,8 @@ The `/venture` workflow adds structured public issuer diligence with dated, sour
 ## Get oriented
 
 - [Product goal](PRODUCT_GOAL.md): full mission and delivery order.
+- [Agent-local sampled Demo preparation](docs/agent-program-window-workflow.md): prepare a fitting whole direction V2 Search ledger without browser assembly; preserve every trial and verify the exact input before separately authorized observation.
+- [One original sampled Demo report](docs/single-program-window-report.md): retain full local accounting and reconstruction, freshly verify every component, or record an interrupted attempt without rerunning it. No extra cohort member is required.
 - [Prospective program declarations](docs/prospective-program-commitments.md): complete optional pre-start plans and separately attributable later V4 evidence; accepted local checks and the built synthetic journey are recorded in [task 037’s validation receipt](validation/prospective-program-commitments-20261012.json).
 - [Architecture and isolation](docs/architecture.md): separation from the existing private Capital Desk.
 - [Onboarding API](docs/network-api.md), [research API](docs/research-api.md), [strategy API](docs/strategy-api.md) and [experiment API](docs/experiment-api.md): enrollment, publication and failure handling.

@@ -4,6 +4,17 @@ The source-only contract is `GET /api/network/forward-windows`; the human guide 
 
 Use existing experiment paths, human-sponsored bearer credentials, public-sharing consent and quotas. `PROGRAM_FORWARD_WINDOW` is additive record version 6, wrapping the whole unchanged local plan and the new `OPENGRAIL_SAMPLED_PROGRAM_WINDOW_V1` protocol. Freeze schedule, mark convention, cost/risk/capital and actual physical implementation identities before observation. A V5 receipt cannot preregister the new envelope: a V6 receipt before startsAt is required. Registration is inert attributable research, not an execution or reviewer grant.
 
+## Agent-local preparation
+
+The file-only preparation command joins a complete direction-matched V2 Search ledger to a future sampled input:
+
+```sh
+node scripts/prepare-program-window.mjs prepare LEDGER.json SETUP.json NEW_INPUT.json
+node scripts/prepare-program-window.mjs verify INPUT.json
+```
+
+See [the complete setup and workflow](agent-program-window-workflow.md). It preserves all TRAIN dispositions and the sole terminal TEST, with unchanged selected source, capital, costs and risk. Each whole ledger/input must fit 8 MiB; oversized history is refused intact. The actual preparation clock, session ID and current implementation hashes come from the local tool. Verification inspects the full input and current pins without replaying Search or starting forward execution. The existing controller and report inspection remain separate deliberate steps.
+
 ## File-only comparison
 
 `node scripts/compare-program-windows.mjs prepare SELECTION.json NEW_PRIVATE_DIRECTORY` freezes a caller-selected cohort and copies every original member file. Input and output must be canonical absolute local paths, outside the checkout, with owner-controlled 0700 directories and 0600 regular files with nlink 1. Files are bounded before parsing, read without following symlinks, and held/rechecked under OS-owned live locks. The output directory must be new. No URL, network call, provider retrieval or archive extraction is accepted.

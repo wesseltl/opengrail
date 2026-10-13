@@ -1,0 +1,29 @@
+# Inspect one agent-local sampled Demo run
+
+`scripts/report-program-window.mjs` creates a complete file-only report for one original V2 sampled program window. Run these commands from the reviewed checkout root; inherited fixed loaders resolve their compilation graph there. It reuses OpenGrail's fixed accounting and interpreter reconstruction. It does not start a controller, capture market data, publish evidence, run prior TRAIN/TEST again or enable orders. No particular model or paid API is required; computation and storage belong to the operator.
+
+First retain the exact complete Search ledger and sole TEST, [prepare its future input](agent-program-window-workflow.md), and separately run the authorized sampled controller. Keep its entire original directory. Losses, failures, uncertain receipts and open inventory remain evidence. The new tool needs the original `input.json`, physical graph, raw index/body files, journal and artifact expected by the existing exporter; missing originals cannot be manufactured from a summary.
+
+```sh
+node scripts/report-program-window.mjs report /private/run/original-window /private/run/new-report
+node scripts/report-program-window.mjs verify /private/run/new-report
+node scripts/report-program-window.mjs recover /private/run/interrupted-report
+```
+
+Use canonical absolute Linux paths outside checkout/current directory. Parent and work directories must be current-user-owned mode 0700; files regular mode 0600 with one link, without symlinks. Output is a new exclusive directory. Credentials, commands, provider URLs and caller-selected code are not part of the interface. JSON is bounded duplicate-free UTF-8, with credential checks. Refusals emit fixed codes without source bodies, paths or secret values.
+
+`report` first freezes the existing exporter's five complete files under `original/`: context, input, hydrated raw archive, artifact and export receipt. Original archive/journal coordination locks are held during capture, then released. The original event/raw/journal files are not altered; coordination lock files may be opened or created. The complete method context includes raw bodies and the original journal inside its artifact. Optional operational files remain in the separately retained source directory; this export is not a copy of every ancillary original or proof of independent custody.
+
+Before any guest reconstruction, the tool confirms a durable immutable `admission.json` with the actual local clock, fresh attempt ID, exact original file/context identities and `report-source-graph.json`. It then explicitly reconstructs the fixed method and retains the whole accounting report, fresh observation report, reconstruction attempt/comparison and reconstructed artifact separately. `report.json` binds every whole derivative by byte digest and reports ACCOUNTED, HELD, UNAVAILABLE or INTERRUPTED. The entry manifest cannot substitute for full originals or results.
+
+ACCOUNTED confirms sampled accounting under declared costs and marks. A negative result is allowed. Terminal valuation does not sell positions, pay estimated exit fees or invent a closing quote. Missing marks, feed gaps, unresolved admission/ACK, failed guests, numerical mismatch and open protective exits remain visible. Source mode is unchanged; synthetic observations do not become authentic market evidence.
+
+`verify` reopens the immutable full context, admission and every result file; it actually runs `verifyProgramWindowAccounting` and compares every fresh component. It changes no original/report files. Digest checks alone are not fresh verification, and reproduction by the same implementation is not independent qualification. A prior cancelled partial reconstruction may remain interrupted and fail exact complete reproduction; the original partial evidence is preserved.
+
+`recover` records a pending original admission as INTERRUPTED without executing a guest. Existing confirmed terminal attempts require explicit verification and cannot be overwritten or downgraded by recovery. A new computation requires a new directory. Preserve admission and partial outputs on cancellation, lost locks, changed files, clock regression or uncertain write/readback; neither automatic replay nor overwrite follows a failure. An interruption record makes no claim about unnoticed earlier guest execution.
+
+The whole original context must fit **8 MiB** before raw hydration. Preparation's 8 MiB input cap does not guarantee this combined context fits. Larger histories are refused intact. Derived components use separate existing V2 maxima: accounting and observation reports 2 MiB each; reconstruction attempt 419,430,400 bytes; comparison 131,072 bytes; reconstructed artifact 209,715,200 bytes. Source graph and metadata have finite separate bounds. The whole attempt ceiling is **700 MiB**. Available unreserved filesystem space must cover that conservative budget before admission; it is a reservation/refusal check, not preallocation or a promise against later disk exhaustion. Results are not trimmed to fit a browser/public fence.
+
+Each requested operation has a ten-minute cooperative cancellation budget. Fixed interpreter fuel/event limits still apply. These bounds establish no universal memory fit, OS sandbox or hard real-time deadline. Keep full large derivatives locally; the existing browser workspace/public limits remain unchanged.
+
+Exit 0 confirms an ACCOUNTED report or its fresh verification, including a loss. Exit 2 retains a confirmed HELD/UNAVAILABLE/INTERRUPTED disposition; exit 1 means the operation was refused or unconfirmed and possible files must be retained. Reports remain AUTHOR_REPORTED, qualification NONE and independence/source authentication NOT_ESTABLISHED. Hosted availability, authentic licensed market use, independent custody/evaluation and profitable strategies remain unverified. Live, investment and publication authority are unchanged.

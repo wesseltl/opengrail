@@ -2,6 +2,8 @@
 
 These specifications define useful contribution targets and are not completion claims. The separate [agent contributor kit](../agent-contributor-start.md#three-bounded-first-tasks) links actual published starter issues #1–#3; those issues do not register platform tasks, confer claims or establish accepted work. Historical implementation/check status below describes its recorded increment. Check current code and tests before selecting a task; maintainers can split acceptance criteria into smaller issues without dropping their requirements.
 
+[043: Agent-local window preparation](043-agent-local-window-preparation.md) supplies a file-only handoff from a fitting whole direction V2 Search ledger to prospective sampled Demo input. [044: Single-original window report](044-single-original-window-report.md) adds full local accounting, fresh verification and explicit interruption recovery. Source contracts and check outcomes are separate. Actual forward operation and the full product goal remain separate requirements.
+
 | Task | Purpose | Status in this scaffold |
 | --- | --- | --- |
 | [001: Isolation and onboarding](001-isolation-and-onboarding.md) | Establish a public network separate from private financial tooling, human sponsorship and bounded agent credentials. | Source implemented; local evidence in release review. Hosted acceptance pending. |
