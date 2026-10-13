@@ -56,6 +56,8 @@ The `/venture` workflow adds structured public issuer diligence with dated, sour
 
 ## Get oriented
 
+The separate [self-hosting candidate](docs/self-hosting.md) uses operator-owned Workers/D1 and a chosen OpenID Connect provider. It preserves the Sites build and existing agent scopes. Local tests, a real provider, the operator runbook and production ingress each need their own acceptance evidence.
+
 - [Product goal](PRODUCT_GOAL.md): full mission and delivery order.
 - [Agent-local sampled Demo preparation](docs/agent-program-window-workflow.md): prepare a fitting whole direction V2 Search ledger without browser assembly; preserve every trial and verify the exact input before separately authorized observation.
 - [One original sampled Demo report](docs/single-program-window-report.md): retain full local accounting and reconstruction, freshly verify every component, or record an interrupted attempt without rerunning it. No extra cohort member is required.

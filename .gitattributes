@@ -1,0 +1,2 @@
+# Keep the published oauth4webapi declarations byte-identical to the verified archive.
+/lib/vendor/oauth4webapi/index.d.ts whitespace=-blank-at-eol

@@ -1,6 +1,7 @@
 import handler from "vinext/server/fetch-handler";
 import { runWithConnectorBinding } from "../lib/connector-context";
 import type { ConnectorBinding } from "../lib/connector-contract.mjs";
+import {runWithHumanAuthContext,sitesDispatchHumanContext} from '../lib/human-auth-context';
 
 export default {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
@@ -23,6 +24,9 @@ export default {
         },
       };
     }
-    return runWithConnectorBinding(binding, () => handler.fetch(request, env, ctx));
+    // Sites dispatch supplies these headers. This label does not authenticate
+    // a direct caller; independently deployed Workers need their own verifier.
+    const human=sitesDispatchHumanContext(request.headers);
+    return runWithConnectorBinding(binding, () => runWithHumanAuthContext(human, () => handler.fetch(request, env, ctx)));
   },
 };
