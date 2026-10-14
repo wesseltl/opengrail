@@ -16,6 +16,7 @@ const publicReads=new Set([
  '/api/research','/api/strategies','/api/strategies/evidence','/api/strategies/lineage',
  '/api/experiments','/api/experiments/reviews','/api/contributions',
  '/api/contributions/discussion','/api/assistance',
+ '/api/reputation/agents',
 ]);
 const publicWrites=new Set([
  '/api/research/agent','/api/strategies/agent','/api/experiments/agent',

@@ -2,6 +2,8 @@ import {ExperimentRepository} from './experiment-store';
 import {networkAgentSchema} from './network-model';
 import {boundedStrategyRecord,boundedStrategyCommand,strategyPublishCommandForRecord,verifyStrategyProgram,strategyAuthorReference,type StrategyPublicItem} from './strategy-model';
 import {boundedExperimentRecord,boundedExperimentCommand,experimentInputDependencies,experimentDigest,experimentPublicHumanId,experimentAuthorReference,experimentPublicEventSchema,experimentPrivateReportSchema,type ExperimentActor,type ExperimentAuthorReference,type ExperimentPublicItem} from './experiment-model';
+import {AgentWorkProfileSnapshot} from './agent-work-profile-snapshot';
+import {AgentWorkProfileError,agentWorkSubjectSchema,createAgentWorkProfile,type AgentWorkProfileUnitInput} from './agent-work-profile-model';
 import {experimentReviewLimits,ExperimentReviewError,boundedExperimentReviewCommand,boundedExperimentReviewRecord,experimentReviewContent,experimentReviewCommandForRecord,experimentReviewPublicItemSchema,experimentReviewSummarySchema,experimentReviewListSchema,experimentReviewGetSchema,experimentReviewWriteSchema,experimentReviewReportsSchema,validateExperimentReviewBindings,type ExperimentReviewCommand,type ExperimentReviewRecord,type ExperimentReviewActor,type ExperimentReviewPublicItem,type ExperimentReviewVerificationMemo,createExperimentReviewVerificationMemo} from './experiment-review-model';
 
 type Actor=ExperimentReviewActor|Extract<ExperimentActor,{kind:'AGENT'}>;
@@ -16,7 +18,7 @@ type ExperimentRow={id:string;type:string;manifest_id:string|null;manifest_diges
 type StrategyRow={id:string;root_id:string;revision:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;created_at:string;digest:string;payload:string|null};
 type CommitmentContext={repository:ExperimentRepository;result:Awaited<ReturnType<ExperimentRepository['commitmentContexts']>>};
 type CommitmentRead={context:CommitmentContext;rows:Row[];events:EventRow[];head:{id:string;digest:string;sequence:number}|null};
-type Scope={commitments?:Map<string,Promise<CommitmentContext>>;commitmentRead?:CommitmentRead;canonical:Map<string,Promise<unknown>>;canonicalBytes:number;verificationMemo:ExperimentReviewVerificationMemo;experimentRows?:Map<string,ExperimentRow>;strategyRows?:Map<string,StrategyRow>};
+type Scope={commitments?:Map<string,Promise<CommitmentContext>>;commitmentRead?:CommitmentRead;canonical:Map<string,Promise<unknown>>;canonicalBytes:number;verificationMemo:ExperimentReviewVerificationMemo;experimentRows?:Map<string,ExperimentRow>;strategyRows?:Map<string,StrategyRow>;profileSnapshotClosed?:boolean};
 const readScope=():Scope=>({canonical:new Map(),canonicalBytes:0,verificationMemo:createExperimentReviewVerificationMemo()});
 async function canonical<T>(scope:Scope,material:string,verify:()=>Promise<T>):Promise<T>{const key=await experimentDigest(material),retained=scope.canonical.get(key);if(retained)return retained as Promise<T>;const size=new TextEncoder().encode(material).byteLength,pending=verify();if(scope.canonical.size<128&&scope.canonicalBytes+size<=16_777_216){scope.canonical.set(key,pending);scope.canonicalBytes+=size;}return pending;}
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
@@ -98,7 +100,8 @@ export class ExperimentReviewRepository{
  }
  private async experiment(reference:Reference,scope:Scope){
   identity(reference.id,reference.digest);
-  const row=scope.experimentRows?.get(reference.id)??await this.db.prepare(`SELECT ${experimentColumns} FROM experiment_records WHERE id=?`).bind(reference.id).first<ExperimentRow>();
+  const retained=scope.experimentRows?.get(reference.id);if(scope.profileSnapshotClosed&&!retained)throw inconsistent();
+  const row=retained??await this.db.prepare(`SELECT ${experimentColumns} FROM experiment_records WHERE id=?`).bind(reference.id).first<ExperimentRow>();
   if(!row||row.digest!==reference.digest)throw new ExperimentReviewError('Exact experiment reference not found.',404);
   return canonical(scope,'E:'+JSON.stringify(row),async()=>{try{
    if(!row.payload)throw Error();const checked=boundedExperimentRecord(JSON.parse(row.payload)),record=checked.record;
@@ -110,7 +113,8 @@ export class ExperimentReviewRepository{
  }
  private async strategy(reference:Reference,scope:Scope){
   identity(reference.id,reference.digest);
-  const row=scope.strategyRows?.get(reference.id)??await this.db.prepare(`SELECT ${strategyColumns} FROM strategy_publications WHERE id=?`).bind(reference.id).first<StrategyRow>();
+  const retained=scope.strategyRows?.get(reference.id);if(scope.profileSnapshotClosed&&!retained)throw inconsistent();
+  const row=retained??await this.db.prepare(`SELECT ${strategyColumns} FROM strategy_publications WHERE id=?`).bind(reference.id).first<StrategyRow>();
   if(!row||row.digest!==reference.digest)throw new ExperimentReviewError('Exact strategy reference not found.',404);
   if(!scope.strategyRows)scope.strategyRows=new Map();scope.strategyRows.set(row.id,row);
   return canonical(scope,'S:'+JSON.stringify(row),async()=>{try{
@@ -207,6 +211,92 @@ export class ExperimentReviewRepository{
   const second=(await this.projectionPass([publication],scope))[0];return first.state!=='VISIBLE'&&second.state==='VISIBLE'?first:second;
  }
  private summary(item:ExperimentReviewPublicItem){const {record,moderation,...metadata}=item;void moderation;return experimentReviewSummarySchema.parse({...metadata,reasons:record?.content.reasons??[]});}
+ /** Public computational work projection. Existing records and write authority
+  * remain unchanged; one final statement fences the complete read closure. */
+ async workProfile(agentId:string,observedAt=new Date().toISOString()){
+  identity(agentId);clock(observedAt);
+  const snapshot=new AgentWorkProfileSnapshot(this.db),scope=readScope();
+  const rFields=['id','original_id','original_digest','sequence','author_key','sponsor_key','request_id','command_digest','payload','digest','created_at'] as const;
+  const eFields=['id','type','manifest_id','manifest_digest','strategy_id','strategy_digest','author_key','sponsor_key','request_id','command_digest','payload','digest','created_at'] as const;
+  const sFields=['id','root_id','revision','author_key','sponsor_key','request_id','command_digest','created_at','digest','payload'] as const;
+  const mFields=['record_id','sequence','author_key','sponsor_key','request_id','command_digest','payload','digest','state','reason','created_at'] as const;
+  const rows=await snapshot.read<Row>('experiment_reviews',rFields,experimentReviewLimits.retained);
+  if(new Set(rows.map(row=>row.id)).size!==rows.length)throw inconsistent();
+  const records:ExperimentReviewRecord[]=[];
+  for(const row of rows){try{if(!row.payload)throw Error();records.push(boundedExperimentReviewRecord(JSON.parse(row.payload)).record);}catch{throw inconsistent();}}
+  const eIds=[...new Set(records.flatMap(record=>[record.content.target.original.id,record.content.target.reproduction.id,record.content.target.manifest.id]))].sort();
+  const experiments=await snapshot.read<ExperimentRow>('experiment_records',eFields,eIds.length,{column:'id',ids:eIds});
+  if(experiments.length!==eIds.length||new Set(experiments.map(row=>row.id)).size!==experiments.length||experiments.some(row=>!eIds.includes(row.id)))throw inconsistent();
+  const sIds=[...new Set(records.map(record=>record.content.target.strategy.id))];
+  for(const row of experiments)if(row.type==='MANIFEST'){
+   try{if(!row.payload)throw Error();const manifest=boundedExperimentRecord(JSON.parse(row.payload)).record;if(manifest.type!=='MANIFEST')throw Error();for(const source of experimentInputDependencies(manifest.content.input))if(!sIds.includes(source.id))sIds.push(source.id);}catch{throw inconsistent();}
+  }
+  sIds.sort();const strategies=await snapshot.read<StrategyRow>('strategy_publications',sFields,sIds.length,{column:'id',ids:sIds});
+  if(strategies.length!==sIds.length||new Set(strategies.map(row=>row.id)).size!==strategies.length||strategies.some(row=>!sIds.includes(row.id)))throw inconsistent();
+  scope.experimentRows=new Map(experiments.map(row=>[row.id,row]));scope.strategyRows=new Map(strategies.map(row=>[row.id,row]));scope.profileSnapshotClosed=true;
+  const checked:Checked[]=[];
+  for(const row of rows)checked.push(await this.check(row,scope));
+  const histories=new Map<string,Checked[]>();
+  for(const item of checked){const key=JSON.stringify(item.record.content.target.original),prior=histories.get(key)??[];prior.push(item);histories.set(key,prior);}
+  for(const history of histories.values()){
+   history.sort((a,b)=>a.record.sequence-b.record.sequence);
+   if(history.length>experimentReviewLimits.reviewsPerOutcome)throw inconsistent();
+   for(let n=0;n<history.length;n++){
+    const item=history[n],previous=history[n-1];
+    if(item.record.sequence!==n+1||!same(item.record.content.previous,previous?{id:previous.record.id,digest:previous.row.digest}:null)||previous&&item.record.createdAt<previous.record.createdAt)throw inconsistent();
+   }
+  }
+  const rIds=checked.map(item=>item.record.id).sort();
+  const reviewEvents=await snapshot.read<EventRow>('experiment_review_moderation',mFields,rIds.length*16,{column:'record_id',ids:rIds});
+  const experimentEvents=await snapshot.read<EventRow>('experiment_moderation',mFields,eIds.length*16,{column:'record_id',ids:eIds});
+  const strategyEvents=await snapshot.read<EventRow>('strategy_moderation',mFields,sIds.length*16,{column:'record_id',ids:sIds});
+  const group=(events:EventRow[],ids:string[])=>{
+   const groups=new Map<string,EventRow[]>();
+   for(const row of events){if(!ids.includes(row.record_id))throw inconsistent();const history=groups.get(row.record_id)??[];history.push(row);if(history.length>16)throw inconsistent();groups.set(row.record_id,history);}
+   for(const history of groups.values())history.sort((a,b)=>a.sequence-b.sequence);
+   return groups;
+  };
+  const rEvents=group(reviewEvents,rIds),eEvents=group(experimentEvents,eIds),sEvents=group(strategyEvents,sIds);
+  const eStates=new Map<string,string>(),sStates=new Map<string,string>();
+  for(const row of experiments)eStates.set(row.id,await this.currentState('experiment_moderation',{id:row.id,digest:row.digest,createdAt:row.created_at},eEvents.get(row.id)??[]));
+  for(const row of strategies)sStates.set(row.id,await this.currentState('strategy_moderation',{id:row.id,digest:row.digest,createdAt:row.created_at},sEvents.get(row.id)??[]));
+  const inputs:AgentWorkProfileUnitInput[]=[];let subject:ReturnType<typeof agentWorkSubjectSchema.parse>|null=null;
+  for(const history of histories.values()){
+   const projected:ExperimentReviewPublicItem[]=[];
+   let chosen:Awaited<ReturnType<ExperimentReviewRepository['bindings']>>|null=null;
+   for(const publication of history){
+    const refs=await this.bindings(publication.record,scope),own=await this.events(publication,rEvents.get(publication.record.id)??[]);
+    // The present profile covers actual supported computational-review methods.
+    // Unsupported continuous/commitment/window notes are not reputation units.
+    if(refs.manifest.record.type!=='MANIFEST')throw inconsistent();
+    const supported=[1,3,4].includes(refs.manifest.record.version);
+    const sourceUnavailable=refs.dependencies.some(source=>sStates.get(source.row.id)!=='VISIBLE');
+    const suppression=sourceUnavailable?'SOURCE_UNAVAILABLE' as const:eStates.get(refs.manifest.row.id)!=='VISIBLE'?'PARENT_UNAVAILABLE' as const:eStates.get(refs.original.row.id)!=='VISIBLE'||eStates.get(refs.reproduction.row.id)!=='VISIBLE'?'OUTCOME_UNAVAILABLE' as const:null;
+    const state=own.state==='WITHDRAWN'?'WITHDRAWN':own.state==='HIDDEN'||suppression?'HIDDEN':'VISIBLE',record=publication.record;
+    const item=experimentReviewPublicItemSchema.parse({id:record.id,digest:publication.row.digest,requestId:record.requestId,createdAt:record.createdAt,author:record.author,sequence:record.sequence,target:record.content.target,previous:record.content.previous,state,reason:own.reason,suppression,decision:state==='VISIBLE'?record.content.decision:null,...state==='VISIBLE'&&refs.manifest.record.version===4?{method:'PROGRAM_FORWARD_DEMO' as const}:{},record:state==='VISIBLE'?record:null,moderation:own.events});
+    projected.push(item);
+    if(supported&&refs.reproduction.full.author.kind==='AGENT'&&refs.reproduction.full.author.id===agentId){
+     chosen=refs;
+     // Resolve public attribution from a currently available original record,
+     // not the private agent registry or the state of its credential.
+     if(!suppression){const next=agentWorkSubjectSchema.parse(refs.reproduction.full.author);if(subject&&!same(subject,next))throw inconsistent();subject=next;}
+    }
+   }
+   if(!chosen)continue;
+   const {original,reproduction,manifest,strategy,dependencies}=chosen;
+   if(reproduction.record.type!=='OUTCOME'||manifest.record.type!=='MANIFEST')throw inconsistent();
+   const version=manifest.record.version;if(version!==1&&version!==3&&version!==4)throw inconsistent();
+   const head=history.at(-1)!;
+   inputs.push({original:{id:original.row.id,digest:original.row.digest,author:original.full.author},reproduction:{id:reproduction.row.id,digest:reproduction.row.digest,author:reproduction.full.author,claim:reproduction.record.content.claim},manifest:{id:manifest.row.id,digest:manifest.row.digest,author:manifest.full.author,version,flags:manifest.record.flags},strategy:{id:strategy.row.id,digest:strategy.row.digest,author:strategy.full.author},dependencyAuthors:dependencies.map(source=>source.full.author),currentHead:{id:head.row.id,digest:head.row.digest,sequence:head.record.sequence},history:projected});
+  }
+  let profile:ReturnType<typeof createAgentWorkProfile>|null=null;
+  if(subject){try{profile=createAgentWorkProfile(subject,observedAt,inputs);}catch{throw inconsistent();}}
+  // All crypto/schema/projection work finishes first. This one closing query
+  // binds complete catalog membership, exact raw bytes and all source events.
+  await snapshot.confirm();
+  if(!profile)throw new AgentWorkProfileError('No public computational work profile is available for this identity.',404);
+  return profile;
+ }
  async get(recordId:string,digest?:string){const scope=readScope(),result=experimentReviewGetSchema.parse({version:1,item:await this.project(await this.publication(recordId,digest,scope),scope),executionEnabled:false});this.retainCommitmentRead(result.item,scope);return result;}
  /** Final HTTP fence for a previously verified V4 projection. The scope is new
   * and bounded; no permissions or raw records are cached across requests. */

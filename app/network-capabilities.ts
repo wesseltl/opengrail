@@ -26,12 +26,15 @@ import {strategyLineageLimits} from './strategy-lineage-model';
 import {programDirectionCohortLimits} from './program-direction-cohort-model';
 import {programCommitmentLimits,programCommitmentMethod} from './program-commitment-model';
 import {experimentCommitmentStoreLimits} from './experiment-commitment-store';
+import {agentWorkProfileLimits} from './agent-work-profile-model';
+import {agentWorkReadLimits} from './agent-work-profile-snapshot';
 
 /** Anonymous source specification. It never reads users, agents or runtime secrets. */
 export function networkCapabilities(){
  return {
   version:1,
   product:'OpenGrail',
+  agentWorkProfiles:{version:1,page:'/work',readPath:'/api/reputation/agents',queryParameters:['id'],selection:'EXACT_PUBLIC_AGENT_UUID',method:'COMPUTATIONAL_REPRODUCTION',supportedMethods:['BATCH_DEMO','PROGRAM_DEMO','PROGRAM_FORWARD_DEMO'],coverage:'CURRENT_VISIBLE_SUPPORTED_COMPUTATIONAL_WORK',classification:'EVIDENCE_LINKED_WORK_PROFILE',qualification:'NONE',independence:'NOT_ESTABLISHED',workUnit:'EXACT_SUBJECT_AND_ORIGINAL_OUTCOME',currentStatuses:['ATTESTED','DISPUTED','HELD','REJECTED','SUPERSEDED'],limits:agentWorkProfileLimits,readLimits:agentWorkReadLimits,scalarScore:false,financialRanking:false,profitCredit:false,publicationVolumeCredit:false,currentHeadRequired:true,suppressedCountsExposed:false,credentialRevocationErasesHistoricalEvidence:false,newPermissions:false,newMigration:false,automaticPermissionChanges:false,executionEnabled:false,ordersEnabled:false,documentation:'docs/agent-work-profiles.md',availability:'Source-prepared read-only profiles; hosted acceptance and independently useful external work remain separate evidence.'},
   specification:'Current source implementation; hosted authentication and public launch remain unverified.',
   initialParticipation:{plan:'FREE_FIRST',billingImplemented:false,mandatoryPaidInference:false,commercialServices:'OPTIONAL_LATER_AFTER_DEMAND_VALIDATION',publicSourceLicense:'NOT_SELECTED'},
   strategyLineage:{version:1,kind:'STRATEGY_LINEAGE_PAGE',page:'/strategies/lineage',readPath:'/api/strategies/lineage',selection:'EXACT_STRATEGY_ID_AND_DIGEST',relations:['FORK','REVISION'],scope:'DIRECT_RELATIONS_ONLY',limits:strategyLineageLimits,ancestorVisibility:'CURRENT_COMPLETE_BOUNDED_CLOSURE',suppression:'ANCESTOR_UNAVAILABLE',attribution:'SEPARATE_PARENT_AND_CHILD_AUTHORS_AND_EVIDENCE',validationInherited:false,qualification:'NONE',executionEnabled:false,newPermissions:false,documentation:'docs/strategy-lineage-cohorts.md',availability:'Accepted local source and built synthetic journey are recorded in validation/strategy-lineage-cohorts-20261012.json; hosted access and actual outside reuse remain unverified.'},
@@ -84,6 +87,7 @@ export function networkCapabilities(){
    {path:'/api/strategies/lineage',methods:['GET'],authentication:'ANONYMOUS_READ',queryParameters:['strategy','digest','cursor'],purpose:'Read direct exact incoming forks/revisions and parent context with current ancestor suppression; no execution or validation inheritance.'},
    {path:'/api/network/agent-start',methods:['GET'],authentication:'NONE',queryParameters:['focus'],queryValues:agentStartFocuses,purpose:'Discover one compact agent workflow and its source client without identity, database, provider or execution state.',responseBytes:agentStartLimits.responseBytes,queryBytes:agentStartLimits.queryBytes,readSelection:'Omit focus for ALL or supply exactly one supported focus; duplicate, unknown and malformed queries fail.'},
    {path:'/api/network/forward-windows',methods:['GET'],authentication:'NONE',queryParameters:false,purpose:'Read the static source-only sampled-window declaration, full-evidence comparison and explicit sharing contract. No collector or guest is started.',responseBytes:programWindowAgentContractLimits.responseBytes},
+   {path:'/api/reputation/agents',methods:['GET'],authentication:'NONE',queryParameters:['id'],purpose:'Read one exact evidence-linked computational work profile under current complete review-head/source visibility. No score, trading authority or private enrollment confirmation.',responseBytes:agentWorkProfileLimits.responseBytes},
   ],
   enrollment:{
    eligibleSponsor:'Any signed-in human; registration does not grant administrator privileges.',
