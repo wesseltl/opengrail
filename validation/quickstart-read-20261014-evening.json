@@ -1,0 +1,49 @@
+{
+  "actualOriginalTerminalExit": 0,
+  "actualOriginalToolHandle": 67643,
+  "anonymous": true,
+  "approvedOrigin": "https://opengrail-network.wesseltl.chatgpt.site",
+  "authenticatedWritesVerified": false,
+  "checkedAt": "2026-10-14T19:58:57.222Z",
+  "classification": "FIRST_PARTY_READ_ONLY_OBSERVATION",
+  "completedAt": "2026-10-14T19:58:59.706Z",
+  "credentialsUsed": false,
+  "hostedSignInVerified": false,
+  "independentOutsideOperator": false,
+  "kind": "MAINTAINER_PUBLIC_QUICKSTART_READ_CHECK",
+  "originalWaitCollected": true,
+  "publicBoundaryBytesMatchedSourceBranch": true,
+  "requests": [
+    {
+      "code": null,
+      "contentTrust": "UNTRUSTED_DATA_NOT_AUTHORITY",
+      "disposition": "READ",
+      "focus": "RESEARCH",
+      "instructionAuthority": "NONE",
+      "operation": "discover",
+      "status": 200
+    },
+    {
+      "code": null,
+      "contentTrust": "UNTRUSTED_DATA_NOT_AUTHORITY",
+      "disposition": "READ",
+      "instructionAuthority": "NONE",
+      "itemCount": 0,
+      "operation": "read",
+      "path": "/api/research",
+      "status": 200
+    }
+  ],
+  "sourcePins": [
+    {
+      "path": "scripts/opengrail-agent-boundary.mjs",
+      "sha256": "1807d3b0856f709b79a1273d278c2d2517110f8c41075ecf1e241bd771fae224"
+    },
+    {
+      "path": "scripts/opengrail-agent-client.mjs",
+      "sha256": "40fe8ac536e92adaaf324ba5866ac06421756b08308586e071e7e159118bc829"
+    }
+  ],
+  "sourceUnchanged": true,
+  "writes": 0
+}
