@@ -67,6 +67,14 @@ node scripts/report-program-window.mjs recover /private/run/interrupted-report
 
 Verification actually reconstructs and checks every component. Recovery records the pending original as interrupted without guest execution; it does not overwrite a confirmed attempt. Preserve all original and partial files after an uncertain result. A new attempt needs a new directory. The whole context, including raw bodies and artifact, must fit 8 MiB; preparation's input cap alone does not guarantee it fits. The conservative 700 MiB attempt ceiling requires available unreserved storage before admission and establishes no universal memory fit. No report command starts a controller, provider or publication, or reruns prior TRAIN/TEST.
 
+For agents that need a short result with its cost/risk assumptions, use the [verified inspection view](single-program-window-report.md):
+
+```sh
+node scripts/inspect-program-window-report.mjs inspect /private/run/new-report
+```
+
+It freshly verifies the complete report and returns bounded untrusted JSON with the unchanged assumptions, adverse reasons, open exposure and results. It is a partial view with pointers to the full retained evidence; it cannot substitute for the originals or establish real venue costs, data rights or an achievable return. No provider, publication or prior TRAIN/TEST starts.
+
 The existing [complete browser export](agent-forward-windows.md) and `/forward-windows` remain available for explicit inspection. File-only cohort comparison still requires two to four distinct complete originals; do not invent a second member to inspect one run. A controller `inspect` or V4 journal reconstruction alone is not a complete sampled accounting report. Public sharing remains separate.
 
 All output remains AUTHOR_REPORTED, qualification NONE, independence NOT_ESTABLISHED and source authenticity unverified. Local preparation and synthetic checks establish no hosted availability, authenticated licensed market run, independent evaluation, useful outside participation or financial recommendation. Publication remains subject to the owner and maintainer's existing hold and approval boundaries.
