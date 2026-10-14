@@ -1,0 +1,97 @@
+{
+  "name": "Next.js create-next-app template SVG assets",
+  "adoption": "Retain the unchanged upstream MIT notice for only the three listed template SVG assets. Their original local bytes match the pinned upstream bytes plus one final LF. This comparison does not establish the historical copy event or copyright ownership of OpenGrail. No asset content is changed by this notice record.",
+  "upstream": {
+    "repository": "https://github.com/vercel/next.js",
+    "tag": "v16.3.4",
+    "commit": "299180d3315c7ebd7b199d2b1a265b5986c5fc7d",
+    "templateDirectory": "packages/create-next-app/templates/app-tw/ts/public"
+  },
+  "license": {
+    "declared": "MIT",
+    "upstreamCopyrightDeclaration": "Copyright (c) 2025 Vercel, Inc.",
+    "upstreamPath": "license.md",
+    "url": "https://raw.githubusercontent.com/vercel/next.js/299180d3315c7ebd7b199d2b1a265b5986c5fc7d/license.md",
+    "gitBlobSha1": "5948ee9bd0de5064423688a2967ab3111c2658ed",
+    "bytes": 1079,
+    "sha256": "ee765244e2d59f5234d474f62e0766fa0c8b99af967fdd4c0cb8dcb0c76ea224",
+    "retainedNotice": "vendor/nextjs-template-assets.LICENSE.md",
+    "scope": "Only the three matching template SVG assets listed below. This is a retained third-party notice, not a project-wide license or a grant concerning other code, fonts, artwork, trademarks or data."
+  },
+  "files": [
+    {
+      "path": "public/file.svg",
+      "original": {
+        "bytes": 392,
+        "sha256": "1e0ae4d1a1ddfa36752988647b731e4abf150c414d069ec83c96fb0aaeff0307",
+        "gitBlobSha1": "16fe3d3a3ab9bd42e1616ec00066faba7e4aabe0"
+      },
+      "upstream": {
+        "path": "packages/create-next-app/templates/app-tw/ts/public/file.svg",
+        "url": "https://raw.githubusercontent.com/vercel/next.js/299180d3315c7ebd7b199d2b1a265b5986c5fc7d/packages/create-next-app/templates/app-tw/ts/public/file.svg",
+        "bytes": 391,
+        "sha256": "2b67812c325c199a02536cdbeea0c593a72f707d323b72ee3e08dbab06753bd4",
+        "gitBlobSha1": "004145cddf3f9db91b57b9cb596683c8eb420862"
+      },
+      "comparison": "EXACT_UPSTREAM_BYTES_PLUS_ONE_FINAL_LF",
+      "localDifference": {
+        "appendUtf8Hex": "0a",
+        "bytes": 1,
+        "renderedContentEdited": false
+      }
+    },
+    {
+      "path": "public/globe.svg",
+      "original": {
+        "bytes": 1036,
+        "sha256": "d051a8c47936990a9085693d307bb7cea1bc1b6d7ed956bcbaacf674f4ec96b9",
+        "gitBlobSha1": "c7215fe0f2634ae9f51d15dacc09184f5343941a"
+      },
+      "upstream": {
+        "path": "packages/create-next-app/templates/app-tw/ts/public/globe.svg",
+        "url": "https://raw.githubusercontent.com/vercel/next.js/299180d3315c7ebd7b199d2b1a265b5986c5fc7d/packages/create-next-app/templates/app-tw/ts/public/globe.svg",
+        "bytes": 1035,
+        "sha256": "b614b9bf183925957661ac851498fe1d8029fd43a62fbfed86f9e2624a57e7cf",
+        "gitBlobSha1": "567f17b0d7c7fb662c16d4357dd74830caf2dccb"
+      },
+      "comparison": "EXACT_UPSTREAM_BYTES_PLUS_ONE_FINAL_LF",
+      "localDifference": {
+        "appendUtf8Hex": "0a",
+        "bytes": 1,
+        "renderedContentEdited": false
+      }
+    },
+    {
+      "path": "public/window.svg",
+      "original": {
+        "bytes": 386,
+        "sha256": "decf1cf7bb22b5c99c4857cfcd5718ce5465c4454166317589c83fc73df74b66",
+        "gitBlobSha1": "d05e7a1bc066341298657dcc304dbadc4ddcab9d"
+      },
+      "upstream": {
+        "path": "packages/create-next-app/templates/app-tw/ts/public/window.svg",
+        "url": "https://raw.githubusercontent.com/vercel/next.js/299180d3315c7ebd7b199d2b1a265b5986c5fc7d/packages/create-next-app/templates/app-tw/ts/public/window.svg",
+        "bytes": 385,
+        "sha256": "644768c4aaeb4767bce293344eeb0c125fb804a94d801440424072202d85e3a1",
+        "gitBlobSha1": "b2b2a44f6ebc70c450043c05a002e7a93ba5d651"
+      },
+      "comparison": "EXACT_UPSTREAM_BYTES_PLUS_ONE_FINAL_LF",
+      "localDifference": {
+        "appendUtf8Hex": "0a",
+        "bytes": 1,
+        "renderedContentEdited": false
+      }
+    }
+  ],
+  "comparisonObservedAt": "2026-10-14T00:10:19.069205+00:00",
+  "comparisonEvidence": {
+    "kind": "ACTUAL_NEXTJS_TEMPLATE_SVG_BYTE_COMPARISON",
+    "bytes": 2896,
+    "sha256": "53d1dec933881cc10c8fafbdfd050ebd25618847afc9a1295ed5f49004a3a75f",
+    "primaryInputsSha256": "1a79a573344fe073c56a7d7d85ecd6e2ffd3e8d92ce7bc0fecf559b10e6d2e57"
+  },
+  "historicalCopyEventEstablished": false,
+  "copyrightOwnershipOfOpenGrailEstablished": false,
+  "projectLicenseSelected": false,
+  "legalReviewCompleted": false
+}
