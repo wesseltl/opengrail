@@ -57,6 +57,21 @@ The new output must not exist. Publication uses a private exclusive staged file,
 
 Review the complete input, data rights and fixed request budget before separately starting the existing [sampled window controller](tasks/039-sampled-program-windows.md). No preparation or verification command starts it automatically. Preserve its original complete raw directory, journal, outbox, ACK clocks and every adverse disposition.
 
+Create a new, empty, current-user-owned mode-0700 archive directory in the private parent prepared above. Then explicitly start the `PUBLIC_HTTP` controller. Its startup clock, after module loading and input verification, must fall inside the first declared active slot: `target <= clock < deadline`. Starting early does not wait for admission. Allow for startup latency and preserve the original dates and source pins. The CLI refuses `SYNTHETIC_RESPONSES`; these commands grant no data-use permission.
+
+```sh
+mkdir -m 700 /private/run/original-window
+node scripts/program-window.mjs start /private/run/new-window-input.json /private/run/original-window
+```
+
+`start` already performs scheduled observation and closeout. For a retained original, choose only the operation needed below. `inspect` reports collection/disposition; full accounting remains the separate report step. `reconcile` checks original receipts without replacement events or new provider requests. `closeout` reconciles receipts and attempts only remaining predeclared observation-only grace slots; it does not resume active guest work. Preserve complete originals, pending/partial files and adverse outcomes. See the existing [recovery and clock rules](tasks/039-sampled-program-windows.md#recovery-original-acknowledgments-and-clocks).
+
+```sh
+node scripts/program-window.mjs inspect /private/run/original-window
+node scripts/program-window.mjs closeout /private/run/original-window
+node scripts/program-window.mjs reconcile /private/run/original-window
+```
+
 For one complete V2 original, use the [single-run file report](single-program-window-report.md). It freezes the whole fitting context, retains admission before fixed local reconstruction, and keeps full accounting, observation and reconstruction components separately:
 
 ```sh
