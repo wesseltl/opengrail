@@ -174,3 +174,71 @@ test('multi-binding snapshot proof preserves whole raw rows beneath D1 string ca
  // These deliberately malformed payloads pass only a byte snapshot, never a profile.
  await assert.rejects(()=>repo().workProfile(a.registered.id),error=>error.status===503);
 });
+
+const snapshotReviewFields=['id','original_id','original_digest','sequence','author_key','sponsor_key','request_id','command_digest','payload','digest','created_at'];
+async function sixChunkSnapshotFixture(){
+ const a=await agent(),f=await fixture({agent:a.actor}),review=(await repo().write(reviewer(),command(f),at)).item;
+ // Each raw row fits the existing row/binding caps, but no two fit one proof
+ // chunk. These payloads deliberately do not claim valid computational work.
+ const material='x'.repeat(900000),ids=[review.id];
+ await db.prepare('UPDATE experiment_reviews SET payload=? WHERE id=?').bind(material,review.id).run();
+ for(let n=0;n<5;n++){const id=uid();ids.push(id);await db.prepare('INSERT INTO experiment_reviews SELECT ?,original_id,original_digest,?,author_key,sponsor_key,?,command_digest,payload,digest,created_at FROM experiment_reviews WHERE id=?').bind(id,n+2,uid(),review.id).run();}
+ return {material,ids,profileId:a.registered.id};
+}
+function assertSixChunkProof(traced,ids,selector=false,closings=1){
+ const closing=traced.calls.at(-1);assert(closing.sql.startsWith('WITH expected_0'));
+ assert.equal(traced.calls.filter(call=>call.sql.startsWith('WITH expected_0')).length,closings);
+ assert.equal(closing.values.length,selector?7:6);assert(Buffer.byteLength(closing.sql)<=100000);
+ const chunks=closing.values.slice(0,6).map(value=>{assert(Buffer.byteLength(value)<=1500000);return JSON.parse(value)});
+ assert(chunks.every(chunk=>chunk.length===1));assert.deepEqual(chunks.flat().map(row=>row.id).sort(),[...ids].sort());
+ assert(closing.values.reduce((total,value)=>total+Buffer.byteLength(value),0)<=16777216);
+ if(selector)assert.deepEqual(JSON.parse(closing.values[6]),ids);
+}
+test('native closing proof accepts six bounded exact chunks with and without a selector',async()=>{
+ const {material,ids,profileId}=await sixChunkSnapshotFixture(),{AgentWorkProfileSnapshot,agentWorkReadLimits}=load('app/agent-work-profile-snapshot.ts');
+ for(const selected of [false,true]){
+  const traced=instrument(),snapshot=new AgentWorkProfileSnapshot(traced),rows=await snapshot.read('experiment_reviews',snapshotReviewFields,250,selected?{column:'id',ids}:undefined);
+  assert.equal(rows.length,6);assert(rows.every(row=>row.payload===material));
+  assert(rows.reduce((total,row)=>total+Buffer.byteLength(JSON.stringify(row)),0)<=agentWorkReadLimits.canonicalWireBytes);
+  assert(rows.every(row=>Buffer.byteLength(JSON.stringify(row))<=agentWorkReadLimits.rowWireBytes));
+  await snapshot.confirm();assertSixChunkProof(traced,ids,selected);
+ }
+ // A successful exact byte snapshot is not a valid full-profile projection.
+ await assert.rejects(()=>repo().workProfile(profileId),error=>error.status===503);
+});
+test('six-chunk native closing proof rejects same-length payload corruption despite unchanged digest labels',async()=>{
+ const {material,ids}=await sixChunkSnapshotFixture(),traced=instrument(),{AgentWorkProfileSnapshot}=load('app/agent-work-profile-snapshot.ts'),snapshot=new AgentWorkProfileSnapshot(traced);
+ await snapshot.read('experiment_reviews',snapshotReviewFields,250);await snapshot.confirm();assertSixChunkProof(traced,ids);
+ const changed=material.slice(0,-1)+'y';assert.equal(Buffer.byteLength(changed),Buffer.byteLength(material));assert.notEqual(changed,material);
+ const prior=await db.prepare('SELECT digest,command_digest FROM experiment_reviews WHERE id=?').bind(ids[0]).first();
+ await db.prepare('UPDATE experiment_reviews SET payload=? WHERE id=?').bind(changed,ids[0]).run();
+ assert.deepEqual(await db.prepare('SELECT digest,command_digest FROM experiment_reviews WHERE id=?').bind(ids[0]).first(),prior);
+ await assert.rejects(()=>snapshot.confirm(),error=>error.status===503);assertSixChunkProof(traced,ids,false,2);
+});
+test('six-chunk native closing proof rejects removed membership after the complete read',async()=>{
+ const {ids}=await sixChunkSnapshotFixture(),traced=instrument(),{AgentWorkProfileSnapshot}=load('app/agent-work-profile-snapshot.ts'),snapshot=new AgentWorkProfileSnapshot(traced);
+ await snapshot.read('experiment_reviews',snapshotReviewFields,250);await snapshot.confirm();assertSixChunkProof(traced,ids);
+ await db.prepare('DELETE FROM experiment_reviews WHERE id=?').bind(ids[0]).run();
+ await assert.rejects(()=>snapshot.confirm(),error=>error.status===503);assertSixChunkProof(traced,ids,false,2);
+});
+test('six-chunk native closing proof rejects replaced membership even when the row count is unchanged',async()=>{
+ const {ids}=await sixChunkSnapshotFixture(),traced=instrument(),{AgentWorkProfileSnapshot}=load('app/agent-work-profile-snapshot.ts'),snapshot=new AgentWorkProfileSnapshot(traced);
+ await snapshot.read('experiment_reviews',snapshotReviewFields,250);await snapshot.confirm();assertSixChunkProof(traced,ids);
+ await db.prepare('UPDATE experiment_reviews SET id=? WHERE id=?').bind(uid(),ids[0]).run();
+ assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM experiment_reviews').first()).count,6);
+ await assert.rejects(()=>snapshot.confirm(),error=>error.status===503);assertSixChunkProof(traced,ids,false,2);
+});
+test('native closing proof preserves empty frames and an empty selector over populated source rows',async()=>{
+ const {AgentWorkProfileSnapshot}=load('app/agent-work-profile-snapshot.ts'),empty=instrument(),first=new AgentWorkProfileSnapshot(empty);
+ assert.deepEqual(await first.read('experiment_reviews',snapshotReviewFields,250),[]);await first.confirm();assert.deepEqual(empty.calls.at(-1).values,['[]']);
+ await sixChunkSnapshotFixture();
+ const selected=instrument(),second=new AgentWorkProfileSnapshot(selected);
+ assert.deepEqual(await second.read('experiment_reviews',snapshotReviewFields,250,{column:'id',ids:[]}),[]);
+ assert.deepEqual(await second.read('experiment_review_moderation',['record_id','sequence','payload'],0,{column:'record_id',ids:[]}),[]);
+ await second.confirm();assert.deepEqual(selected.calls.at(-1).values,['[]','[]','[]','[]']);
+});
+test('native closing proof rejects new membership after an empty unselected frame was read',async()=>{
+ const {AgentWorkProfileSnapshot}=load('app/agent-work-profile-snapshot.ts'),snapshot=new AgentWorkProfileSnapshot(instrument());
+ assert.deepEqual(await snapshot.read('experiment_reviews',snapshotReviewFields,250),[]);await snapshot.confirm();
+ await sixChunkSnapshotFixture();await assert.rejects(()=>snapshot.confirm(),error=>error.status===503);
+});

@@ -86,7 +86,10 @@ export class AgentWorkProfileSnapshot {
       }
       flush(); if (!chunks.length) chunks.push(add('[]'));
       const name = 'expected_' + index;
-      ctes.push(`${name} AS (${chunks.map(parameter => `SELECT value FROM json_each(${parameter})`).join(' UNION ALL ')})`);
+      // A VALUES rowset admits every bounded chunk without a compound SELECT
+      // per chunk. Native SQLite limits compound terms independently of the
+      // admitted byte/parameter limits; six valid chunks must still close.
+      ctes.push(`${name} AS (WITH chunks(material) AS (VALUES ${chunks.map(parameter => `(${parameter})`).join(',')}) SELECT expanded.value FROM chunks CROSS JOIN json_each(chunks.material) expanded)`);
       const where = frame.selector ? ` WHERE ${frame.selector.column} IN (SELECT value FROM json_each(${add(JSON.stringify(frame.selector.ids))}))` : '';
       predicates.push(`(SELECT COUNT(*) FROM ${frame.table}${where})=(SELECT COUNT(*) FROM ${name})`);
       const equal = frame.fields.map(field => `actual.${field} IS json_extract(expected.value,'$.${field}')`).join(' AND ');
