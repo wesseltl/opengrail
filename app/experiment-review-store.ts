@@ -16,9 +16,14 @@ type Values=(string|number)[];
 type Reference={id:string;digest:string};
 type ExperimentRow={id:string;type:string;manifest_id:string|null;manifest_digest:string|null;strategy_id:string;strategy_digest:string;author_key:string;sponsor_key:string;request_id:string;command_digest:string;payload:string|null;digest:string;created_at:string};
 type StrategyRow={id:string;root_id:string;revision:number;author_key:string;sponsor_key:string;request_id:string;command_digest:string;created_at:string;digest:string;payload:string|null};
+type ExperimentBinding={row:ExperimentRow;record:ReturnType<typeof boundedExperimentRecord>['record'];full:ExperimentPublicItem};
+type StrategyBinding={row:StrategyRow;full:StrategyPublicItem};
+type Bindings={original:ExperimentBinding;reproduction:ExperimentBinding;manifest:ExperimentBinding;strategy:StrategyBinding;dependencies:StrategyBinding[]};
+type ProfileBindingsEntry={checked:Checked;result:Bindings};
+type ProfileBindingsMemo={enabled:boolean;checked:WeakMap<ExperimentReviewRecord,Checked>;results:Map<ExperimentReviewRecord,ProfileBindingsEntry>;owned:WeakSet<object>};
 type CommitmentContext={repository:ExperimentRepository;result:Awaited<ReturnType<ExperimentRepository['commitmentContexts']>>};
 type CommitmentRead={context:CommitmentContext;rows:Row[];events:EventRow[];head:{id:string;digest:string;sequence:number}|null};
-type Scope={commitments?:Map<string,Promise<CommitmentContext>>;commitmentRead?:CommitmentRead;canonical:Map<string,Promise<unknown>>;canonicalBytes:number;verificationMemo:ExperimentReviewVerificationMemo;experimentRows?:Map<string,ExperimentRow>;strategyRows?:Map<string,StrategyRow>;profileSnapshotClosed?:boolean};
+type Scope={commitments?:Map<string,Promise<CommitmentContext>>;commitmentRead?:CommitmentRead;canonical:Map<string,Promise<unknown>>;canonicalBytes:number;verificationMemo:ExperimentReviewVerificationMemo;experimentRows?:Map<string,ExperimentRow>;strategyRows?:Map<string,StrategyRow>;profileSnapshotClosed?:boolean;profileBindings?:ProfileBindingsMemo};
 const readScope=():Scope=>({canonical:new Map(),canonicalBytes:0,verificationMemo:createExperimentReviewVerificationMemo()});
 async function canonical<T>(scope:Scope,material:string,verify:()=>Promise<T>):Promise<T>{const key=await experimentDigest(material),retained=scope.canonical.get(key);if(retained)return retained as Promise<T>;const size=new TextEncoder().encode(material).byteLength,pending=verify();if(scope.canonical.size<128&&scope.canonicalBytes+size<=16_777_216){scope.canonical.set(key,pending);scope.canonicalBytes+=size;}return pending;}
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/,hash=/^[a-f0-9]{64}$/;
@@ -35,6 +40,35 @@ const authorKey=(reference:ExperimentAuthorReference)=>reference.kind+':'+refere
 const same=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 const add=(values:Values,value:string|number)=>{values.push(value);return '?'+values.length;};
 const policy='public-experiment-review-v1' as const;
+const profileMemo=(scope:Scope)=>scope.profileSnapshotClosed===true&&scope.profileBindings?.enabled?scope.profileBindings:undefined;
+/** Freeze only this profile's owned plain-data graphs, before validation awaits.
+ * Shared nested aliases are traversed once; a pre-frozen root is not proof that
+ * its descendants are immutable. Traversal bounds limit memo admission only:
+ * exceeding them disables reuse, retaining the complete validation fallback. */
+function ownProfileGraph<T>(scope:Scope,value:T):T{
+ const memo=profileMemo(scope);if(!memo)return value;
+ let nodes=0;const active=new Set<object>();
+ const visit=(item:unknown,depth:number):boolean=>{
+  if(++nodes>500000||depth>64)return false;
+  if(item===null||typeof item==='string'||typeof item==='boolean'||typeof item==='number'&&Number.isFinite(item))return true;
+  if(!item||typeof item!=='object')throw inconsistent();
+  if(memo.owned.has(item))return true;
+  const array=Array.isArray(item),prototype=Object.getPrototypeOf(item),descriptors=Object.getOwnPropertyDescriptors(item);
+  if(active.has(item)||Object.getOwnPropertySymbols(item).length||(array?prototype!==Array.prototype:prototype!==Object.prototype&&prototype!==null)||array&&Object.keys(descriptors).length!==item.length+1)throw inconsistent();
+  active.add(item);
+  for(const [key,descriptor]of Object.entries(descriptors)){
+   if(array&&key==='length')continue;
+   if(!('value'in descriptor)||!descriptor.enumerable||array&&(!/^(0|[1-9][0-9]*)$/.test(key)||Number(key)>=item.length))throw inconsistent();
+   if(!visit(descriptor.value,depth+1))return false;
+  }
+  active.delete(item);Object.freeze(item);memo.owned.add(item);return true;
+ };
+ if(!visit(value,0)){memo.enabled=false;memo.results.clear();}return value;
+}
+function profileBindingsMembership(scope:Scope,result:Bindings){
+ for(const source of [result.original,result.reproduction,result.manifest])if(scope.experimentRows?.get(source.row.id)!==source.row)throw inconsistent();
+ for(const source of [result.strategy,...result.dependencies])if(scope.strategyRows?.get(source.row.id)!==source.row)throw inconsistent();
+}
 function identity(id:string,digest?:string){if(typeof id!=='string'||!uuid.test(id)||digest!==undefined&&(typeof digest!=='string'||!hash.test(digest)))throw new ExperimentReviewError('Invalid review identity or digest.',400);}
 function clock(at:string){if(typeof at!=='string'||!Number.isFinite(Date.parse(at))||new Date(at).toISOString()!==at)throw new ExperimentReviewError('Invalid review timestamp.',400);}
 function retryAfter(at:string){const d=new Date(at);return Math.max(1,Math.ceil((Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+1)-Date.parse(at))/1000));}
@@ -89,47 +123,68 @@ export class ExperimentReviewRepository{
  private async requireCredential(context:Context,at:string){if(context.actor.kind==='AGENT'){const values:Values=[];if(!await this.db.prepare('SELECT 1 AS active WHERE '+this.credentialClause(context,at,values)).bind(...values).first())throw new ExperimentReviewError('Agent credential is invalid, expired or revoked.',401);}}
  private requestClause(context:Context,requestId:string,values:Values){const author=add(values,context.key),request=add(values,requestId);return namespace.map(table=>`NOT EXISTS(SELECT 1 FROM ${table} WHERE author_key=${author} AND request_id=${request})`).join(' AND ');}
  private async check(row:Row,scope:Scope):Promise<Checked>{
+  ownProfileGraph(scope,row);
   const checked=await canonical(scope,'R:'+JSON.stringify(row),async()=>{try{
    if(!row.payload||!hash.test(row.digest)||!hash.test(row.command_digest))throw Error();
    const {record,payload}=boundedExperimentReviewRecord(JSON.parse(row.payload));
+   ownProfileGraph(scope,record);
    if(payload!==row.payload||await experimentDigest(payload)!==row.digest||record.id!==row.id||record.content.target.original.id!==row.original_id||record.content.target.original.digest!==row.original_digest||record.sequence!==row.sequence||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(record.author)!==row.author_key||record.author.sponsorId!==row.sponsor_key)throw Error();
    const command=boundedExperimentReviewCommand(experimentReviewCommandForRecord(record));if(await experimentDigest(command.payload)!==row.command_digest)throw Error();
-   return {row,record};
+   return ownProfileGraph(scope,{row,record});
   }catch{throw inconsistent();}});
+  const memo=profileMemo(scope);if(memo){if(!memo.owned.has(checked)||checked.row!==row)throw inconsistent();memo.checked.set(checked.record,checked);}
   try{await this.bindings(checked.record,scope);return checked;}catch{throw inconsistent();}
  }
- private async experiment(reference:Reference,scope:Scope){
+ private async experiment(reference:Reference,scope:Scope):Promise<ExperimentBinding>{
   identity(reference.id,reference.digest);
   const retained=scope.experimentRows?.get(reference.id);if(scope.profileSnapshotClosed&&!retained)throw inconsistent();
   const row=retained??await this.db.prepare(`SELECT ${experimentColumns} FROM experiment_records WHERE id=?`).bind(reference.id).first<ExperimentRow>();
   if(!row||row.digest!==reference.digest)throw new ExperimentReviewError('Exact experiment reference not found.',404);
+  ownProfileGraph(scope,row);
   return canonical(scope,'E:'+JSON.stringify(row),async()=>{try{
    if(!row.payload)throw Error();const checked=boundedExperimentRecord(JSON.parse(row.payload)),record=checked.record;
+   ownProfileGraph(scope,record);
    if(checked.payload!==row.payload||await experimentDigest(row.payload)!==row.digest||record.id!==row.id||record.type!==row.type||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(experimentAuthorReference(record.author))!==row.author_key||record.author.sponsorId!==row.sponsor_key||await experimentDigest(boundedExperimentCommand({action:record.type==='MANIFEST'?'register':'outcome',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted}).payload)!==row.command_digest)throw Error();
    if(record.type==='MANIFEST'?(row.manifest_id!==null||row.manifest_digest!==null):(row.manifest_id!==record.content.manifest.id||row.manifest_digest!==record.content.manifest.digest))throw Error();
    const full:ExperimentPublicItem={id:record.id,digest:row.digest,type:record.type,requestId:record.requestId,createdAt:record.createdAt,author:experimentAuthorReference(record.author),strategy:{id:row.strategy_id,digest:row.strategy_digest},manifest:record.type==='OUTCOME'?record.content.manifest:null,state:'VISIBLE',reason:null,suppression:null,reporting:record.type==='OUTCOME'?'AUTHOR_REPORTED':'UNREPORTED',outcomeCount:0,record,moderation:[]};
-   return {row,record,full};
+   return ownProfileGraph(scope,{row,record,full});
   }catch{throw inconsistent();}});
  }
- private async strategy(reference:Reference,scope:Scope){
+ private async strategy(reference:Reference,scope:Scope):Promise<StrategyBinding>{
   identity(reference.id,reference.digest);
   const retained=scope.strategyRows?.get(reference.id);if(scope.profileSnapshotClosed&&!retained)throw inconsistent();
   const row=retained??await this.db.prepare(`SELECT ${strategyColumns} FROM strategy_publications WHERE id=?`).bind(reference.id).first<StrategyRow>();
   if(!row||row.digest!==reference.digest)throw new ExperimentReviewError('Exact strategy reference not found.',404);
+  ownProfileGraph(scope,row);
   if(!scope.strategyRows)scope.strategyRows=new Map();scope.strategyRows.set(row.id,row);
   return canonical(scope,'S:'+JSON.stringify(row),async()=>{try{
-   if(!row.payload)throw Error();const checked=boundedStrategyRecord(JSON.parse(row.payload));const record=checked.record;await verifyStrategyProgram(record);if(checked.payload!==row.payload||record.id!==row.id||record.rootId!==row.root_id||record.revision!==row.revision||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(strategyAuthorReference(record.author))!==row.author_key||record.author.sponsorId!==row.sponsor_key||await experimentDigest(row.payload)!==row.digest||await experimentDigest(boundedStrategyCommand(strategyPublishCommandForRecord(record)).payload)!==row.command_digest)throw Error();
+   if(!row.payload)throw Error();const checked=boundedStrategyRecord(JSON.parse(row.payload));const record=checked.record;ownProfileGraph(scope,record);await verifyStrategyProgram(record);if(checked.payload!==row.payload||record.id!==row.id||record.rootId!==row.root_id||record.revision!==row.revision||record.requestId!==row.request_id||record.createdAt!==row.created_at||authorKey(strategyAuthorReference(record.author))!==row.author_key||record.author.sponsorId!==row.sponsor_key||await experimentDigest(row.payload)!==row.digest||await experimentDigest(boundedStrategyCommand(strategyPublishCommandForRecord(record)).payload)!==row.command_digest)throw Error();
    const full:StrategyPublicItem={id:record.id,digest:row.digest,rootId:record.rootId,revision:record.revision,requestId:record.requestId,createdAt:record.createdAt,author:strategyAuthorReference(record.author),state:'VISIBLE',reason:null,record,moderation:[]};
-   return {row,full};
+   return ownProfileGraph(scope,{row,full});
   }catch{throw inconsistent();}});
  }
- private async bindings(record:ExperimentReviewRecord,scope:Scope){
+ private async bindings(record:ExperimentReviewRecord,scope:Scope):Promise<Bindings>{
+  const memo=profileMemo(scope),checked=memo?.checked.get(record),entry=memo?.results.get(record);
+  if(entry&&memo){
+   if(!checked||entry.checked!==checked||checked.record!==record||!memo.owned.has(checked)||!memo.owned.has(record)||!memo.owned.has(entry)||!memo.owned.has(entry.result))throw inconsistent();
+   profileBindingsMembership(scope,entry.result);return entry.result;
+  }
+  ownProfileGraph(scope,record);
   const target=record.content.target;
   const [original,reproduction,manifest,strategy]=await Promise.all([this.experiment(target.original,scope),this.experiment(target.reproduction,scope),this.experiment(target.manifest,scope),this.strategy(target.strategy,scope)]);
   await validateExperimentReviewBindings(experimentReviewCommandForRecord(record),{original:original.full,reproduction:reproduction.full,manifest:manifest.full,strategy:strategy.full},record.author,record.createdAt,scope.verificationMemo);
   if(manifest.record.type!=='MANIFEST')throw inconsistent();const retained=experimentInputDependencies(manifest.record.content.input);if(retained.length>4)throw inconsistent();
   const dependencies=await Promise.all(retained.map(async dependency=>{const source=dependency.id===strategy.row.id?strategy:await this.strategy(dependency,scope);if(source.row.payload!==JSON.stringify(dependency.record)||source.row.digest!==dependency.digest)throw inconsistent();return source;}));
-  return {original,reproduction,manifest,strategy,dependencies};
+  const result=ownProfileGraph(scope,{original,reproduction,manifest,strategy,dependencies});
+  if(memo&&profileMemo(scope)===memo){
+   profileBindingsMembership(scope,result);
+   // Only complete successful bindings of this exact internally checked record
+   // qualify. Capacity changes admission, never validation or catalog coverage.
+   if(checked&&checked.record===record&&memo.checked.get(record)===checked&&memo.owned.has(checked)&&memo.owned.has(record)&&memo.owned.has(result)&&memo.results.size<experimentReviewLimits.verificationMemoEntries){
+    const successful=ownProfileGraph(scope,{checked,result});if(profileMemo(scope)===memo&&memo.owned.has(successful))memo.results.set(record,successful);
+   }
+  }
+  return result;
  }
  private async hydrate(records:ExperimentReviewRecord[],scope:Scope){
   const experiments=[...new Set(records.flatMap(record=>[record.content.target.original.id,record.content.target.reproduction.id,record.content.target.manifest.id]))],strategies=[...new Set(records.map(record=>record.content.target.strategy.id))];
@@ -234,6 +289,10 @@ export class ExperimentReviewRepository{
   sIds.sort();const strategies=await snapshot.read<StrategyRow>('strategy_publications',sFields,sIds.length,{column:'id',ids:sIds});
   if(strategies.length!==sIds.length||new Set(strategies.map(row=>row.id)).size!==strategies.length||strategies.some(row=>!sIds.includes(row.id)))throw inconsistent();
   scope.experimentRows=new Map(experiments.map(row=>[row.id,row]));scope.strategyRows=new Map(strategies.map(row=>[row.id,row]));scope.profileSnapshotClosed=true;
+  // Hydration closes source lookups, not moderation or the final atomic proof.
+  // This memo and every retained graph become unreachable with this readScope.
+  scope.profileBindings={enabled:true,checked:new WeakMap(),results:new Map(),owned:new WeakSet()};
+  for(const row of [...rows,...experiments,...strategies])ownProfileGraph(scope,row);
   const checked:Checked[]=[];
   for(const row of rows)checked.push(await this.check(row,scope));
   const histories=new Map<string,Checked[]>();

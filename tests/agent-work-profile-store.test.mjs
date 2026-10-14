@@ -57,6 +57,28 @@ async function programFixture({falseFuel=false,falseReproduction=false,cloneOrig
 }
 async function source(record,actor=human()){const original=sm.strategyPublishCommandForRecord(record);return (await new StrategyRepository(db).write(actor,{...original,id:uid(),requestId:uid()},'2025-01-01T00:00:00.000Z')).item;}
 async function unplanned(){const f=await programSessionFixture(),selected=await source(f.config.strategy.record),config={...f.config,sessionId:uid(),strategy:{record:selected.record,digest:selected.digest}};let journal=await journalModel.createProgramSessionJournal(config,f.startedAt);const step=async(event,receivedAt,completedAt=receivedAt)=>journal=await journalModel.executeProgramSessionPending(await journalModel.admitProgramSessionEvent(journal,event,receivedAt),{clock:()=>completedAt});for(const row of f.events.slice(0,2))await step({...row.event,requestId:uid()},row.receivedAt,row.completedAt);let quoteAt=new Date(Date.parse(f.events[1].completedAt)+1000).toISOString();await step({requestId:uid(),type:'QUOTE',observedAt:quoteAt,price:99},quoteAt);quoteAt=new Date(Date.parse(quoteAt)+1000).toISOString();await step({requestId:uid(),type:'QUOTE',observedAt:quoteAt,price:103},quoteAt);assert(journal.trading.state.trades[0].netPnl<0);return {f,selected,config,journal,artifact:await forwardEvidence.snapshotProgramForwardEvidence(journal),sources:[selected]};}
+// Native synthetic canonical rows let capacity and invalid-binding cases avoid
+// publication quotas. They are never public write-authority or execution proof.
+async function retainedReviews(f,count,{previous=null,author,createdAt=at,extra={},heldHead=false}={}){
+ const items=[],statements=[];let head=previous;
+ for(let n=0;n<count;n++){
+  const id=await em.experimentPublicHumanId(uid()),reviewAuthor=author??{kind:'HUMAN',id,sponsorId:id},sequence=(head?.sequence??head?.record?.sequence??0)+1;
+  const sent=rm.boundedExperimentReviewCommand(command(f,{previous:head?ref(head):null,...heldHead&&n===count-1?{decision:'HELD',reasons:['INCOMPLETE_EVIDENCE'],evidence:null}:{},...extra})).command;
+  const {record,payload}=rm.boundedExperimentReviewRecord({version:1,id:sent.id,requestId:sent.requestId,createdAt,author:reviewAuthor,sequence,content:rm.experimentReviewContent(sent),policyAccepted:rp,classification:'REVIEW_ATTESTATION',executionAssurance:'TRUSTED_HUMAN_ATTESTATION',qualification:'NONE',independence:'NOT_ESTABLISHED',ordersEnabled:false});
+  head={id:record.id,digest:await em.experimentDigest(payload),sequence,record};items.push(head);
+  statements.push(db.prepare('INSERT INTO experiment_reviews(id,original_id,original_digest,sequence,author_key,sponsor_key,request_id,command_digest,payload,digest,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)').bind(record.id,f.original.id,f.original.digest,sequence,'HUMAN:'+record.author.id,record.author.sponsorId,record.requestId,await em.experimentDigest(rm.boundedExperimentReviewCommand(sent).payload),payload,head.digest,createdAt));
+ }
+ for(let offset=0;offset<statements.length;offset+=50)await db.batch(statements.slice(offset,offset+50));return items;
+}
+async function rewriteRetainedReview(item,mutate){
+ const row=await db.prepare('SELECT payload FROM experiment_reviews WHERE id=?').bind(item.id).first(),raw=JSON.parse(row.payload);await mutate(raw);
+ const {record,payload}=rm.boundedExperimentReviewRecord(raw),digest=await em.experimentDigest(payload),commandDigest=await em.experimentDigest(rm.boundedExperimentReviewCommand(rm.experimentReviewCommandForRecord(record)).payload);
+ await db.prepare('UPDATE experiment_reviews SET payload=?,digest=?,command_digest=?,author_key=?,sponsor_key=?,created_at=? WHERE id=?').bind(payload,digest,commandDigest,'HUMAN:'+record.author.id,record.author.sponsorId,record.createdAt,record.id).run();return {id:record.id,digest,sequence:record.sequence,record};
+}
+function assertOwnedGraph(value,seen=new Set()){
+ if(!value||typeof value!=='object'||seen.has(value))return;seen.add(value);assert(Object.isFrozen(value));
+ for(const descriptor of Object.values(Object.getOwnPropertyDescriptors(value))){assert('value'in descriptor);assertOwnedGraph(descriptor.value,seen);}
+}
 test('actual public Worker returns one exact synthetic human-attested reproduction, including a fee-bearing loss',async()=>{
  const a=await agent(),f=await fixture({agent:a.actor,flat:true});assert(f.artifact.metrics.returnPct<0);
  const review=(await repo().write(reviewer(),command(f),at)).item;
@@ -74,6 +96,74 @@ test('identical retry and additional favorable reviews count the exact original 
  const a=await agent(),f=await fixture({agent:a.actor}),sent=command(f),first=(await repo().write(reviewer(),sent,at)).item;
  await repo().write(reviewer(),sent,at);const second=(await repo().write(reviewer(),command(f,{previous:ref(first)}),at)).item;
  const profile=await repo().workProfile(a.registered.id);assert.equal(profile.counts.total,1);assert.equal(profile.counts.attested,1);assert.equal(profile.units[0].history.length,2);assert.equal(profile.units[0].currentHead.id,second.id);
+});
+test('profile binding reuse owns complete graphs before validation and refuses mutations through shared aliases',async()=>{
+ const a=await agent(),f=await fixture({agent:a.actor}),review=(await repo().write(reviewer(),command(f),at)).item,repository=repo(),initial=repository.bindings,experiment=repository.experiment,seen=new WeakSet();let reused=false,sourceChecked=false;
+ repository.experiment=async function(reference,scope){const result=await experiment.call(this,reference,scope);assertOwnedGraph(result);assert.equal(result.full.record,result.record);assert.equal(Reflect.set(result.row,'author_key','HUMAN:forged'),false);assert.equal(Reflect.set(result.full.author,'sponsorId','human_'+'f'.repeat(64)),false);sourceChecked=true;return result;};
+ repository.bindings=async function(record,scope){
+  const checked=scope.profileBindings.checked.get(record);assert(checked);assertOwnedGraph(record);assertOwnedGraph(checked);assert.equal(Reflect.set(record.author,'sponsorId',f.original.author.sponsorId),false);assert.equal(Reflect.set(record.content.target.original,'digest','f'.repeat(64)),false);
+  const repeat=seen.has(record);seen.add(record);const result=await initial.call(this,record,scope);assertOwnedGraph(result);assert.equal(result.reproduction.record,result.reproduction.full.record);assert.equal(result.dependencies[0],result.strategy);
+  assert.equal(Reflect.set(result.reproduction.full.record.content.claim.relation,'digest','f'.repeat(64)),false);assert.equal(Reflect.set(result.manifest.record.content.input.strategy.record.author,'sponsorId','human_'+'f'.repeat(64)),false);assert.equal(Reflect.set(result.dependencies,'0',null),false);assert.equal(Reflect.set(result.strategy.full.record.content,'name','forged'),false);
+  if(repeat){assert.equal(scope.profileBindings.results.get(record).result,result);const unowned=structuredClone(record);unowned.author={...f.original.author};await assert.rejects(()=>initial.call(this,unowned,scope),error=>error.status===400);reused=true;}return result;
+ };
+ const profile=await repository.workProfile(a.registered.id);assert(sourceChecked);assert(reused);assert.equal(profile.counts.attested,1);assert.equal(profile.units[0].currentHead.id,review.id);assert.deepEqual(profile.units[0].history.map(entry=>entry.review.id),[review.id]);
+});
+for(const source of ['original','reproduction','manifest','strategy','dependency'])for(const operation of ['remove','replace'])test(`profile memo hit rejects retained ${source} row ${operation} without source SQL fallback`,async()=>{
+ const a=await agent(),f=await fixture({agent:a.actor});await repo().write(reviewer(),command(f),at);assert.equal((await repo().workProfile(a.registered.id)).counts.attested,1);
+ const traced=instrument(),repository=repo(traced),initial=repository.bindings,seen=new WeakSet();let changed=false;
+ repository.bindings=async function(record,scope){
+  if(seen.has(record)&&!changed){const cached=scope.profileBindings.results.get(record);assert(cached);const result=cached.result,selected=source==='dependency'?result.dependencies[0]:result[source],map=source==='strategy'||source==='dependency'?scope.strategyRows:scope.experimentRows;
+   assert.equal(map.get(selected.row.id),selected.row);if(operation==='remove')map.delete(selected.row.id);else map.set(selected.row.id,{...selected.row});changed=true;
+  }
+  seen.add(record);return initial.call(this,record,scope);
+ };
+ await assert.rejects(()=>repository.workProfile(a.registered.id),error=>error.status===503);assert(changed);assert.equal(traced.calls.length,12);assert(!traced.calls.some(call=>/^SELECT .* FROM (?:experiment_records|strategy_publications) WHERE id=\?/.test(call.sql)));assert(!traced.calls.some(call=>call.sql.startsWith('WITH expected_0')));
+});
+for(const variant of ['reviewer','time','decision'])test(`reviews sharing targets still validate a distinct ${variant}`,async()=>{
+ const a=await agent(),f=await fixture({agent:a.actor,biased:variant==='decision'}),first=(await repo().write(reviewer(),command(f,{id:'00000000-0000-4000-8000-000000000001',...variant==='decision'?{decision:'HELD',reasons:['INCOMPLETE_EVIDENCE'],evidence:null}:{}}),at)).item;
+ const positive=await repo().workProfile(a.registered.id);assert.equal(positive.counts.total,1);assert.equal(positive.units[0].status,variant==='decision'?'HELD':'ATTESTED');
+ const [bad]=await retainedReviews(f,1,{previous:first,extra:{id:'ffffffff-ffff-4fff-bfff-ffffffffffff'},...variant==='reviewer'?{author:f.original.author}:variant==='time'?{createdAt:new Date(Date.parse(at)-1000).toISOString()}:{} });
+ const repository=repo(),initial=repository.bindings;let rejectedBinding=false;
+ repository.bindings=async function(record,scope){if(record.id===bad.id)assert([...scope.profileBindings.results.keys()].some(key=>key.id===first.id));try{return await initial.call(this,record,scope);}catch(error){if(record.id===bad.id)rejectedBinding=true;throw error;}};
+ await assert.rejects(()=>repository.workProfile(a.registered.id),error=>error.status===503);assert(rejectedBinding);
+});
+test('unrelated adverse history with rehashed contradictory reports still rejects the whole profile',async()=>{
+ const a=await agent(),selected=await fixture({agent:a.actor}),background=await fixture();await repo().write(reviewer(),command(selected),at);
+ const adverse=(await repo().write(reviewer(),command(background,{decision:'HELD',reasons:['INCOMPLETE_EVIDENCE']}),at)).item;
+ assert.equal((await repo().workProfile(a.registered.id)).counts.attested,1);
+ await rewriteRetainedReview(adverse,async record=>{const report=record.content.evidence.original;report.summaries.claimed.metrics.returnPct++;const {reportDigest,...body}=report;void reportDigest;report.reportDigest=await em.experimentDigest(JSON.stringify(body));});
+ await assert.rejects(()=>repo().workProfile(a.registered.id),error=>error.status===503);
+});
+test('a second profile call on the same repository freshly detects changed database bytes',async()=>{
+ const a=await agent(),f=await fixture({agent:a.actor}),review=(await repo().write(reviewer(),command(f),at)).item,repository=repo();assert.equal((await repository.workProfile(a.registered.id)).counts.attested,1);
+ const row=await db.prepare('SELECT payload FROM experiment_reviews WHERE id=?').bind(review.id).first(),changed=row.payload.replace('Synthetic human computational attestation.','Synthetic false computational attestation.');assert.equal(changed.length,row.payload.length);assert.notEqual(changed,row.payload);
+ await db.prepare('UPDATE experiment_reviews SET payload=? WHERE id=?').bind(changed,review.id).run();await assert.rejects(()=>repository.workProfile(a.registered.id),error=>error.status===503);
+});
+test('profile result memo capacity keeps complete histories and fully validates uncached projections',async()=>{
+ const a=await agent(),histories=[];
+ for(let n=0;n<5;n++){const f=await fixture({agent:a.actor}),items=await retainedReviews(f,29,{heldHead:n%2===0});histories.push({f,items});}
+ const positive=repo(),positiveBindings=positive.bindings;let retained=0;
+ positive.bindings=async function(record,scope){const result=await positiveBindings.call(this,record,scope);retained=Math.max(retained,scope.profileBindings.results.size);return result;};
+ const profile=await positive.workProfile(a.registered.id);assert.equal(retained,rm.experimentReviewLimits.verificationMemoEntries);assert.equal(profile.counts.total,5);assert.equal(profile.counts.attested,2);assert.equal(profile.counts.held,3);
+ for(const {f,items}of histories){const unit=profile.units.find(unit=>unit.original.id===f.original.id);assert(unit);assert.deepEqual(unit.history.map(entry=>entry.review.id),items.map(item=>item.id));assert.equal(unit.currentHead.id,items.at(-1).id);}
+ const traced=instrument(),repository=repo(traced),initial=repository.bindings,experiment=repository.experiment,seen=new WeakSet();let fallback=null,changed=false;
+ repository.bindings=async function(record,scope){const repeat=seen.has(record);seen.add(record);if(repeat&&!scope.profileBindings.results.has(record)&&!changed)fallback=record;try{return await initial.call(this,record,scope);}finally{fallback=null;}};
+ repository.experiment=async function(reference,scope){const result=await experiment.call(this,reference,scope);if(fallback&&reference.id===fallback.content.target.reproduction.id&&!changed){assert.equal(scope.profileBindings.results.size,rm.experimentReviewLimits.verificationMemoEntries);const corrupt=structuredClone(result);assert.equal(corrupt.record,corrupt.full.record);corrupt.record.content.claim.relation.digest='f'.repeat(64);changed=true;return corrupt;}return result;};
+ // The existing full validators reject the injected derived graph directly;
+ // check() translates their failures when reading native canonical rows.
+ await assert.rejects(()=>repository.workProfile(a.registered.id),error=>[400,503].includes(error.status));assert(changed);assert.equal(traced.calls.length,12);assert(!traced.calls.some(call=>call.sql.startsWith('WITH expected_0')));
+});
+test('ownership traversal exhaustion disables memo admission and keeps full validation without refusing valid work',async()=>{
+ const a=await agent(),f=await fixture({agent:a.actor});await repo().write(reviewer(),command(f),at);const expected=await repo().workProfile(a.registered.id,at);
+ const bounded=corruptProjection=>{
+  const repository=repo(),initial=repository.bindings,strategy=repository.strategy,experiment=repository.experiment,seen=new WeakSet();let framed=false,projecting=false,disabled=false,changed=false;
+  repository.strategy=async function(reference,scope){const result=await strategy.call(this,reference,scope);if(!framed){let framing={};for(let n=0;n<70;n++)framing={child:framing};framed=true;return {...result,ownedTestFraming:framing};}return result;};
+  repository.bindings=async function(record,scope){projecting=seen.has(record);seen.add(record);try{const result=await initial.call(this,record,scope);assert.equal(scope.profileBindings.enabled,false);assert.equal(scope.profileBindings.results.size,0);disabled=true;return result;}finally{projecting=false;}};
+  repository.experiment=async function(reference,scope){const result=await experiment.call(this,reference,scope);if(corruptProjection&&projecting&&reference.id===f.reproduction.id){const corrupt=structuredClone(result);corrupt.record.content.claim.relation.digest='f'.repeat(64);changed=true;return corrupt;}return result;};
+  return {repository,observed:()=>({disabled,changed})};
+ };
+ const positive=bounded(false);assert.deepEqual(await positive.repository.workProfile(a.registered.id,at),expected);assert(positive.observed().disabled);
+ const negative=bounded(true);await assert.rejects(()=>negative.repository.workProfile(a.registered.id,at),error=>[400,503].includes(error.status));assert(negative.observed().disabled);assert(negative.observed().changed);
 });
 test('later adverse heads remove current endorsement, retained history stays visible and hidden heads never fall back',async()=>{
  const a=await agent(),f=await fixture({agent:a.actor}),first=(await repo().write(reviewer(),command(f),at)).item;
