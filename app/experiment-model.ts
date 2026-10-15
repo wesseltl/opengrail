@@ -5,7 +5,7 @@ import {sessionEvidenceInputSchema,sessionEvidenceArtifactSchema,sessionEvidence
 import {programRunInputSchema,programRunOutcomeSchema,programImplementationSchema,programRunMethod,boundedProgramRunInput,guardProgramData,type ProgramRunInput,type ProgramRunOutcome} from './program-run-model';
 import {verifyProgramRunInput,validateProgramRunOutcome} from './program-evidence';
 import {programForwardEvidenceInputSchema,programForwardEvidenceArtifactSchema,programForwardEvidenceEvaluatorSchema,boundedProgramForwardEvidenceValue,boundedProgramForwardEvidenceInput,boundedProgramForwardEvidenceArtifact,verifyProgramForwardEvidenceInput,verifyProgramForwardEvidenceArtifact,programForwardEvidenceDependencies,type ProgramForwardEvidenceInput,type ProgramForwardEvidenceArtifact} from './program-forward-evidence-model';
-import {programCommitmentInputSchema,programCommitmentLinkSchema,boundedProgramCommitmentInput,boundedProgramCommitmentValue,verifyProgramCommitmentPlan,programCommitmentDependencies,type ProgramCommitmentInput} from './program-commitment-model';
+import {programCommitmentInputSchema,programCommitmentLinkSchema,boundedProgramCommitmentInput,boundedProgramCommitmentValue,verifyProgramCommitmentPlan,programCommitmentDependencies,checkedProgramCommitmentVerificationScope,type ProgramCommitmentVerificationScope,type ProgramCommitmentInput} from './program-commitment-model';
 import {programSessionMethod} from './program-session-model';
 import {programWindowInputSchema,boundedPublicProgramWindowInput,boundedProgramWindowValue,type ProgramWindowInput} from './program-window-model';
 import {programWindowEvaluatorSchema,programWindowEvidenceSchema,boundedProgramWindowEvidence,verifyProgramWindowEvaluator,createProgramWindowEvaluator,type ProgramWindowEvaluator} from './program-window-evidence-model';
@@ -175,14 +175,15 @@ export function boundedExperimentRecord(raw:unknown){experimentValueDepth(raw);i
 export function experimentManifestFlags(disclosures:z.infer<typeof experimentDisclosuresSchema>):ExperimentFlag[]{const result:ExperimentFlag[]=['SOURCE_EXECUTION_UNVERIFIED','TIMING_UNVERIFIED'];const s=disclosures.search,v=disclosures.validation;if(s.trialCount>1)result.push('MULTIPLE_TRIALS');if(s.selection!=='FIRST_DECLARED')result.push('POST_SELECTED');if(s.logCompleteness!=='COMPLETE')result.push('INCOMPLETE_SEARCH_LOG');if(v.trainEvaluationOverlap==='PRESENT')result.push('TRAIN_EVAL_OVERLAP');if(v.trainEvaluationOverlap==='UNKNOWN')result.push('OVERLAP_UNKNOWN');if(!v.holdoutDeclared)result.push('NO_HOLDOUT');if(v.holdoutPriorAccess==='SEEN')result.push('HOLDOUT_SEEN');if(v.holdoutPriorAccess==='UNKNOWN')result.push('HOLDOUT_ACCESS_UNKNOWN');if(v.holdoutReuseCount>0)result.push('HOLDOUT_REUSED');if(disclosures.conflicts.sharedDependencies.length)result.push('SHARED_DEPENDENCIES');return result;}
 export function experimentOutcomeFlags(author:ExperimentAuthorReference,parent:ExperimentAuthorReference,claim:z.infer<typeof experimentClaimSchema>):ExperimentFlag[]{const result:ExperimentFlag[]=['SOURCE_EXECUTION_UNVERIFIED','TIMING_UNVERIFIED'];if(author.kind===parent.kind&&author.id===parent.id)result.push('SAME_AUTHOR');if(author.sponsorId===parent.sponsorId)result.push('SAME_SPONSOR');if(claim.sharedDependencies.length)result.push('SHARED_DEPENDENCIES');return result;}
 /** Public server identity checks only: no guest, Session or Demo evaluator is executed. */
-export async function verifyExperimentManifestInput(input:ExperimentInput,evaluator:z.infer<typeof experimentEvaluatorSchema>|SessionEvidenceEvaluator|z.infer<typeof experimentProgramEvaluatorSchema>|z.infer<typeof experimentProgramForwardEvaluatorSchema>|ProgramWindowEvaluator){
+export async function verifyExperimentManifestInput(input:ExperimentInput,evaluator:z.infer<typeof experimentEvaluatorSchema>|SessionEvidenceEvaluator|z.infer<typeof experimentProgramEvaluatorSchema>|z.infer<typeof experimentProgramForwardEvaluatorSchema>|ProgramWindowEvaluator,verificationScope?:ProgramCommitmentVerificationScope){
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope);
  if('kind'in input&&input.kind==='PROGRAM_FORWARD_WINDOW_INPUT'){
   try{await verifyProgramWindowEvaluator(input,evaluator);}catch(error){programEvidenceError(error);}
  }else if('kind'in input&&(input.kind==='LOCAL_PROGRAM_FORWARD_PLAN'||input.kind==='LOCAL_PROGRAM_DIRECTION_FORWARD_PLAN')){
-  try{await verifyProgramCommitmentPlan(input);}catch(error){programEvidenceError(error);}
+  try{await(scope?scope.verifyPlan(input):verifyProgramCommitmentPlan(input));}catch(error){programEvidenceError(error);}
   if(evaluator.version!=='opengrail-program-session-v1'||evaluator.methodDigest!==await strategyDigest(JSON.stringify(programSessionMethod))||!('implementations'in evaluator)||JSON.stringify(evaluator.implementations)!==JSON.stringify(input.implementation))throw new ExperimentError('Commitment evaluator must retain exact frozen source identities.',400);
  }else if('kind'in input&&input.kind==='PROGRAM_FORWARD_DEMO_INPUT'){
-  try{await verifyProgramForwardEvidenceInput(input);}catch(error){programEvidenceError(error);}
+  try{await(scope?scope.verifyForwardInput(input):verifyProgramForwardEvidenceInput(input));}catch(error){programEvidenceError(error);}
   if(evaluator.version!=='opengrail-program-session-v1'||evaluator.methodDigest!==input.methodDigest||!('implementations'in evaluator)||JSON.stringify(evaluator.implementations)!==JSON.stringify(input.implementation))throw new ExperimentError('Forward evaluator identities must match the complete frozen method.',400);
  }else if('kind'in input&&input.kind==='LOCAL_PROGRAM_RUN_INPUT'){
   try{await verifyProgramRunInput(input);}catch(error){programEvidenceError(error);}
@@ -194,30 +195,33 @@ export async function verifyExperimentManifestInput(input:ExperimentInput,evalua
  }else if(evaluator.version!==demoEvaluatorVersion||evaluator.methodDigest!==await strategyDigest(JSON.stringify(demoEvaluatorMethod)))throw new ExperimentError('The declared method digest does not match the trusted Demo method.',400);
  return input;
 }
-export async function verifyExperimentArtifact(artifact:z.infer<typeof demoArtifactSchema>|z.infer<typeof sessionEvidenceArtifactSchema>|ProgramRunOutcome|ProgramForwardEvidenceArtifact,input:ExperimentInput){
+export async function verifyExperimentArtifact(artifact:z.infer<typeof demoArtifactSchema>|z.infer<typeof sessionEvidenceArtifactSchema>|ProgramRunOutcome|ProgramForwardEvidenceArtifact,input:ExperimentInput,verificationScope?:ProgramCommitmentVerificationScope){
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope);
+ if(scope&&'kind'in input&&input.kind==='PROGRAM_FORWARD_DEMO_INPUT')input=boundedProgramForwardEvidenceInput(input).input;
  if('kind'in input&&input.kind==='PROGRAM_FORWARD_WINDOW_INPUT')throw new ExperimentError('Sampled windows link the original V4 artifact and complete raw evidence without copying or replacing it.',400);
  if('kind'in input&&(input.kind==='LOCAL_PROGRAM_FORWARD_PLAN'||input.kind==='LOCAL_PROGRAM_DIRECTION_FORWARD_PLAN'))throw new ExperimentError('Commitments link existing forward evidence instead of copying artifacts.',400);
  let checked;
- try{checked='kind'in input?(input.kind==='PROGRAM_FORWARD_DEMO_INPUT'?await verifyProgramForwardEvidenceArtifact(artifact,input):input.kind==='LOCAL_PROGRAM_RUN_INPUT'?await validateProgramRunOutcome(artifact,input):await verifySessionEvidenceArtifact(artifact)):await verifyDemoArtifact(artifact);}
+ try{checked='kind'in input?(input.kind==='PROGRAM_FORWARD_DEMO_INPUT'?(scope?await scope.verifyForwardArtifact(artifact):await verifyProgramForwardEvidenceArtifact(artifact,input)):input.kind==='LOCAL_PROGRAM_RUN_INPUT'?await validateProgramRunOutcome(artifact,input):await verifySessionEvidenceArtifact(artifact)):await verifyDemoArtifact(artifact);}
  catch(error){if('kind'in input){if(input.kind==='LOCAL_PROGRAM_RUN_INPUT')programEvidenceError(error);evidenceError(error);}throw new ExperimentError('The Demo artifact identity is invalid.',400);}
  if(!checked.input||JSON.stringify(checked.input)!==JSON.stringify(input))throw new ExperimentError('Artifact input must exactly match the registered manifest.',400);
  return checked;
 }
 /** Retained artifact identity without reconstructing any declared method. */
-export async function verifyExperimentRecordArtifact(record:ExperimentRecord){if(record.type!=='OUTCOME'||record.content.result.kind!=='ARTIFACT')return null;return record.version===4?verifyProgramForwardEvidenceArtifact(record.content.result.artifact):record.version===3?validateProgramRunOutcome(record.content.result.artifact):record.version===2?verifySessionEvidenceArtifact(record.content.result.artifact):verifyDemoArtifact(record.content.result.artifact);}
+export async function verifyExperimentRecordArtifact(record:ExperimentRecord,verificationScope?:ProgramCommitmentVerificationScope){const scope=checkedProgramCommitmentVerificationScope(verificationScope);if(record.type!=='OUTCOME'||record.content.result.kind!=='ARTIFACT')return null;return record.version===4?(scope?scope.verifyForwardArtifact(record.content.result.artifact):verifyProgramForwardEvidenceArtifact(record.content.result.artifact)):record.version===3?validateProgramRunOutcome(record.content.result.artifact):record.version===2?verifySessionEvidenceArtifact(record.content.result.artifact):verifyDemoArtifact(record.content.result.artifact);}
 export function experimentRecordMethod(record:ExperimentRecord){return record.version===6?'PROGRAM_FORWARD_WINDOW' as const:record.version===5?'PROGRAM_FORWARD_COMMITMENT' as const:record.version===4?'PROGRAM_FORWARD_DEMO' as const:record.version===3?'PROGRAM_DEMO' as const:record.version===2?'CONTINUOUS_DEMO' as const:undefined;}
 export function experimentRecordStatus(record:ExperimentRecord){if(record.type!=='OUTCOME')return null;if(record.content.result.kind!=='ARTIFACT')return record.content.result.kind;if(record.version===4){const journal=record.content.result.artifact.journal;return journal.guest.status==='FAILED'?'FAILED':journal.pending||journal.guest.status==='INTERRUPTED'?'INTERRUPTED':journal.trading.state.status;}if(record.version===2)return record.content.result.artifact.projection.status;return record.content.result.artifact.status;}
-export async function validateExperimentItem(raw:unknown){
+export async function validateExperimentItem(raw:unknown,verificationScope?:ProgramCommitmentVerificationScope){
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope);
  boundedExperimentTransport(raw);
  const item=experimentPublicItemSchema.parse(raw);if(!item.record)return item;
  const {record,payload}=boundedExperimentRecord(item.record);if(await strategyDigest(payload)!==item.digest)throw new ExperimentError('Experiment digest does not match.',400);
  if(record.type==='MANIFEST'){
-  const source=experimentInputStrategy(record.content.input);await verifyExperimentManifestInput(record.content.input,record.content.evaluator);
+  const source=experimentInputStrategy(record.content.input);await verifyExperimentManifestInput(record.content.input,record.content.evaluator,scope);
   if(item.strategy.id!==source.record.id||item.strategy.digest!==source.digest||await strategyDigest(JSON.stringify(source.record))!==item.strategy.digest||JSON.stringify(record.flags)!==JSON.stringify(experimentManifestFlags(record.content.disclosures)))throw new ExperimentError('Manifest bindings do not match.',400);
  }else{
   if(JSON.stringify(item.manifest)!==JSON.stringify(record.content.manifest))throw new ExperimentError('Outcome parent does not match.',400);
   if(record.content.result.kind==='ARTIFACT'){
-   const artifact=await verifyExperimentRecordArtifact(record);
+   const artifact=await verifyExperimentRecordArtifact(record,scope);
    if(!artifact?.input)throw new ExperimentError('Outcome artifact has no retained input.',400);const source=experimentInputStrategy(artifact.input);
    if(source.record.id!==item.strategy.id||source.digest!==item.strategy.digest)throw new ExperimentError('Outcome artifact has no matching retained input.',400);
   }

@@ -54,6 +54,55 @@ export async function verifyProgramCommitmentPlan(raw:unknown):Promise<SharedPro
  const {input}=boundedProgramCommitmentInput(raw);
  try{const plan=await verifySharedProgramForwardPlan(input);assert(programForwardEvidenceSame(plan,input),'The complete original frozen plan must remain unchanged.');programCommitmentDependencies(plan);return plan;}catch(error){if(error instanceof ProgramCommitmentError)throw error;throw new ProgramCommitmentError('Complete commitment plan, retained Search or source identities are invalid.',error&&typeof error==='object'&&'status'in error&&error.status===413?413:400);}
 }
+/** Reuse only complete pure proofs within one operation. Keys retain exact
+ * bounded canonical bytes; current visibility and authority are never stored. */
+export class ProgramCommitmentVerificationScope{
+ #entries=new Map<string,Promise<unknown>>();
+ #bytes=0;
+ #hits=0;
+ constructor(){Object.freeze(this);}
+ stats(){return Object.freeze({entries:this.#entries.size,bytes:this.#bytes,hits:this.#hits});}
+ #snapshot(raw:unknown,maximum:number){
+  const payload=boundedProgramForwardEvidenceValue(raw,maximum,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
+  const negativeZero=(value:unknown):boolean=>typeof value==='number'?Object.is(value,-0):!!value&&typeof value==='object'&&Object.values(value).some(negativeZero);
+  // JSON encodes -0 as 0. Preserve the original verifier's treatment of it
+  // rather than repairing it or sharing the canonical positive-zero key.
+  const reusable=!negativeZero(raw);return {payload,reusable,value:reusable?JSON.parse(payload):structuredClone(raw)};
+ }
+ #freeze<T>(value:T):T{if(value&&typeof value==='object'&&!Object.isFrozen(value)){for(const child of Object.values(value))this.#freeze(child);Object.freeze(value);}return value;}
+ #retain<T>(key:string,promise:Promise<T>){const size=new TextEncoder().encode(key).byteLength;if(this.#entries.size<96&&this.#bytes+size<=8388608){this.#entries.set(key,promise);this.#bytes+=size;}return promise;}
+ #rememberPlan(raw:unknown){
+  if(raw===null)return;
+  // A forward proof can contain other plan modes. Only the complete strict
+  // prospective commitment domain may seed a commitment-plan proof.
+  try{const {input,payload}=boundedProgramCommitmentInput(raw);programCommitmentDependencies(input);const key='PLAN\n'+payload;if(!this.#entries.has(key))this.#retain(key,Promise.resolve(this.#freeze(input)));}catch{/* Other forward plans cannot seed commitment proofs. */}
+ }
+ #rememberInput(input:ProgramForwardEvidenceInput){
+  try{const payload=boundedProgramForwardEvidenceValue(input,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes),key='INPUT\n'+payload;
+   if(!this.#entries.has(key))this.#retain(key,Promise.resolve(this.#freeze(input)));
+  }catch{/* An artifact cannot enlarge the separate public input cache bound. */}
+  this.#rememberPlan(input.plan);
+ }
+ verifyPlan(raw:unknown):Promise<SharedProgramForwardPlan>{
+  const {input,payload}=boundedProgramCommitmentInput(raw),key='PLAN\n'+payload,previous=this.#entries.get(key);
+  if(previous){this.#hits++;return previous as Promise<SharedProgramForwardPlan>;}
+  return this.#retain(key,verifyProgramCommitmentPlan(input).then(value=>this.#freeze(value)));
+ }
+ verifyForwardInput(raw:unknown):Promise<ProgramForwardEvidenceInput>{
+  const {payload,reusable,value:detached}=this.#snapshot(raw,programCommitmentLimits.inputBytes),key='INPUT\n'+payload,previous=reusable?this.#entries.get(key):undefined;
+  if(previous){this.#hits++;return previous as Promise<ProgramForwardEvidenceInput>;}
+  const proof=verifyProgramForwardEvidenceInput(detached).then(value=>{if(reusable)this.#rememberPlan(value.plan);return this.#freeze(value);});return reusable?this.#retain(key,proof):proof;
+ }
+ verifyForwardArtifact(raw:unknown):Promise<ProgramForwardEvidenceArtifact>{
+  const {payload,reusable,value:detached}=this.#snapshot(raw,programCommitmentLimits.artifactBytes),key='ARTIFACT\n'+payload,previous=reusable?this.#entries.get(key):undefined;
+  if(previous){this.#hits++;return previous as Promise<ProgramForwardEvidenceArtifact>;}
+  const proof=verifyProgramForwardEvidenceArtifact(detached).then(value=>{if(reusable)this.#rememberInput(value.input);return this.#freeze(value);});return reusable?this.#retain(key,proof):proof;
+ }
+}
+Object.freeze(ProgramCommitmentVerificationScope.prototype);
+export function checkedProgramCommitmentVerificationScope(scope:ProgramCommitmentVerificationScope|undefined){
+ if(scope!==undefined){assert(Object.getPrototypeOf(scope)===ProgramCommitmentVerificationScope.prototype,'Only the fixed operation-local pure verification scope is supported.');ProgramCommitmentVerificationScope.prototype.stats.call(scope);}return scope;
+}
 /** Call after full plan verification. These snapshots do not establish current visibility. */
 export function programCommitmentDependencies(plan:SharedProgramForwardPlan):Array<{id:string;digest:string;record:StrategyRecordV2}>{
  const seen=new Map<string,{id:string;digest:string;record:StrategyRecordV2}>(),sources=[{record:plan.config.strategy.record,digest:plan.config.strategy.digest},...plan.handoff.ledger.plan.admission.candidates.map(candidate=>({record:candidate.source.record,digest:candidate.source.digest}))];
@@ -69,15 +118,15 @@ function bindInput(plan:SharedProgramForwardPlan,input:ProgramForwardEvidenceInp
  assert(input.events.every(row=>row.receivedAt>=input.startedAt)&&(!input.pending||input.pending.receivedAt>=input.startedAt),'Original forward receipts cannot precede session admission.');
 }
 /** Pure structural/identity linkage. Registered time is supplied by the trusted repository. */
-export async function verifyProgramCommitmentEvidenceInput(planRaw:unknown,inputRaw:unknown,registeredAt:string):Promise<ProgramForwardEvidenceInput>{
+export async function verifyProgramCommitmentEvidenceInput(planRaw:unknown,inputRaw:unknown,registeredAt:string,verificationScope?:ProgramCommitmentVerificationScope):Promise<ProgramForwardEvidenceInput>{
  const {input:plan}=boundedProgramCommitmentInput(planRaw);boundedProgramForwardEvidenceValue(inputRaw,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
  // The forward verifier proves its complete retained plan. Exact canonical
  // equality binds this detached, bounded registration to that same proof.
- const input=await verifyProgramForwardEvidenceInput(inputRaw);bindInput(plan,input,registeredAt);programCommitmentDependencies(plan);return input;
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope),input=await(scope?scope.verifyForwardInput(inputRaw):verifyProgramForwardEvidenceInput(inputRaw));bindInput(plan,input,registeredAt);programCommitmentDependencies(plan);return input;
 }
-export async function verifyProgramCommitmentEvidenceArtifact(planRaw:unknown,artifactRaw:unknown,registeredAt:string):Promise<ProgramForwardEvidenceArtifact>{
+export async function verifyProgramCommitmentEvidenceArtifact(planRaw:unknown,artifactRaw:unknown,registeredAt:string,verificationScope?:ProgramCommitmentVerificationScope):Promise<ProgramForwardEvidenceArtifact>{
  const {input:plan}=boundedProgramCommitmentInput(planRaw);boundedProgramForwardEvidenceValue(artifactRaw,programCommitmentLimits.artifactBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
- const artifact=await verifyProgramForwardEvidenceArtifact(artifactRaw);boundedProgramForwardEvidenceValue(artifact.input,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);bindInput(plan,artifact.input,registeredAt);programCommitmentDependencies(plan);return artifact;
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope),artifact=await(scope?scope.verifyForwardArtifact(artifactRaw):verifyProgramForwardEvidenceArtifact(artifactRaw));boundedProgramForwardEvidenceValue(artifact.input,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);bindInput(plan,artifact.input,registeredAt);programCommitmentDependencies(plan);return artifact;
 }
 /** Exact public record references are correlated separately from body/source checks. */
 export function verifyProgramCommitmentEvidenceLink(raw:unknown,manifestRaw:unknown,outcomeRaw:unknown,outcomeManifestRaw:unknown):ProgramCommitmentEvidenceLink{

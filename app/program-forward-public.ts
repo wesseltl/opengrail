@@ -3,6 +3,7 @@ import {experimentGetSchema,experimentInputDependencies,experimentIsProgramForwa
 import {strategyGetSchema,type StrategyPublicItem} from './strategy-model';
 import {verifyProgramSource} from './program-link';
 import {type ProgramForwardEvidenceInput} from './program-forward-evidence-model';
+import {checkedProgramCommitmentVerificationScope,type ProgramCommitmentVerificationScope} from './program-commitment-model';
 
 export type PublicProgramForwardReference={kind:'MANIFEST'|'OUTCOME';id:string;digest:string};
 export type PublicProgramForwardContext={reference:PublicProgramForwardReference;manifest:ExperimentPublicItem&{record:ExperimentProgramForwardManifest};outcome:ExperimentPublicItem|null;sources:StrategyPublicItem[];source:StrategyPublicItem};
@@ -36,9 +37,10 @@ export async function readProgramForwardSources(input:ProgramForwardEvidenceInpu
  const first=await Promise.all(dependencies.map(read));signal.throwIfAborted();const last=await Promise.all(dependencies.map(read));last.forEach((after,index)=>assertForwardPublicMemberContinuation(first[index],after));signal.throwIfAborted();return last;
 }
 /** This exact reader uses pure admission models and source parsing only. Reading grants no execution. */
-export async function readPublicProgramForwardContext(reference:PublicProgramForwardReference,signal:AbortSignal):Promise<PublicProgramForwardContext>{
+export async function readPublicProgramForwardContext(reference:PublicProgramForwardReference,signal:AbortSignal,verificationScope?:ProgramCommitmentVerificationScope):Promise<PublicProgramForwardContext>{
+ const scope=checkedProgramCommitmentVerificationScope(verificationScope);
  if(!parsePublicProgramForwardReference('?'+(reference.kind==='OUTCOME'?'outcome':'manifest')+'='+reference.id+'&digest='+reference.digest))throw Error('Invalid forward reference.');
- async function experiment(id:string){const response=await fetch('/api/experiments?id='+encodeURIComponent(id),options(signal));if(response.status===404)throw new PublicProgramForwardUnavailable(id);if(!response.ok)throw Error('Forward record unavailable.');const item=await validateExperimentItem(experimentGetSchema.parse(await readProgramForwardPublicJson(response,signal)).item);signal.throwIfAborted();if(item.id!==id)throw Error('Wrong exact forward identity.');if(item.state!=='VISIBLE'||!item.record||item.suppression)throw new PublicProgramForwardUnavailable(item.strategy.id);return item;}
+ async function experiment(id:string){const response=await fetch('/api/experiments?id='+encodeURIComponent(id),options(signal));if(response.status===404)throw new PublicProgramForwardUnavailable(id);if(!response.ok)throw Error('Forward record unavailable.');const item=await validateExperimentItem(experimentGetSchema.parse(await readProgramForwardPublicJson(response,signal)).item,scope);signal.throwIfAborted();if(item.id!==id)throw Error('Wrong exact forward identity.');if(item.state!=='VISIBLE'||!item.record||item.suppression)throw new PublicProgramForwardUnavailable(item.strategy.id);return item;}
  const first=await experiment(reference.id);if(first.type!==reference.kind||first.digest!==reference.digest)throw Error('Wrong exact forward reference.');const outcome=reference.kind==='OUTCOME'?first:null,manifest=outcome?await experiment(outcome.manifest!.id):first;
  if(!manifest.record||!experimentIsProgramForwardManifest(manifest.record))throw Error('PROGRAM_FORWARD_DEMO manifest required.');
  if(outcome){if(outcome.record?.version!==4||outcome.record.type!=='OUTCOME'||!same(outcome.manifest,{id:manifest.id,digest:manifest.digest})||!same(outcome.strategy,manifest.strategy))throw Error('Different forward parent or method.');if(outcome.record.content.result.kind==='ARTIFACT'){const artifact=outcome.record.content.result.artifact;if(!same(artifact.input,manifest.record.content.input))throw Error('Different exact forward input.');}if(!same(outcome.record.flags,experimentOutcomeFlags(outcome.author,manifest.author,outcome.record.content.claim))||Date.parse(outcome.createdAt)<Date.parse(manifest.createdAt))throw Error('Forward claim flags or creation order differ.');}

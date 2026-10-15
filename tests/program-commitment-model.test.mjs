@@ -64,13 +64,58 @@ test('later whole V4 input/artifact links retain the exact committed plan and in
 
 test('matching plan copies and repaired outer digests cannot admit corrupt pins or omitted retained trials',async()=>{
  const {f,e,artifact}=await evidenceFixture();
+ const scope=new m.ProgramCommitmentVerificationScope();await scope.verifyForwardArtifact(artifact);
  for(const edit of [plan=>plan.implementation.forward.model='f'.repeat(64),plan=>plan.handoff.ledger.attempts.splice(1,1)]){
   const plan=clone(f.plan);edit(plan);const {planDigest,...planBody}=plan;void planDigest;plan.planDigest=await e.programForwardEvidenceDigest(planBody);
   const forged=clone(artifact);forged.input.plan=clone(plan);const {inputDigest,...inputBody}=forged.input;void inputDigest;forged.input.inputDigest=await e.programForwardEvidenceDigest(inputBody);forged.inputDigest=forged.input.inputDigest;
   const {resultDigest,...artifactBody}=forged;void resultDigest;forged.resultDigest=await e.programForwardEvidenceDigest(artifactBody);
   await assert.rejects(m.verifyProgramCommitmentEvidenceInput(plan,forged.input,registeredAt));
   await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(plan,forged,registeredAt));
+  await assert.rejects(m.verifyProgramCommitmentEvidenceInput(plan,forged.input,registeredAt,scope));
+  await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(plan,forged,registeredAt,scope));
  }
+});
+
+test('operation proofs reuse only exact complete bytes, detach callers and freeze nested results',async()=>{
+ const {f,e,artifact}=await evidenceFixture(),scope=new m.ProgramCommitmentVerificationScope(),raw=clone(artifact),pending=scope.verifyForwardArtifact(raw);
+ raw.input.plan.handoff.ledger.attempts.length=0;raw.journal.events.length=0;
+ const checked=await pending;assert.deepEqual(checked,artifact);assert(Object.isFrozen(checked));assert(Object.isFrozen(checked.input.plan.handoff.ledger.attempts));assert(Object.isFrozen(checked.journal.trading.state));
+ const before=scope.stats();assert.strictEqual(await scope.verifyForwardArtifact(clone(artifact)),checked);assert.strictEqual(await scope.verifyForwardInput(clone(artifact.input)),checked.input);assert.deepEqual(await scope.verifyPlan(clone(f.plan)),f.plan);assert.equal(scope.stats().hits,before.hits+3);
+ const other=new m.ProgramCommitmentVerificationScope();assert.notStrictEqual(await other.verifyForwardInput(artifact.input),checked.input);assert.equal(other.stats().hits,0);
+ let touched=0;for(const [method,original]of [['verifyPlan',f.plan],['verifyForwardInput',artifact.input],['verifyForwardArtifact',artifact]]){
+  for(const edit of [value=>Object.defineProperty(value,'hidden',{value:true}),value=>Object.defineProperty(value,Object.keys(value)[0],{enumerable:true,get(){touched++;throw Error('getter executed');}}),value=>value.extra='unproved bytes']){
+   const changed=clone(original);edit(changed);await assert.rejects(async()=>scope[method](changed));
+  }
+ }
+ assert.equal(touched,0);
+ // Canonical JSON gives these two values identical bytes. Preserve the strict
+ // forward verifier's original -0 semantics instead of repairing it on a hit.
+ assert(Object.is(artifact.input.plan.handoff.ledger.plan.admission.selection.minReturnPct,0));
+ const negative=clone(artifact.input);negative.plan.handoff.ledger.plan.admission.selection.minReturnPct=-0;const hits=scope.stats().hits,strict=await e.verifyProgramForwardEvidenceInput(negative),fresh=await scope.verifyForwardInput(negative);assert(Object.is(strict.plan.handoff.ledger.plan.admission.selection.minReturnPct,-0));assert(Object.is(fresh.plan.handoff.ledger.plan.admission.selection.minReturnPct,-0));assert.notStrictEqual(fresh,checked.input);assert.equal(scope.stats().hits,hits);
+ const invalid=clone(artifact.input);invalid.plan.handoff.ledger.attempts[0].input.dataset.bars[0].volume=-0;await assert.rejects(async()=>scope.verifyForwardInput(invalid));
+});
+
+test('warm pure proofs never authorize changed registry clocks, config, plan bindings or forged scopes',async()=>{
+ const {f,artifact}=await evidenceFixture(),scope=new m.ProgramCommitmentVerificationScope();await scope.verifyForwardArtifact(artifact);
+ for(const at of [f.plan.startsAt,'not a timestamp']){
+  await assert.rejects(m.verifyProgramCommitmentEvidenceInput(f.plan,artifact.input,at,scope));await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(f.plan,artifact,at,scope));
+ }
+ for(const edit of [plan=>plan.config.sessionId=crypto.randomUUID(),plan=>plan.config.initialCapital++,plan=>plan.handoff.ledger.attempts.splice(1,1)]){
+  const plan=clone(f.plan);edit(plan);await assert.rejects(m.verifyProgramCommitmentEvidenceInput(plan,artifact.input,registeredAt,scope));await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(plan,artifact,registeredAt,scope));
+ }
+ let invoked=0;const forged=Object.freeze(Object.defineProperties(Object.create(m.ProgramCommitmentVerificationScope.prototype),{verifyForwardInput:{value(){invoked++;return artifact.input;}},verifyForwardArtifact:{value(){invoked++;return artifact;}},stats:{value(){return{};}}}));
+ class Subclass extends m.ProgramCommitmentVerificationScope{}
+ for(const bad of [forged,new Subclass(),{verified:true}]){await assert.rejects(m.verifyProgramCommitmentEvidenceInput(f.plan,artifact.input,registeredAt,bad));await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(f.plan,artifact,registeredAt,bad));}
+ assert.equal(invoked,0);
+ const playback=await programDirectionForwardFixture(),e=await loadProgramForwardEvidenceModules(),planScope=new m.ProgramCommitmentVerificationScope(),journal=await e.createProgramSessionJournal(playback.config,playback.plan.startsAt),playbackArtifact=await e.snapshotProgramForwardEvidence(journal,playback.plan);await planScope.verifyForwardInput(playbackArtifact.input);const before=planScope.stats();await assert.rejects(async()=>planScope.verifyPlan(playback.plan));assert.equal(planScope.stats().hits,before.hits);
+});
+
+test('proof capacity exhaustion preserves strict uncached verification and immutable results',async()=>{
+ const {f,artifact}=await evidenceFixture(),entries=new m.ProgramCommitmentVerificationScope();
+ for(let n=0;n<97;n++)await assert.rejects(async()=>entries.verifyForwardInput({unverified:n}));
+ assert.equal(entries.stats().entries,96);const checked=await entries.verifyForwardArtifact(artifact);assert.deepEqual(checked,artifact);assert(Object.isFrozen(checked.input));assert.equal(entries.stats().entries,96);
+ const bytes=new m.ProgramCommitmentVerificationScope();for(let n=0;n<48;n++)await assert.rejects(async()=>bytes.verifyForwardInput({unverified:n,padding:'x'.repeat(190000)}));
+ assert(bytes.stats().bytes<=8388608);assert(bytes.stats().entries<48);assert.deepEqual(await bytes.verifyPlan(f.plan),f.plan);
 });
 
 test('evidence checks detach registration before awaiting and refuse supplied plan accessors',async()=>{
