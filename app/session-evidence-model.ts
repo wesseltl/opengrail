@@ -1,7 +1,7 @@
 import {z} from 'zod';
 import {boundedStrategyRecord, strategyDigest} from './strategy-model';
 import {boundedSessionConfig, boundedSessionEvent, boundedSessionValue, sessionConfigSchema, sessionEventSchema, sessionLimits, sessionMethod, sessionStateSchema, sessionVersion, type SessionState} from './session-model';
-import {sessionSourceFingerprints} from './session-fingerprints';
+import {sessionImplementationKind} from './session-implementation-registry';
 
 // Public admission is identity checking only. This module imports no Session engine/journal.
 export const sessionEvidenceLimits = {inputBytes: 196608, artifactBytes: 524288, bundleBytes: 786432, reportBytes: 524288, events: sessionLimits.events + sessionLimits.emergencyReserve, eventCanonicalBytes: 1024} as const;
@@ -96,7 +96,7 @@ export function boundedSessionEvidenceInput(raw: unknown) {
 }
 export async function verifySessionEvidenceInput(raw: unknown): Promise<SessionEvidenceInput> {
   const {input} = boundedSessionEvidenceInput(raw);
-  if (Object.values(sessionSourceFingerprints).some(value => /^0+$/.test(value)) || !same(input.implementation, {version: sessionVersion, ...sessionSourceFingerprints}) || input.methodDigest !== await strategyDigest(JSON.stringify(sessionMethod)) || input.config.strategy.digest !== await strategyDigest(boundedStrategyRecord(input.config.strategy.record).payload)) throw new SessionEvidenceError('Continuous Session source, method or strategy identity is inconsistent.');
+  if (sessionImplementationKind(input.implementation)===null || input.methodDigest !== await strategyDigest(JSON.stringify(sessionMethod)) || input.config.strategy.digest !== await strategyDigest(boundedStrategyRecord(input.config.strategy.record).payload)) throw new SessionEvidenceError('Continuous Session source, method or strategy identity is inconsistent.');
   return input;
 }
 export function boundedSessionEvidenceArtifact(raw: unknown) {
@@ -144,6 +144,6 @@ export async function sealSessionEvidenceReview(raw: z.infer<typeof reviewBodySc
 /** Report verification is identity checking, never proof that a local review executed. */
 export async function verifySessionEvidenceReview(raw: unknown): Promise<SessionEvidenceReview> {
   const report = schemaValue(raw, sessionEvidenceReviewSchema, sessionEvidenceLimits.reportBytes), {reportDigest, ...body} = report;
-  if (!same(report.implementation, {version: sessionVersion, ...sessionSourceFingerprints}) || reportDigest !== await strategyDigest(JSON.stringify(body))) throw new SessionEvidenceError('Local continuous Session review identity is inconsistent.');
+  if (sessionImplementationKind(report.implementation)===null || reportDigest !== await strategyDigest(JSON.stringify(body))) throw new SessionEvidenceError('Local continuous Session review identity is inconsistent.');
   return report;
 }

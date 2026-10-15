@@ -1,6 +1,6 @@
 import {createSessionJournal, appendSessionEvent, verifySessionJournal, reconstructSessionJournal, type SessionJournal} from './session-journal';
-import {sessionVersion} from './session-model';
-import {sessionSourceFingerprints} from './session-fingerprints';
+import {sessionImplementationKind} from './session-implementation-registry';
+import * as legacy from './compat/session-20261011/session-journal';
 import {SessionEvidenceError, sessionEvidenceDigest, sessionEvidenceProjection, sessionEvidenceProjectionSchema, verifySessionEvidenceInput, verifySessionEvidenceArtifact, sealSessionEvidenceArtifact, sealSessionEvidenceBundle, sealSessionEvidenceReview, type SessionEvidenceInput, type SessionEvidenceBundle, type SessionEvidenceArtifact, type SessionEvidenceProjection, type SessionEvidenceReview} from './session-evidence-model';
 
 // Fixed local reconstruction only. No provider access, publication or imported code execution.
@@ -8,6 +8,7 @@ const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.st
 const retrospectiveHypothesis = 'Retrospective report of this retained Demo Session snapshot; no hypothesis preregistration or authentic feed timing is established.';
 const retrospectiveFalsification = 'Reject the reported computation if fixed reconstruction does not reproduce every retained transition, the final journal identity and the reported terminal projection.';
 type Options = {signal?: AbortSignal};
+function executor(input:SessionEvidenceInput){return sessionImplementationKind(input.implementation)==='LEGACY_20261011'?legacy:{createSessionJournal,appendSessionEvent};}
 function cancelled(options: Options) { return options.signal?.aborted === true; }
 function abort(options: Options) { if (cancelled(options)) throw new SessionEvidenceError('Local continuous Session review interrupted.', 409); }
 async function inputFromJournal(journal: SessionJournal, options: {hypothesis?: string; falsification?: string}): Promise<SessionEvidenceInput> {
@@ -38,10 +39,11 @@ type Mismatch = 'CHECKPOINT_MISMATCH' | 'FINAL_STATE_MISMATCH' | 'JOURNAL_MISMAT
 export async function reconstructSessionEvidence(rawInput: unknown, options: Options = {}): Promise<SessionJournal> {
   const input = await verifySessionEvidenceInput(rawInput);
   abort(options);
-  let journal = await createSessionJournal(input.config, input.startedAt);
+  const execution=executor(input);
+  let journal = await execution.createSessionJournal(input.config, input.startedAt);
   for (const entry of input.events) {
     abort(options);
-    journal = await appendSessionEvent(journal, entry.event, entry.receivedAt);
+    journal = await execution.appendSessionEvent(journal, entry.event, entry.receivedAt);
     if (journal.state.stateDigest !== entry.stateDigest) throw new SessionEvidenceError('An intermediate continuous Session checkpoint does not reconstruct.');
   }
   abort(options);
@@ -55,17 +57,18 @@ export async function reviewSessionEvidence(rawArtifact: unknown, options: Optio
   let observed: SessionEvidenceProjection | null = null, mismatch: Mismatch | null = null;
   const identity = {artifact: artifact.resultDigest, input: artifact.inputDigest, journal: input.journalDigest, state: input.finalStateDigest};
   const result = async (status: SessionEvidenceReview['status'], reason: SessionEvidenceReview['reason']) => {
-    const body = {version: 1 as const, kind: 'LOCAL_CONTINUOUS_DEMO_RECONSTRUCTION' as const, classification: 'AUTHOR_REPORTED' as const, qualification: 'NONE' as const, independence: 'NOT_ESTABLISHED' as const, ordersEnabled: false as const, liveEnabled: false as const, scope: 'FIXED_LOCAL_RECONSTRUCTION_ONLY' as const, status, reason, identity, implementation: {version: sessionVersion, ...sessionSourceFingerprints}, observed};
+    const body = {version: 1 as const, kind: 'LOCAL_CONTINUOUS_DEMO_RECONSTRUCTION' as const, classification: 'AUTHOR_REPORTED' as const, qualification: 'NONE' as const, independence: 'NOT_ESTABLISHED' as const, ordersEnabled: false as const, liveEnabled: false as const, scope: 'FIXED_LOCAL_RECONSTRUCTION_ONLY' as const, status, reason, identity, implementation: input.implementation, observed};
     try { return await sealSessionEvidenceReview(body); }
     catch (error) { if (error instanceof SessionEvidenceError && error.status === 413) return sealSessionEvidenceReview({...body, status: 'FAILED', reason: 'RECONSTRUCTION_FAILURE', observed: null}); throw error; }
   };
   try {
     if (cancelled(options)) return result('INTERRUPTED', 'USER_CANCELLED');
-    let journal = await createSessionJournal(input.config, input.startedAt);
+    const execution=executor(input);
+    let journal = await execution.createSessionJournal(input.config, input.startedAt);
     observed = sessionEvidenceProjection(journal.state);
     for (const entry of input.events) {
       if (cancelled(options)) return result('INTERRUPTED', 'USER_CANCELLED');
-      journal = await appendSessionEvent(journal, entry.event, entry.receivedAt);
+      journal = await execution.appendSessionEvent(journal, entry.event, entry.receivedAt);
       observed = sessionEvidenceProjection(journal.state);
       if (journal.state.stateDigest !== entry.stateDigest && mismatch === null) mismatch = 'CHECKPOINT_MISMATCH';
     }

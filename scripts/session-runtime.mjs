@@ -5,6 +5,7 @@ import {pathToFileURL,fileURLToPath} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {build} from 'esbuild';
+import {assertSessionLegacyFingerprints} from './session-legacy-fingerprint-core.mjs';
 
 const root=new URL('../',import.meta.url),project=fileURLToPath(root),sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 let temporary,lock,lockFd,lockAlive=false,interrupted=false;
@@ -22,9 +23,11 @@ function readBounded(path,cap){
 }
 const decode=bytes=>new TextDecoder('utf-8',{fatal:true}).decode(bytes);
 async function modules(){
+ assertSessionLegacyFingerprints();
  const result=await build({stdin:{contents:"export * from './app/session-journal';export * from './app/session-model';export {sessionSourceFingerprints} from './app/session-fingerprints';export {parseUniqueJson} from './app/unique-json';",resolveDir:project},bundle:true,write:false,format:'esm',platform:'node',target:'es2022'});
  temporary=mkdtempSync(join(tmpdir(),'opengrail-session-runtime-'));const path=join(temporary,'fixed-runtime.mjs');writeFileSync(path,result.outputFiles[0].text,{flag:'wx',mode:0o600});
  const m=await import(pathToFileURL(path).href);
+ assertSessionLegacyFingerprints();
  for(const [key,path] of Object.entries({engine:'app/session-engine.ts',model:'app/session-model.ts',journal:'app/session-journal.ts'}))if(sha(readFileSync(new URL(path,root)))!==m.sessionSourceFingerprints[key])throw Error('Stale fixed source identity.');
  return m;
 }

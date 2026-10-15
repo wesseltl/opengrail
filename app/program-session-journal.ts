@@ -1,3 +1,5 @@
+import {programSessionImplementationKind} from './session-implementation-registry';
+import * as legacy from './compat/session-20261011/program-session-journal';
 import {SessionError,sessionLimits} from './session-model';
 import {verifySessionJournal,sessionJournalLimits} from './session-journal';
 import {parseProgramModule,programModuleInfo} from './program-wasm';
@@ -8,6 +10,9 @@ export type {ProgramSessionJournal} from './program-session-model';
 const trusted=new WeakSet<object>(),runtimes=new WeakMap<object,ProgramSessionRuntime>();
 const digest=(value:unknown)=>programSessionDigest(JSON.stringify(value));
 function freeze<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
+// Preserve the archived implementation's private resident handle. Descriptor
+// routing itself grants no trust; its public API proves every unknown object.
+function legacyJournal(raw:unknown){const descriptor=raw&&typeof raw==='object'?Object.getOwnPropertyDescriptor(raw,'implementation'):undefined;return descriptor&&'value'in descriptor&&programSessionImplementationKind(descriptor.value)==='LEGACY_20261011';}
 function prepared(){if(Object.values(programSessionImplementation().forward).some(hash=>/^0+$/.test(hash)))throw new SessionError('Program session physical source identities are not prepared.',503);}
 async function seal(raw:unknown,runtime?:ProgramSessionRuntime):Promise<ProgramSessionJournal>{
  boundedProgramSessionValue(raw);const body=programSessionJournalBodySchema.parse(raw);
@@ -20,12 +25,13 @@ async function seal(raw:unknown,runtime?:ProgramSessionRuntime):Promise<ProgramS
  boundedProgramSessionValue(journal);freeze(journal);trusted.add(journal);if(runtime)runtimes.set(journal,runtime);return journal;
 }
 const body=(journal:ProgramSessionJournal)=>{const {journalDigest,...rest}=journal;void journalDigest;return rest;};
-export function discardProgramSessionRuntime(journal:unknown){if(journal&&typeof journal==='object')runtimes.delete(journal);}
+export function discardProgramSessionRuntime(journal:unknown){if(journal&&typeof journal==='object')runtimes.delete(journal);legacy.discardProgramSessionRuntime(journal);}
 /** Structural identities only. No guest code is invoked by this function. */
 export async function verifyProgramSessionJournal(raw:unknown):Promise<ProgramSessionJournal>{
  prepared();boundedProgramSessionValue(raw);let journal:ProgramSessionJournal;try{journal=programSessionJournalSchema.parse(raw);}catch{throw new SessionError('Invalid bounded program session journal.');}
+ if(programSessionImplementationKind(journal.implementation)==='LEGACY_20261011')return legacy.verifyProgramSessionJournal(journal);
  if(journal.journalDigest!==await digest(body(journal))||!sameProgramSessionValue(journal.implementation,programSessionImplementation())||journal.methodDigest!==await digest(programSessionMethod))throw new SessionError('Program session source or method identity differs.');
- await verifyProgramSessionConfig(journal.config);await verifySessionJournal(journal.trading);
+ await verifyProgramSessionConfig(journal.config);if(!sameProgramSessionValue(journal.trading.implementation,{version:'opengrail-session-v1',...journal.implementation.kernel}))throw new SessionError('Outer and inner kernel implementation differ.');await verifySessionJournal(journal.trading);
  if(!sameProgramSessionValue(journal.trading.config,await programSessionTradingProjection(journal.config))||journal.startedAt!==journal.trading.startedAt)throw new SessionError('Original V2/private V1 projection binding differs.');
  let inner=0,previous=journal.startedAt;const ids=new Set<string>();
  for(let n=0;n<journal.events.length;n++){
@@ -52,14 +58,25 @@ export async function createProgramSessionJournal(rawConfig:unknown,startedAt:st
  prepared();const config=await verifyProgramSessionConfig(rawConfig),at=programSessionClock(startedAt);
  return seal({version:1,kind:'LOCAL_PROGRAM_DEMO_SESSION',classification:'AUTHOR_REPORTED',qualification:'NONE',generatorIndependence:'NOT_ESTABLISHED',ordersEnabled:false,liveEnabled:false,implementation:programSessionImplementation(),methodDigest:await digest(programSessionMethod),config,startedAt:at,events:[],pending:null,guest:emptyProgramSessionGuest(),trading:await createProgramSessionTrading(config,at)},{instance:null});
 }
+/** An already verified frozen plan selects its exact physical implementation. */
+export async function createProgramSessionJournalForImplementation(rawConfig:unknown,startedAt:string,implementation:unknown):Promise<ProgramSessionJournal>{
+ const kind=programSessionImplementationKind(implementation);
+ if(kind==='LEGACY_20261011')return legacy.createProgramSessionJournal(rawConfig,startedAt);
+ if(kind==='CURRENT')return createProgramSessionJournal(rawConfig,startedAt);
+ throw new SessionError('Unknown program session implementation.');
+}
 async function origin(raw:unknown){return raw&&typeof raw==='object'&&trusted.has(raw)?raw as ProgramSessionJournal:reconstructProgramSessionJournal(raw);}
 /** Durable caller must commit the returned complete pending journal before execute. */
 export async function admitProgramSessionEvent(rawJournal:unknown,rawEvent:unknown,receivedAt:string):Promise<ProgramSessionJournal>{
- return prepareAdmission(await origin(rawJournal),rawEvent,receivedAt,true);
+ if(legacyJournal(rawJournal))return legacy.admitProgramSessionEvent(rawJournal,rawEvent,receivedAt);
+ const journal=await origin(rawJournal);
+ return prepareAdmission(journal,rawEvent,receivedAt,true);
 }
 /** Inert parent/browser admission. Execution must reconstruct this untrusted claimed prefix. */
 export async function prepareProgramSessionAdmission(rawJournal:unknown,rawEvent:unknown,receivedAt:string):Promise<ProgramSessionJournal>{
- return prepareAdmission(await verifyProgramSessionJournal(rawJournal),rawEvent,receivedAt,false);
+ if(legacyJournal(rawJournal))return legacy.prepareProgramSessionAdmission(rawJournal,rawEvent,receivedAt);
+ const journal=await verifyProgramSessionJournal(rawJournal);
+ return prepareAdmission(journal,rawEvent,receivedAt,false);
 }
 async function prepareAdmission(journal:ProgramSessionJournal,rawEvent:unknown,receivedAt:string,retainRuntime:boolean):Promise<ProgramSessionJournal>{
  const {event}=boundedProgramSessionEvent(rawEvent),at=programSessionClock(receivedAt),prior=journal.events.find(row=>row.event.requestId===event.requestId);
@@ -74,6 +91,7 @@ async function prepareAdmission(journal:ProgramSessionJournal,rawEvent:unknown,r
 }
 /** Caller confirms the whole returned terminal before ACK, new input or UI adoption. */
 export async function executeProgramSessionPending(raw:unknown,options:{clock:()=>string}):Promise<ProgramSessionJournal>{
+ if(legacyJournal(raw))return legacy.executeProgramSessionPending(raw,options);
  let journal=await origin(raw);if(!journal.pending)throw new SessionError('A pending original event is required.',409);
  let runtime=runtimes.get(journal);runtimes.delete(journal);
  if(!runtime){journal=await reconstructProgramSessionJournal(journal);runtime=runtimes.get(journal);runtimes.delete(journal);}
@@ -82,13 +100,16 @@ export async function executeProgramSessionPending(raw:unknown,options:{clock:()
  return seal({...body(journal),pending:null,guest:result.guest,trading:result.trading,events:[...journal.events,result.receipt]},result.runtime);
 }
 export async function recoverProgramSessionJournal(raw:unknown,recoveredAt:string):Promise<ProgramSessionJournal>{
+ if(legacyJournal(raw))return legacy.recoverProgramSessionJournal(raw,recoveredAt);
  const journal=await reconstructProgramSessionJournal(raw);if(!journal.pending)return journal;
  const runtime=runtimes.get(journal)!;runtimes.delete(journal);const result=await interruptProgramSessionTransition(journal,runtime,recoveredAt);
  return seal({...body(journal),pending:null,guest:result.guest,trading:result.trading,events:[...journal.events,result.receipt]},runtime);
 }
 /** Fresh configure/on_bar and unchanged kernel replay; hash-consistent snapshots are insufficient. */
 export async function reconstructProgramSessionJournal(raw:unknown,options:{signal?:AbortSignal;onCheckpoint?:(journal:ProgramSessionJournal)=>void}={}):Promise<ProgramSessionJournal>{
- options.signal?.throwIfAborted();const claimed=await verifyProgramSessionJournal(raw);let reconstructed=await createProgramSessionJournal(claimed.config,claimed.startedAt),runtime:ProgramSessionRuntime={instance:null};
+ options.signal?.throwIfAborted();const claimed=await verifyProgramSessionJournal(raw);
+ if(programSessionImplementationKind(claimed.implementation)==='LEGACY_20261011')return legacy.reconstructProgramSessionJournal(claimed,options);
+ let reconstructed=await createProgramSessionJournal(claimed.config,claimed.startedAt),runtime:ProgramSessionRuntime={instance:null};
  options.onCheckpoint?.(reconstructed);
  for(const receipt of claimed.events){
   options.signal?.throwIfAborted();const pending=await seal({...body(reconstructed),pending:{sequence:receipt.sequence,event:receipt.event,receivedAt:receipt.receivedAt}});

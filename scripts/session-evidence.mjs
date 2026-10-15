@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {createHash,randomUUID} from 'node:crypto';
 import {build} from 'esbuild';
+import {assertSessionLegacyFingerprints} from './session-legacy-fingerprint-core.mjs';
 
 const project=fileURLToPath(new URL('../',import.meta.url)),journalCap=8388608,bundleCap=786432;
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -34,17 +35,18 @@ function writeNew(path,value){
  }finally{if(fd!==undefined)closeSync(fd);try{unlinkSync(stage);}catch{}}
 }
 async function modules(){
+ assertSessionLegacyFingerprints();
  const entry="export * from './app/session-evidence';export * from './app/session-evidence-model';export {sessionSourceFingerprints} from './app/session-fingerprints';export {parseUniqueJson} from './app/unique-json';";
  const settings={stdin:{contents:entry,resolveDir:project},bundle:true,write:false,format:'esm',platform:'node',target:'es2022',metafile:true};
  const discovery=await build(settings);
  const sourceFiles=Object.keys(discovery.metafile.inputs).filter(name=>name!=='<stdin>').map(name=>resolve(project,name));
- const sources=new Map(sourceFiles.map(path=>[path,sha(readFileSync(path))]));
+ const sources=new Map([...sourceFiles,join(project,'scripts/session-legacy-fingerprint-core.mjs')].map(path=>[path,sha(readFileSync(path))]));
  const output=await build(settings);
  const checkedInputs=Object.keys(output.metafile.inputs).filter(name=>name!=='<stdin>').map(name=>resolve(project,name));
  if(JSON.stringify(checkedInputs)!==JSON.stringify(sourceFiles))throw Error('Local dependency graph changed.');
  temporary=mkdtempSync(join(tmpdir(),'opengrail-session-evidence-'));const modulePath=join(temporary,'fixed-evidence.mjs');writeFileSync(modulePath,output.outputFiles[0].text,{flag:'wx',mode:0o600});
  const m=await import(pathToFileURL(modulePath).href);
- function fresh(){if(controller.signal.aborted)throw Error('Interrupted.');for(const [path,digest] of sources)if(sha(readFileSync(path))!==digest)throw Error('Local source changed.');}
+ function fresh(){if(controller.signal.aborted)throw Error('Interrupted.');assertSessionLegacyFingerprints();for(const [path,digest] of sources)if(sha(readFileSync(path))!==digest)throw Error('Local source changed.');}
  for(const [key,path]of Object.entries({engine:'app/session-engine.ts',model:'app/session-model.ts',journal:'app/session-journal.ts'}))if(sha(readFileSync(join(project,path)))!==m.sessionSourceFingerprints[key])throw Error('Fixed Session identity does not match.');
  fresh();return {m,fresh};
 }

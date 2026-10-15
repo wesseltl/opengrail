@@ -2,6 +2,8 @@ import {z} from 'zod';
 import {boundedSessionValue,boundedSessionEvent,sessionConfigSchema,sessionEventSchema,sessionStateSchema,sessionClock,sessionDigest,verifySessionState,sessionLimits,sessionVersion,SessionError,type SessionConfig,type SessionEvent,type SessionState} from './session-model';
 import {createSession,advanceSession} from './session-engine';
 import {sessionSourceFingerprints} from './session-fingerprints';
+import {sessionImplementationKind} from './session-implementation-registry';
+import * as legacy from './compat/session-20261011/session-journal';
 
 export const sessionJournalLimits={bytes:8388608,reservedBytes:524288,eventCanonicalBytes:1024,events:sessionLimits.events+sessionLimits.emergencyReserve} as const;
 const hash=z.string().regex(/^[a-f0-9]{64}$/),clock=z.string().datetime().refine(v=>new Date(v).toISOString()===v);
@@ -11,6 +13,9 @@ export type SessionJournal=z.infer<typeof sessionJournalSchema>;
 const same=(a:unknown,b:unknown)=>JSON.stringify(a)===JSON.stringify(b);
 const trusted=new WeakSet<object>();
 function freeze<T>(value:T):T{if(value&&typeof value==='object'){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
+// Routing reads descriptors only; the selected implementation still performs
+// its complete untrusted proof or recognizes its own immutable trusted handle.
+function legacyJournal(raw:unknown){const descriptor=raw&&typeof raw==='object'?Object.getOwnPropertyDescriptor(raw,'implementation'):undefined;return descriptor&&'value'in descriptor&&sessionImplementationKind(descriptor.value)==='LEGACY_20261011';}
 function prepared(){if(Object.values(sessionSourceFingerprints).some(v=>/^0+$/.test(v)))throw new SessionError('Session source identities are not prepared.',503);}
 async function seal(body:z.infer<typeof bodySchema>):Promise<SessionJournal>{
  const canonical=bodySchema.parse(body),journal=sessionJournalSchema.parse({...canonical,journalDigest:await sessionDigest(JSON.stringify(canonical))});
@@ -20,6 +25,7 @@ async function seal(body:z.infer<typeof bodySchema>):Promise<SessionJournal>{
 export async function verifySessionJournal(raw:unknown):Promise<SessionJournal>{
  prepared();boundedSessionValue(raw,sessionJournalLimits.bytes);
  let journal:SessionJournal;try{journal=sessionJournalSchema.parse(raw);}catch{throw new SessionError('Invalid bounded session journal.');}
+ if(sessionImplementationKind(journal.implementation)==='LEGACY_20261011')return legacy.verifySessionJournal(journal);
  const {journalDigest,...body}=journal;
  if(await sessionDigest(JSON.stringify(body))!==journalDigest||!same(journal.implementation,{version:sessionVersion,...sessionSourceFingerprints}))throw new SessionError('Session journal identity or source version is inconsistent.');
  const state=await verifySessionState(journal.state);
@@ -36,6 +42,7 @@ export async function createSessionJournal(rawConfig:unknown,startedAt:string):P
  return seal({version:1,kind:'LOCAL_DEMO_SESSION',classification:'AUTHOR_REPORTED',qualification:'NONE',ordersEnabled:false,implementation:{version:sessionVersion,...sessionSourceFingerprints},config:state.config,startedAt:state.startedAt,events:[],state});
 }
 export async function appendSessionEvent(rawJournal:unknown,rawEvent:unknown,receivedAt:string):Promise<SessionJournal>{
+ if(legacyJournal(rawJournal))return legacy.appendSessionEvent(rawJournal,rawEvent,receivedAt);
  const journal=rawJournal!==null&&typeof rawJournal==='object'&&trusted.has(rawJournal)?rawJournal as SessionJournal:await reconstructSessionJournal(rawJournal);
  const {event,payload}=boundedSessionEvent(rawEvent),at=sessionClock(receivedAt);
  if(new TextEncoder().encode(payload).byteLength>sessionJournalLimits.eventCanonicalBytes)throw new SessionError('Normalized event exceeds its journal budget.',413);
@@ -53,6 +60,7 @@ export async function appendSessionEvent(rawJournal:unknown,rawEvent:unknown,rec
 /** Fresh fixed-code reconstruction. Hash-consistent fabricated account snapshots fail. */
 export async function reconstructSessionJournal(raw:unknown,options:{signal?:AbortSignal}={}):Promise<SessionJournal>{
  options.signal?.throwIfAborted();const journal=await verifySessionJournal(raw);
+ if(sessionImplementationKind(journal.implementation)==='LEGACY_20261011')return legacy.reconstructSessionJournal(journal,options);
  let state=await createSession(journal.config,journal.startedAt);
  for(const entry of journal.events){
   options.signal?.throwIfAborted();state=await advanceSession(state,entry.event,entry.receivedAt);
