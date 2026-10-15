@@ -17,7 +17,7 @@ test('private handoff inputs are caller-selected bounded UTF-8 owned files outsi
 });
 test('private handoff inputs reject shared permissions, aliases, directories and malformed text',()=>{
  const dir=mkdtempSync(join(tmpdir(),'opengrail-handoff-input-'));try{
-  const file=join(dir,'input.json');writeFileSync(file,'{}',{mode:0o644});assert.throws(()=>readPrivateHandoffFile(file,32),/PRIVATE_HANDOFF_INPUT_UNAVAILABLE/);
+  const file=join(dir,'input.json');writeFileSync(file,'{}',{mode:0o644});chmodSync(file,0o644);assert.throws(()=>readPrivateHandoffFile(file,32),/PRIVATE_HANDOFF_INPUT_UNAVAILABLE/);
   chmodSync(file,0o600);const alias=join(dir,'alias');linkSync(file,alias);assert.throws(()=>readPrivateHandoffFile(file,32),/PRIVATE_HANDOFF_INPUT_UNAVAILABLE/);rmSync(alias);
   symlinkSync(file,alias);assert.throws(()=>readPrivateHandoffFile(alias,32),/PRIVATE_HANDOFF_INPUT_UNAVAILABLE/);
   const nested=join(dir,'nested');mkdirSync(nested);writeFileSync(join(nested,'input.json'),'{}',{mode:0o600});const linked=join(dir,'linked');symlinkSync(nested,linked);assert.throws(()=>readPrivateHandoffFile(join(linked,'input.json'),32),/PRIVATE_HANDOFF_INPUT_UNAVAILABLE/);

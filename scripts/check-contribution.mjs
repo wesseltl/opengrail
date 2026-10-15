@@ -76,16 +76,45 @@ function childEnvironment(scratch) {
 function safeText(bytes) {
   // Retained logs are diagnostics, not arbitrary terminal commands or credential storage.
   let text = bytes.toString('utf8');
-  for (let n = 0; n < 3; n++) { try { const decoded = decodeURIComponent(text); if (decoded === text) break; text = decoded; } catch { break; } }
+  for (let n = 0; n < 3; n++) {
+    const decoded = text.replace(/(?:%[a-f0-9]{2})+/gi, part => { try { return decodeURIComponent(part); } catch { return part.replace(/%([a-f0-9]{2})/gi, (_, pair) => String.fromCharCode(parseInt(pair, 16))); } });
+    if (decoded === text) break; text = decoded;
+  }
   text = text.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
   text = text.replace(/og_(?:agent|local_owner|local_producer)_[^\s"'<>]{1,256}|\bgh[pousr]_[A-Za-z0-9_]{36,255}\b|\bgithub_pat_[A-Za-z0-9_]{22,255}\b|\bBearer\s+[^\s"'<>]{1,512}/gi, '[REDACTED_CREDENTIAL]');
-  // Bound the actual JSON string allowance too (quotes/newlines can expand when encoded).
-  if (Buffer.byteLength(JSON.stringify(text)) > contributionCheckLimits.retainedBytesPerStream) {
-    let lo = 0, hi = text.length;
-    while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (Buffer.byteLength(JSON.stringify(text.slice(0, mid))) <= contributionCheckLimits.retainedBytesPerStream) lo = mid; else hi = mid - 1; }
-    text = text.slice(0, lo);
-  }
   return text;
+}
+const textBytes = text => Buffer.byteLength(JSON.stringify(text)) - 2;
+function clipText(text, maximumBytes, fromEnd = false) {
+  if (textBytes(text) <= maximumBytes) return text;
+  let lo = 0, hi = text.length;
+  const slice = length => fromEnd ? text.slice(text.length - length) : text.slice(0, length);
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (textBytes(slice(mid)) <= maximumBytes) lo = mid; else hi = mid - 1; }
+  return slice(lo);
+}
+function diagnosticText(bytes, partial) {
+  const omitted = '\n[... output omitted ...]\n';
+  if (!bytes.length) return { text: partial ? omitted : '', truncated: partial };
+  // A cutoff/termination may end inside a token or UTF-8 sequence. Drop that
+  // incomplete boundary line, then sanitize complete input before any clipping.
+  const complete = partial ? bytes.subarray(0, bytes.lastIndexOf(10) + 1) : bytes;
+  const text = safeText(complete);
+  if (!partial && textBytes(text) + 2 <= contributionCheckLimits.retainedBytesPerStream) return { text, truncated: Buffer.byteLength(text) < bytes.length };
+  const allowance = contributionCheckLimits.retainedBytesPerStream - 2 - 2 * textBytes(omitted);
+  const quarter = Math.floor(allowance / 4);
+  let failures = '';
+  for (const match of text.matchAll(/^[ \t]*not ok \d+[^\n]*(?:\n|$)/gm)) {
+    let block = match[0];
+    const following = text.slice(match.index + block.length);
+    if (/^[ \t]+---\r?\n/.test(following)) {
+      const end = /^[ \t]+\.\.\.(?:\r?\n|$)/m.exec(following);
+      block += end ? following.slice(0, end.index + end[0].length) : following;
+    }
+    const next = failures + (failures ? omitted : '') + clipText(block, quarter);
+    failures = clipText(next, 2 * quarter);
+    if (textBytes(next) >= 2 * quarter) break;
+  }
+  return { text: clipText(text, quarter) + omitted + (failures ? failures + omitted : '') + clipText(text, allowance - 3 * quarter, true), truncated: true };
 }
 async function command(argv, { root, env, timeoutMs, signal, maximumBytes = contributionCheckLimits.outputBytes }) {
   const started = performance.now();
@@ -97,11 +126,13 @@ async function command(argv, { root, env, timeoutMs, signal, maximumBytes = cont
     const aborted = () => kill('INTERRUPTED');
     const complete = (code, exitSignal) => {
       if (completed) return; completed = true; clearTimeout(timer); clearTimeout(killTimer); signal?.removeEventListener('abort', aborted);
-      const output = key => { const s = streams[key]; const retained = Buffer.concat(s.chunks), text = safeText(retained); return { text, bytes: s.bytes, sha256: s.digest.digest('hex'), truncated: s.bytes > s.retained || Buffer.byteLength(text) < retained.length }; };
+      const output = key => { const s = streams[key]; const retained = Buffer.concat(s.chunks), diagnostic = diagnosticText(retained, s.bytes > 0 && (s.bytes > s.retained || cause !== null || exitSignal != null)); return { text: diagnostic.text, bytes: s.bytes, sha256: s.digest.digest('hex'), truncated: diagnostic.truncated }; };
       resolveResult({ status: cause ?? (code === 0 ? 'PASSED' : 'FAILED'), exitCode: Number.isInteger(code) ? code : null, signal: exitSignal ?? null, durationMs: Math.round(performance.now() - started), stdout: output('stdout'), stderr: output('stderr') });
     };
     try { child = spawn(argv[0], argv.slice(1), { cwd: root, env, shell: false, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] }); } catch { cause = 'FAILED'; complete(null, null); return; }
-    for (const key of ['stdout', 'stderr']) child[key].on('data', chunk => { if (cause === 'OUTPUT_LIMIT') return; const s = streams[key]; total += chunk.length; s.bytes += chunk.length; s.digest.update(chunk); const keep = Math.min(chunk.length, contributionCheckLimits.retainedBytesPerStream - s.retained); if (keep > 0) { s.chunks.push(chunk.subarray(0, keep)); s.retained += keep; } if (total > maximumBytes) kill('OUTPUT_LIMIT'); });
+    // Buffer at most the existing combined raw-output allowance, not an
+    // unbounded stream. Counts/hash still include the received crossing chunk.
+    for (const key of ['stdout', 'stderr']) child[key].on('data', chunk => { if (cause === 'OUTPUT_LIMIT') return; const s = streams[key], remaining = Math.max(0, maximumBytes - total); total += chunk.length; s.bytes += chunk.length; s.digest.update(chunk); const keep = Math.min(chunk.length, remaining); if (keep > 0) { s.chunks.push(keep === chunk.length ? chunk : Buffer.from(chunk.subarray(0, keep))); s.retained += keep; } if (total > maximumBytes) kill('OUTPUT_LIMIT'); });
     child.on('error', () => { cause = 'FAILED'; }); child.on('close', complete);
     timer = setTimeout(() => kill('TIMED_OUT'), timeoutMs); timer.unref(); signal?.addEventListener('abort', aborted, { once: true }); if (signal?.aborted) aborted();
   });
