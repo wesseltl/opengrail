@@ -33,16 +33,16 @@ function expand(n){return n&&typeof n==='object'&&typeof n.type==='function'&&['
 function walk(node,predicate){const n=expand(node);if(!n||typeof n!=='object')return [];if(Array.isArray(n))return n.flatMap(v=>walk(v,predicate));return [...(predicate(n)?[n]:[]),...walk(n.props?.children,predicate)];}
 function text(node){const n=expand(node);return n==null||typeof n==='boolean'?'':Array.isArray(n)?n.map(text).join(' '):typeof n==='object'?text(n.props?.children):String(n);}
 const label=n=>text(n).replace(/\s+/g,' ').trim(),button=(tree,name)=>walk(tree,n=>n.type==='button'&&(n.props['aria-label']===name||label(n)===name))[0],field=(tree,name)=>walk(tree,n=>n.props?.['aria-label']===name)[0];
-const originalDocument=globalThis.document,originalCreate=URL.createObjectURL,originalRevoke=URL.revokeObjectURL,exports=[],urls=new Map();
-URL.createObjectURL=blob=>{const id='blob:synthetic-'+crypto.randomUUID();urls.set(id,blob);return id;};URL.revokeObjectURL=id=>urls.delete(id);globalThis.document={createElement:()=>({click(){exports.push({name:this.download,blob:urls.get(this.href)});}})};
+const originalDocument=globalThis.document,originalCreate=URL.createObjectURL,originalRevoke=URL.revokeObjectURL,exports=[],urls=new Map();let downloadFailure=false;
+URL.createObjectURL=blob=>{const id='blob:synthetic-'+crypto.randomUUID();urls.set(id,blob);return id;};URL.revokeObjectURL=id=>urls.delete(id);globalThis.document={createElement:()=>({click(){if(downloadFailure){downloadFailure=false;throw Error('Synthetic uncertain download');}exports.push({name:this.download,blob:urls.get(this.href)});}})};
 function harness(props={signedIn:false},search=''){
  const listeners=new Map(),win={location:{search},addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:(type,fn)=>{if(listeners.get(type)===fn)listeners.delete(type);}};globalThis.window=win;
- context.cleanup.forEach(fn=>fn?.());for(const key of ['state','refs','deps','effects','cleanup'])context[key]=[];exports.length=0;for(const key of ['Start','Append','Restore','Example','Snapshot'])delete globalThis['__session'+key+'Override'];
+ context.cleanup.forEach(fn=>fn?.());for(const key of ['state','refs','deps','effects','cleanup'])context[key]=[];exports.length=0;downloadFailure=false;for(const key of ['Start','Append','Restore','Example','Snapshot'])delete globalThis['__session'+key+'Override'];
  const render=()=>{context.si=context.ri=context.ei=0;return Session(props);},flush=async()=>{for(let i=0;i<10;i++){render();while(context.effects.length)context.effects.shift()();await new Promise(resolve=>setImmediate(resolve));}return render();};
  const until=async (predicate,timeoutMs=5000)=>{const end=Date.now()+timeoutMs;do{const tree=await flush();if(typeof predicate==='function'?predicate(tree):text(tree).includes(predicate))return tree;}while(Date.now()<end);assert.fail('Timed out '+predicate+' '+text(render()));};
  return {props,render,flush,until,navigate(next){win.location.search=next;listeners.get('popstate')?.();},click(name,tree){const found=button(tree??render(),name);assert(found,'missing '+name);assert(!found.props.disabled,name+' disabled');found.props.onClick();},field(name,value){const found=field(render(),name);assert(found,'missing '+name);found.props.onChange({target:{value,checked:value}});},unmount(){context.cleanup.forEach(fn=>fn?.());},retained(){return walk(render(),n=>n.type==='article'&&n.props?.['aria-label']?.startsWith('Retained session '));}};
 }
-function server(sources=[]){const records=new Map(sources.map(s=>[s.id,s])),requests=[];globalThis.fetch=async(path,init={})=>{requests.push({path,init});const url=new URL(path,'https://local');if(url.searchParams.has('id')){const source=records.get(url.searchParams.get('id'));return source?Response.json(envelope(source)):new Response(null,{status:404});}return Response.json(list([...records.values()]));};return {records,requests};}
+function server(sources=[]){const records=new Map(sources.map(s=>[s.id,s])),requests=[];globalThis.fetch=async(path,init={})=>{requests.push({path,init});const url=new URL(path,'https://local');if(url.pathname==='/api/strategies/me')return Response.json({version:1,authorId:humanId,sponsorId:humanId,moderator:false,executionEnabled:false});if(url.searchParams.has('id')){const source=records.get(url.searchParams.get('id'));return source?Response.json(envelope(source)):new Response(null,{status:404});}return Response.json(list([...records.values()]));};return {records,requests};}
 async function offline(h){await h.until('No visible public definitions');h.click('Use synthetic fixture');await h.until('Synthetic playback prepared');}
 async function start(h){h.field('Confirm session input rights',true);await h.flush();h.click('Start Demo session');await h.until('Session started locally');}
 async function restored(h,journal,timeoutMs=5000){h.field('Session journal JSON',JSON.stringify(journal));await h.flush();h.field('Confirm journal reconstruction rights',true);await h.flush();h.click('Verify and restore');await h.until('Exact journal reconstructed',timeoutMs);}
@@ -189,6 +189,81 @@ test('public Session instructions separate the sponsor-local receiver and creden
 
 const handoff=source=>'?strategy='+source.id+'&digest='+source.digest;
 async function receiverSetup(h){h.field('Session clock mode','SYSTEM_RECEIPT');await h.flush();h.field('Confirm session input rights',true);await h.flush();}
+
+let forwardFixtureModules;
+async function lockedFixture(){
+ const m=await (forwardFixtureModules??=build({stdin:{contents:"export * from './app/search-protocol';export * from './app/search-example';export * from './app/forward-demo-model';",resolveDir:process.cwd()},bundle:true,format:'esm',platform:'node',write:false,target:'es2022'}).then(result=>import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'))));
+ const example=await m.syntheticSearchExample();let ledger=await m.createSearchLedger(await m.createSearchPlan(example.admission)),clock=Date.now()-60000;
+ const next=()=>new Date(++clock).toISOString();
+ for(const candidate of ledger.plan.admission.candidates){ledger=await m.admitSearchTrain(ledger,candidate.source.id,next());ledger=await m.finishSearchAttempt(ledger,await m.evaluateSearchAttempt(m.pendingSearchAttempt(ledger),{finishedAt:next()}));}
+ ledger=await m.lockSearchSelection(ledger,next());assert.equal(ledger.selection.decision,'SELECTED');
+ ledger=await m.admitSearchTest(ledger,example.testInput,next());ledger=await m.finishSearchAttempt(ledger,await m.evaluateSearchAttempt(m.pendingSearchAttempt(ledger),{finishedAt:next()}));
+ assert(ledger.attempts.find(attempt=>attempt.phase==='TEST').artifact.metrics.netPnl<0);
+ return {m,ledger,handoff:await m.createLockedSearchHandoff(ledger),sources:ledger.plan.admission.candidates.map(candidate=>candidate.source)};
+}
+async function importLocked(h,value){
+ const input=field(h.render(),'Import locked search');assert(!input.props.disabled);
+ input.props.onChange({target:{files:[new File([JSON.stringify(value.handoff)],'synthetic-locked-search.json',{type:'application/json'})],value:'local.json'}});
+ await h.until('Locked search imported.');
+}
+async function forwardSchedule(h){
+ const local=days=>{const date=new Date(Date.now()+days*86400000);return new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,19);};
+ h.field('Forward Demo nominal start',local(1));h.field('Forward Demo nominal end',local(2));await h.flush();
+ h.field('Confirm session input rights',true);await h.flush();
+}
+
+test('imported locked search accepts fresh feed details without retuning its winner, history or account context',async()=>{
+ const value=await lockedFixture(),{requests}=server(value.sources),h=harness({signedIn:true});await h.until(value.sources[0].record.content.name);
+ h.click('Select session strategy '+value.handoff.winner.source.id);await h.flush();h.field('Session clock mode','SYSTEM_RECEIPT');await h.flush();h.field('Confirm session input rights',true);await h.flush();
+ const preImportLabel=field(h.render(),'Session source label').props.onChange,preImportNote=field(h.render(),'Session rights note').props.onChange;
+ const preImportConsent=field(h.render(),'Confirm session input rights').props.onChange,preImportExport=button(h.render(),'Export local receiver config').props.onClick;
+ const originalLabel=field(h.render(),'Session source label').props.value,originalNote=field(h.render(),'Session rights note').props.value;
+ await importLocked(h,value);const held=context.refs.find(ref=>ref.current?.forward!==undefined),life=context.refs.find(ref=>ref.current?.forwardPlan!==undefined);
+ const imported=held.current.forward,selection=held.current.selection,principal=life.current.forwardPrincipal,history=held.current.forwardHistory;
+ assert.equal(principal,humanId);assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);
+ preImportLabel({target:{value:'Stale pre-import label'}});preImportNote({target:{value:'Stale pre-import note'}});preImportConsent({target:{checked:true}});preImportExport();await h.flush();
+ assert.equal(field(h.render(),'Session source label').props.value,originalLabel);assert.equal(field(h.render(),'Session rights note').props.value,originalNote);
+ assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);assert.equal(exports.length,0);
+ assert.equal(field(h.render(),'Session source label').props.disabled,false);assert.equal(field(h.render(),'Session rights note').props.disabled,false);
+ const sourceLabel='Operator-authorized future normalized events',rightsNote='Synthetic operator declaration permitting these future inputs locally.';
+ h.field('Confirm session input rights',true);await h.flush();h.field('Session source label',sourceLabel);await h.flush();assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);
+ h.field('Confirm session input rights',true);await h.flush();h.field('Session rights note',rightsNote);await h.flush();assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);
+ assert.strictEqual(held.current.forward,imported);assert.strictEqual(held.current.selection,selection);assert.strictEqual(held.current.forwardHistory,history);assert.equal(life.current.forwardPrincipal,principal);
+ assert(field(h.render(),'Session virtual capital').props.disabled);assert(field(h.render(),'Session clock mode').props.disabled);assert(button(h.render(),'Start Demo session').props.disabled);
+ await forwardSchedule(h);const config=JSON.parse(await (await exported(h,'Export local receiver config')).blob.text());
+ const plan=await value.m.verifyForwardDemoPlan(JSON.parse(await (await exported(h,'Export forward Demo plan')).blob.text()));
+ assert.deepEqual(plan.config,config);assert.equal(config.sourceLabel,sourceLabel);assert.equal(config.rights.note,rightsNote);assert.equal(config.rights.acknowledged,true);
+ assert.deepEqual(plan.handoff,value.handoff);assert.deepEqual(plan.handoff.ledger,value.ledger);assert.equal(config.initialCapital,value.handoff.initialCapital);
+ assert.deepEqual(config.strategy,{record:value.handoff.winner.source.record,digest:value.handoff.winner.source.digest});assert.deepEqual(config.strategy.record.content.definition.costs,value.handoff.costs);assert.deepEqual(config.strategy.record.content.definition.risk,value.handoff.risk);
+ assert(field(h.render(),'Session source label').props.disabled);assert(field(h.render(),'Session rights note').props.disabled);assert.equal(h.retained().length,0);assert(requests.every(request=>!request.init.method||request.init.method==='GET'));
+});
+
+test('forward feed edits fence A-B-A callbacks, busy changes and uncertain-download identity replacement',async()=>{
+ const value=await lockedFixture();server(value.sources);const h=harness();await h.until(value.sources[0].record.content.name);await importLocked(h,value);await forwardSchedule(h);
+ for(const name of ['Session source label','Session rights note']){
+  const original=field(h.render(),name).props.value,staleEdit=field(h.render(),name).props.onChange,staleConsent=field(h.render(),'Confirm session input rights').props.onChange,staleExport=button(h.render(),'Export forward Demo plan').props.onClick;
+  h.field(name,'Changed synthetic future data detail');await h.flush();assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);
+  h.field(name,original);await h.flush();staleConsent({target:{checked:true}});staleEdit({target:{value:'Stale edit'}});staleExport();await h.flush();
+  assert.equal(field(h.render(),name).props.value,original);assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);assert.equal(exports.length,0);
+  h.field('Confirm session input rights',true);await h.flush();
+ }
+ const sourceLabel=field(h.render(),'Session source label').props.value,rightsNote=field(h.render(),'Session rights note').props.value;
+ const beforeBusyEdit=field(h.render(),'Session source label').props.onChange,ordinary=globalThis.fetch;let release,paused=false;
+ try{
+  globalThis.fetch=async(path,init)=>{if(!paused&&path.includes('?id=')){paused=true;const response=await ordinary(path,init);return new Promise(resolve=>release=()=>resolve(response));}return ordinary(path,init);};
+  h.click('Export forward Demo plan');await h.until(()=>typeof release==='function');assert(field(h.render(),'Session source label').props.disabled);
+  beforeBusyEdit({target:{value:'Busy edit'}});await h.flush();assert.equal(field(h.render(),'Session source label').props.value,sourceLabel);
+  h.click('Cancel local confirmation');await h.flush();release();await h.flush();assert.equal(exports.length,0);
+ }finally{globalThis.fetch=ordinary;release?.();}
+ const beforeFreezeLabel=field(h.render(),'Session source label').props.onChange,beforeFreezeNote=field(h.render(),'Session rights note').props.onChange;
+ downloadFailure=true;h.click('Export forward Demo plan');await h.until('Forward export withheld.');
+ const life=context.refs.find(ref=>ref.current?.forwardPlan!==undefined),retained=structuredClone(life.current.forwardPlan);
+ assert(retained);assert.equal(exports.length,0);assert.equal(urls.size,0);assert(field(h.render(),'Session source label').props.disabled);assert(field(h.render(),'Session rights note').props.disabled);
+ beforeFreezeLabel({target:{value:'Changed frozen label'}});beforeFreezeNote({target:{value:'Changed frozen note'}});await h.flush();
+ assert.equal(field(h.render(),'Session source label').props.value,sourceLabel);assert.equal(field(h.render(),'Session rights note').props.value,rightsNote);assert.deepEqual(life.current.forwardPlan,retained);assert.deepEqual(life.current.receiverDraft,retained.config);
+ const planText=await (await exported(h,'Export forward Demo plan')).blob.text(),configText=await (await exported(h,'Export local receiver config')).blob.text();
+ assert.equal(planText,JSON.stringify(retained));assert.equal(configText,JSON.stringify(retained.config));assert.deepEqual(await value.m.verifyForwardDemoPlan(JSON.parse(planText)),retained);assert.equal(h.retained().length,0);
+});
 
 test('exact Session links load older versions of all seven families without catalog fallback, permission, generated input or journal',async()=>{
  for(const type of ['TREND','RSI','BREAKOUT','DCA','GRID','SIGNAL','RULES']){const value=await fixture(type,'PUBLIC_STRATEGY'),{requests}=server([value.source]),h=harness({},handoff(value.source));let calls=0;globalThis.__sessionExampleOverride=globalThis.__sessionStartOverride=()=>{calls++;throw Error('no automatic computation');};await h.until('Linked exact strategy selected');assert.deepEqual(requests.map(r=>r.path),['/api/strategies?id='+value.source.id]);assert(text(h.render()).includes(value.source.digest));assert.equal(field(h.render(),'Confirm session input rights').props.checked,false);assert.equal(h.retained().length,0);assert.equal(exports.length,0);assert.equal(calls,0);assert.equal(button(h.render(),'Export local receiver config'),undefined);assert(button(h.render(),'Start Demo session').props.disabled);}

@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from 'react';
 import {ArrowRight, ArrowUpRight, Download, FlaskConical, Play, RefreshCw, X} from 'lucide-react';
 import {parseUniqueJson} from './unique-json';
 import {boundedStrategyRecord, strategyRecordV1Schema, type StrategyRecordV1, strategyDigest, strategyListSchema, strategyGetSchema} from './strategy-model';
-import {parseStrategyHandoff, verifyStrategyHandoff} from './strategy-handoff';
+import {parseStrategyHandoff, strategyHandoffHref, verifyStrategyHandoff} from './strategy-handoff';
 import {boundedDemoRequest, demoLimits, verifyDemoArtifact, type DemoArtifact, type DemoRequest} from './demo-model';
 import {replayDemo, syntheticDemoInput} from './demo-engine';
 import {MainNavigation} from './main-navigation';
@@ -240,7 +240,7 @@ export default function Demo({signedIn = false}: {signedIn?: boolean} = {}) {
         {busy && <p className="og-demo-message" role="status">{busy === 'IMPORT' ? 'Reading replay file…' : busy === 'EXAMPLE' ? 'Preparing synthetic inputs…' : busy === 'EXPORT' ? 'Checking exact sources before export…' : 'Running local replay…'}</p>}{message && <p className="og-demo-message" role="status">{message}</p>}
       </section></div>
       <section className="og-demo-trials" aria-label="Complete local trial history"><div className="og-demo-trials-head"><div><h2>Session history</h2><p>{trials.length}/{maximumTrials} retained · failed and interrupted trials stay visible. Export before leaving.</p></div><button className="og-button og-secondary" type="button" disabled={!!busy || trials.length === 0} onClick={() => void exportHistory()}><Download size={14}/>Export complete session</button></div>{exportError && <p className="og-demo-message" role="alert">{exportError}</p>}{trials.length >= maximumTrials && <p className="og-demo-message" role="status">Session trial capacity reached. Export all attempts before starting a new page session; prior trials are never dropped to make room.</p>}
-        {!trials.length ? <div className="og-demo-empty"><FlaskConical size={26}/><h3>No local results yet.</h3><p>A replay will appear here with its exact inputs, costs and audit trail. Nothing is registered or saved by opening this page.</p></div> : <div className="og-demo-trial-list">{trials.map(trial => <TrialCard key={trial.localId} trial={trial} exportDisabled={!!busy} onExport={() => void exportArtifact(trial)}/>)}</div>}
+        {!trials.length ? <div className="og-demo-empty"><FlaskConical size={26}/><h3>No local results yet.</h3><p>A replay will appear here with its exact inputs, costs and audit trail. Nothing is registered or saved by opening this page.</p></div> : <div className="og-demo-trial-list">{trials.map(trial => <TrialCard key={trial.localId} trial={trial} exportDisabled={!!busy} onExport={() => void exportArtifact(trial)} onForward={event => {if (!available() || !current.current.trials.includes(trial) || !forwardTrialSource(trial)) event.preventDefault();}}/>)}</div>}
         <p className="og-demo-export-note">Session-only history. Exported artifacts retain the captured inputs and public strategy snapshot. Digests establish content consistency, not data quality or independent evidence.</p>
       </section>
     </main><footer className="og-footer"><a className="og-wordmark" href="/">OpenGrail<span>.xyz</span></a><p>Demo · no execution authority</p><a href="/demo-methodology">Replay methodology<ArrowUpRight size={12}/></a></footer>
@@ -261,10 +261,17 @@ function EquityChart({artifact}: {artifact: DemoArtifact}) {
   return <figure className="og-demo-chart"><svg role="img" aria-label="Actual simulated account equity by supplied closed bar" viewBox={`0 0 ${width} ${height}`}><line x1={padding} x2={width - padding} y1={y(initial)} y2={y(initial)} stroke="#c6c0ba" strokeDasharray="4 5"/><polyline points={line} fill="none" stroke={artifact.metrics.netPnl >= 0 ? '#3f6c52' : '#914557'} strokeWidth="2" strokeLinejoin="round"/></svg><figcaption>Computed closed-bar equity · {points.length} observations · initial capital shown as a dashed line. The display may sample points; the export retains the full series.</figcaption></figure>;
 }
 
-function TrialCard({trial, exportDisabled, onExport}: {trial: Trial; exportDisabled: boolean; onExport: () => void}) {
+function forwardTrialSource(trial: Trial) {
+  const source = trial.source, strategy = trial.artifact?.input?.strategy;
+  return trial.origin === 'PUBLIC_SNAPSHOT' && trial.sourceConfirmed && source && strategy &&
+    strategy.record.id === source.id && strategy.digest === source.digest ? source : null;
+}
+
+function TrialCard({trial, exportDisabled, onExport, onForward}: {trial: Trial; exportDisabled: boolean; onExport: () => void; onForward: (event: {preventDefault: () => void}) => void}) {
   const a = trial.sourceConfirmed ? trial.artifact : null, m = a?.metrics, input = a?.input, definition = input?.strategy.record.content.definition;
   const quote = definition?.market.symbol.split('/')[1] ?? 'capital units', benchmark = a?.benchmark;
   const comparable = !!m?.comparable && !!benchmark?.comparable && benchmark.status === 'COMPLETED';
+  const forwardSource = forwardTrialSource(trial);
   return <article className="og-demo-trial" aria-label={`Local trial ${trial.localId}`}><div className="og-demo-trial-head"><div><span className="og-demo-trial-state">{trial.status.replaceAll('_', ' ')}</span><h3>{trial.label}</h3></div><time dateTime={trial.attemptedAt}>{stamp(trial.attemptedAt)} Amsterdam</time></div>{trial.priorStatus && <p className="og-demo-trial-status">Previous disposition: {trial.priorStatus.replaceAll('_', ' ')}. Earlier disposition is retained as metadata.</p>}{trial.error && <p className="og-demo-trial-status" role="status">{trial.error}</p>}
     {trial.artifact && !trial.sourceConfirmed && <p className="og-demo-trial-status">Computed artifact retained; current source confirmation unavailable. Metrics withheld until a fresh successful source check.</p>}
     {a && <><p className="og-demo-trial-status">{a.classification} · {a.mode} · {input?.dataset.provenance ?? 'Input rejected'}{a.reason ? ` · ${a.reason}` : ''}. Orders disabled. {a.status === 'FAILED' ? 'Failed replay; metrics are not comparable and losses have not been clipped.' : a.status === 'NO_TRADES' ? 'No trades occurred under these exact inputs and rules.' : 'Local simulation, without independent reproduction or forward evidence.'}</p>
@@ -276,6 +283,7 @@ function TrialCard({trial, exportDisabled, onExport}: {trial: Trial; exportDisab
       <details><summary>Decision audit &amp; position limits ({a.audit.length})</summary><div className="og-demo-table-scroll"><table className="og-demo-table"><thead><tr><th>Bar</th><th>Event</th><th>Disposition</th><th>Position</th><th>Evidence</th></tr></thead><tbody>{a.audit.slice(0, 40).map((event, index) => <tr key={index}><td>{event.barIndex ?? '—'}</td><td>{event.type}</td><td>{event.reason}</td><td>{event.positionId ?? '—'}</td><td>{event.details}</td></tr>)}</tbody></table></div>{a.audit.length > 40 && <p>Showing the first 40 events; the artifact export retains the complete decision and rejection audit.</p>}<p>Signals are supplied observations with availability times, not a connected provider. Entries, unused signals, rejected virtual entries, halts and resets remain in the artifact.</p></details>
     </>}
     <details><summary>Exact local reference</summary><p className="og-demo-reference">Local attempt {trial.localId}<br/>Strategy digest {trial.strategyDigest}<br/>{trial.origin === 'SYNTHETIC_OFFLINE' ? 'Synthetic offline fixture, no registered author.' : 'Public strategy snapshot captured locally.'}{a && <><br/>Evaluator {a.evaluatorVersion}<br/>Request digest {a.digests.request ?? 'UNKNOWN'}<br/>Dataset digest {a.digests.dataset ?? 'UNKNOWN'}<br/>Signals digest {a.digests.signals ?? 'UNKNOWN'}<br/>Result digest {a.resultDigest}</>}</p></details>
-    {trial.artifact && <div className="og-demo-actions"><button className="og-button og-secondary" type="button" disabled={exportDisabled} onClick={onExport}><Download size={13}/>Export reproducible artifact</button></div>}
+    {trial.artifact && <div className="og-demo-actions"><button className="og-button og-secondary" type="button" disabled={exportDisabled} onClick={onExport}><Download size={13}/>Export reproducible artifact</button>{forwardSource && <a className="og-button og-secondary og-demo-forward" href={strategyHandoffHref('/session', forwardSource)} aria-disabled={exportDisabled} tabIndex={exportDisabled ? -1 : undefined} aria-describedby={`forward-note-${trial.localId}`} onClick={onForward}>Set up forward Demo<ArrowRight size={13}/></a>}</div>}
+    {forwardSource && <p id={`forward-note-${trial.localId}`} className="og-demo-input-note">Continue with this strategy in a fresh setup. Export your replay before leaving.</p>}
   </article>;
 }

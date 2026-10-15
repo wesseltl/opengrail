@@ -48,6 +48,7 @@ function text(node){const n=expand(node);return n==null||typeof n==='boolean'?''
 const label=node=>text(node).replace(/\s+/g,' ').trim();
 const button=(tree,name)=>walk(tree,node=>node.type==='button'&&(node.props['aria-label']===name||label(node)===name))[0];
 const field=(tree,name)=>walk(tree,node=>node.props?.['aria-label']===name)[0];
+const forwardLink=tree=>walk(tree,node=>node.type==='a'&&label(node)==='Set up forward Demo')[0];
 function harness(props={signedIn:false},search=''){
  const listeners=new Map(),win={location:{search},addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:(type,fn)=>{if(listeners.get(type)===fn)listeners.delete(type);}};globalThis.window=win;
  context.cleanup.forEach(cleanup=>cleanup?.());for(const key of ['state','refs','deps','effects','cleanup'])context[key]=[];exports.length=0;delete globalThis.__demoReplayOverride;delete globalThis.__demoExampleOverride;
@@ -75,6 +76,7 @@ test('an explicitly synthetic offline replay produces verified real-engine metri
  assert(text(h.render()).includes('Synthetic fixture · not a public strategy or registered author'));assert(button(h.render(),'Run local replay').props.disabled);
  await run(h);const tree=h.render();assert.equal(h.trials().length,1);assert(text(tree).includes('AUTHOR_REPORTED'));assert(text(tree).includes('SIMULATED'));assert(text(tree).includes('SYNTHETIC'));
  assert(text(tree).includes('USDT'));assert(text(tree).includes('Realized fees'));assert(text(tree).includes('Slippage')||text(tree).includes('slippage'));
+ assert.equal(forwardLink(tree),undefined);
  const charts=walk(tree,node=>node.type==='svg'&&node.props.role==='img');assert.equal(charts.length,1);assert.equal(charts[0].props['aria-label'],'Actual simulated account equity by supplied closed bar');
  const polyline=walk(charts[0],node=>node.type==='polyline')[0];assert(!/NaN|Infinity/.test(polyline.props.points));assert(polyline.props.points.length>0);
  await exported(h,'Export reproducible artifact',h.trials()[0]);assert.equal(exports.length,1);const artifact=await demoModel.verifyDemoArtifact(JSON.parse(await exports[0].blob.text()));
@@ -85,6 +87,7 @@ test('public replay binds the exact digest-checked record and never reuses synth
  const value=await item('DCA'),{requests}=server([value]),h=harness();await h.until(value.record.content.name);h.click('Select strategy '+value.id);await h.flush();h.click('Load synthetic inputs');await h.until('Synthetic inputs prepared');
  const input=JSON.parse(field(h.render(),'Replay request JSON').props.value);assert.equal(input.strategy.digest,value.digest);assert.deepEqual(input.strategy.record,value.record);
  await run(h);await exported(h,'Export reproducible artifact',h.trials()[0]);const artifact=await demoModel.verifyDemoArtifact(JSON.parse(await exports[0].blob.text()));assert.deepEqual(artifact.input.strategy.record,value.record);
+ assert.equal(forwardLink(h.trials()[0]).props.href,'/session?strategy='+value.id+'&digest='+value.digest);
  assert(text(h.render()).includes('Public strategy snapshot captured locally'));assert.deepEqual(requests.map(request=>request.path),['/api/strategies',...Array(5).fill('/api/strategies?id='+value.id)]);
 });
 
@@ -125,6 +128,7 @@ test('negative stop-loss and emergency-stop results remain alongside rejected at
  const value=await item('DCA');server([value]);const h=harness();await h.until(value.record.content.name);h.click('Select strategy '+value.id);await h.flush();h.click('Load synthetic inputs');await h.until('Synthetic inputs prepared');
  const input=JSON.parse(field(h.render(),'Replay request JSON').props.value);input.dataset.bars=input.dataset.bars.map(bar=>({...bar,open:100,high:100,low:50,close:100,volume:0}));input.signals=[];await imported(h,input);await run(h);
  await exported(h,'Export reproducible artifact',h.trials()[0]);const loss=await demoModel.verifyDemoArtifact(JSON.parse(await exports[0].blob.text()));assert(loss.metrics.netPnl<0);assert(loss.trades.some(trade=>trade.reason==='STOP_LOSS'));assert(text(h.trials()[0]).includes('STOP_LOSS'));
+ assert(forwardLink(h.trials()[0]),'losing public trials retain the same next step');
  const stopped={...input,emergencyStopAt:input.dataset.bars[0].closedAt};await imported(h,stopped);await run(h);h.field('Replay request JSON','invalid');await h.flush();await run(h);
  assert.equal(h.trials().length,3);assert(text(h.render()).includes('EMERGENCY_STOP'));assert(text(h.render()).includes('INPUT REJECTED'));await exported(h,'Export complete session');const session=JSON.parse(await exports.at(-1).blob.text());assert.equal(session.trials.length,3);assert(session.trials[0].artifact.metrics.netPnl<0);assert.equal(session.trials[1].artifact.status,'HALTED');assert.equal(session.trials[2].status,'INPUT_REJECTED');
 });
@@ -148,6 +152,19 @@ test('double clicks serialize one local attempt and stale input/rights callbacks
  server();const h=harness();await offline(h);const staleRights=field(h.render(),'Confirm input rights and provenance').props.onChange,staleRun=button(h.render(),'Run local replay').props.onClick;
  const input=JSON.parse(field(h.render(),'Replay request JSON').props.value);input.hypothesis='A newly edited hypothesis.';await imported(h,input);staleRights({target:{checked:true}});await h.flush();assert.equal(field(h.render(),'Confirm input rights and provenance').props.checked,false);staleRun();await h.flush();assert.equal(h.trials().length,0);
  h.field('Confirm input rights and provenance',true);await h.flush();const active=button(h.render(),'Run local replay').props.onClick;active();active();await h.until(tree=>h.trials().length&&!text(tree).includes('Running local replay…'));assert.equal(h.trials().length,1);
+});
+
+test('forward setup carries only the exact public reference and fences busy, stale and suppressed trial links',async()=>{
+ const value=await item('DCA'),{requests,records}=server([value]),h=harness();await h.until(value.record.content.name);h.click('Select strategy '+value.id);await h.flush();h.click('Load synthetic inputs');await h.until('Synthetic inputs prepared');await run(h);
+ const original=forwardLink(h.trials()[0]),url=new URL(original.props.href,'https://local');
+ assert.equal(url.pathname,'/session');assert.deepEqual([...url.searchParams.keys()],['strategy','digest']);assert.equal(url.searchParams.get('strategy'),value.id);assert.equal(url.searchParams.get('digest'),value.digest);
+ assert(text(h.trials()[0]).includes('Export your replay before leaving'));
+ let prevented=0;const click=link=>link.props.onClick({preventDefault(){prevented++;}}),before=requests.length;click(original);assert.equal(prevented,0);assert.equal(requests.length,before);assert.equal(h.trials().length,1);
+ let release;globalThis.__demoReplayOverride=(input,actual)=>new Promise(resolve=>release=async()=>resolve(await actual(input)));h.field('Confirm input rights and provenance',true);await h.flush();h.click('Run local replay');await h.until(()=>typeof release==='function');
+ const busyLink=forwardLink(h.trials()[0]);assert.equal(busyLink.props['aria-disabled'],true);assert.equal(busyLink.props.tabIndex,-1);click(original);assert.equal(prevented,1);click(busyLink);assert.equal(prevented,2);
+ h.click('Cancel local work');await h.flush();await release();await h.flush();click(original);assert.equal(prevented,3);const current=forwardLink(h.trials()[0]);assert.equal(current.props['aria-disabled'],false);click(current);assert.equal(prevented,3);
+ records.set(value.id,suppressed(value));h.click('Refresh demo catalog');await h.until(()=>!forwardLink(h.render())&&text(h.render()).includes('CLEARED'));click(current);assert.equal(prevented,4);assert(h.trials().length===2&&h.trials().every(trial=>!forwardLink(trial)));
+ h.unmount();click(current);assert.equal(prevented,5);assert(requests.every(request=>request.path.startsWith('/api/strategies')&&!request.init.method));assert.equal(exports.length,0);
 });
 
 test('catalog refresh cancels a pending replay, clears its selection and prevents late output confirmation',async()=>{
@@ -218,7 +235,7 @@ test('post-computation suppression retains the actual terminal disposition but c
 });
 
 test('transient final-source failure preserves computed evidence unconfirmed and fresh export restores the real result',async()=>{
- const value=await item('DCA'),{requests}=server([value]),ordinary=globalThis.fetch,h=harness();await h.until(value.record.content.name);h.click('Select strategy '+value.id);await h.flush();h.click('Load synthetic inputs');await h.until('Synthetic inputs prepared');let reads=0;globalThis.fetch=async(path,init)=>path.includes('?id=')&&++reads===2?new Response(null,{status:503}):ordinary(path,init);await run(h);const held=context.refs.find(r=>r.current?.trials),trial=held.current.trials[0];assert.equal(trial.status,'OUTPUT_UNCONFIRMED');assert(trial.artifact&&trial.input);assert.equal(trial.sourceConfirmed,false);assert(!text(h.render()).includes('Current public source unavailable'));assert.equal(walk(h.render(),n=>n.type==='svg'&&n.props.role==='img').length,0);globalThis.fetch=ordinary;await exported(h,'Export reproducible artifact',h.trials()[0]);const actual=await demoModel.verifyDemoArtifact(JSON.parse(await exports.at(-1).blob.text()));assert.deepEqual(actual,trial.artifact);assert.equal(held.current.trials[0].status,actual.status);assert.equal(held.current.trials[0].sourceConfirmed,true);assert(requests.every(r=>r.path.startsWith('/api/strategies')&&!r.init.method));
+ const value=await item('DCA'),{requests}=server([value]),ordinary=globalThis.fetch,h=harness();await h.until(value.record.content.name);h.click('Select strategy '+value.id);await h.flush();h.click('Load synthetic inputs');await h.until('Synthetic inputs prepared');let reads=0;globalThis.fetch=async(path,init)=>path.includes('?id=')&&++reads===2?new Response(null,{status:503}):ordinary(path,init);await run(h);const held=context.refs.find(r=>r.current?.trials),trial=held.current.trials[0];assert.equal(trial.status,'OUTPUT_UNCONFIRMED');assert(trial.artifact&&trial.input);assert.equal(trial.sourceConfirmed,false);assert.equal(forwardLink(h.render()),undefined);assert(!text(h.render()).includes('Current public source unavailable'));assert.equal(walk(h.render(),n=>n.type==='svg'&&n.props.role==='img').length,0);globalThis.fetch=ordinary;await exported(h,'Export reproducible artifact',h.trials()[0]);const actual=await demoModel.verifyDemoArtifact(JSON.parse(await exports.at(-1).blob.text()));assert.deepEqual(actual,trial.artifact);assert.equal(held.current.trials[0].status,actual.status);assert.equal(held.current.trials[0].sourceConfirmed,true);assert(forwardLink(h.trials()[0]));assert(requests.every(r=>r.path.startsWith('/api/strategies')&&!r.init.method));
 });
 
 test('cancelling final source confirmation preserves completed evidence rather than rewriting it as an unexecuted interruption',async()=>{

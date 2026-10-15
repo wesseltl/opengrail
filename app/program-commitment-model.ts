@@ -70,12 +70,14 @@ function bindInput(plan:SharedProgramForwardPlan,input:ProgramForwardEvidenceInp
 }
 /** Pure structural/identity linkage. Registered time is supplied by the trusted repository. */
 export async function verifyProgramCommitmentEvidenceInput(planRaw:unknown,inputRaw:unknown,registeredAt:string):Promise<ProgramForwardEvidenceInput>{
- const plan=await verifyProgramCommitmentPlan(planRaw);boundedProgramForwardEvidenceValue(inputRaw,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
- const input=await verifyProgramForwardEvidenceInput(inputRaw);bindInput(plan,input,registeredAt);return input;
+ const {input:plan}=boundedProgramCommitmentInput(planRaw);boundedProgramForwardEvidenceValue(inputRaw,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
+ // The forward verifier proves its complete retained plan. Exact canonical
+ // equality binds this detached, bounded registration to that same proof.
+ const input=await verifyProgramForwardEvidenceInput(inputRaw);bindInput(plan,input,registeredAt);programCommitmentDependencies(plan);return input;
 }
 export async function verifyProgramCommitmentEvidenceArtifact(planRaw:unknown,artifactRaw:unknown,registeredAt:string):Promise<ProgramForwardEvidenceArtifact>{
- const plan=await verifyProgramCommitmentPlan(planRaw);boundedProgramForwardEvidenceValue(artifactRaw,programCommitmentLimits.artifactBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
- const artifact=await verifyProgramForwardEvidenceArtifact(artifactRaw);boundedProgramForwardEvidenceValue(artifact.input,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);bindInput(plan,artifact.input,registeredAt);return artifact;
+ const {input:plan}=boundedProgramCommitmentInput(planRaw);boundedProgramForwardEvidenceValue(artifactRaw,programCommitmentLimits.artifactBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);
+ const artifact=await verifyProgramForwardEvidenceArtifact(artifactRaw);boundedProgramForwardEvidenceValue(artifact.input,programCommitmentLimits.inputBytes,programCommitmentLimits.maximumDepth,programCommitmentLimits.maximumNodes);bindInput(plan,artifact.input,registeredAt);programCommitmentDependencies(plan);return artifact;
 }
 /** Exact public record references are correlated separately from body/source checks. */
 export function verifyProgramCommitmentEvidenceLink(raw:unknown,manifestRaw:unknown,outcomeRaw:unknown,outcomeManifestRaw:unknown):ProgramCommitmentEvidenceLink{

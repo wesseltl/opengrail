@@ -62,6 +62,27 @@ test('later whole V4 input/artifact links retain the exact committed plan and in
  const {f,artifact}=await evidenceFixture();assert.equal(artifact.journal.events.at(-1).status,'INTERRUPTED');assert.deepEqual(await m.verifyProgramCommitmentEvidenceInput(f.plan,artifact.input,registeredAt),artifact.input);assert.deepEqual(await m.verifyProgramCommitmentEvidenceArtifact(f.plan,artifact,registeredAt),artifact);assert.equal(artifact.qualification,'NONE');assert.equal(artifact.generatorIndependence,'NOT_ESTABLISHED');
 });
 
+test('matching plan copies and repaired outer digests cannot admit corrupt pins or omitted retained trials',async()=>{
+ const {f,e,artifact}=await evidenceFixture();
+ for(const edit of [plan=>plan.implementation.forward.model='f'.repeat(64),plan=>plan.handoff.ledger.attempts.splice(1,1)]){
+  const plan=clone(f.plan);edit(plan);const {planDigest,...planBody}=plan;void planDigest;plan.planDigest=await e.programForwardEvidenceDigest(planBody);
+  const forged=clone(artifact);forged.input.plan=clone(plan);const {inputDigest,...inputBody}=forged.input;void inputDigest;forged.input.inputDigest=await e.programForwardEvidenceDigest(inputBody);forged.inputDigest=forged.input.inputDigest;
+  const {resultDigest,...artifactBody}=forged;void resultDigest;forged.resultDigest=await e.programForwardEvidenceDigest(artifactBody);
+  await assert.rejects(m.verifyProgramCommitmentEvidenceInput(plan,forged.input,registeredAt));
+  await assert.rejects(m.verifyProgramCommitmentEvidenceArtifact(plan,forged,registeredAt));
+ }
+});
+
+test('evidence checks detach registration before awaiting and refuse supplied plan accessors',async()=>{
+ const {f,artifact}=await evidenceFixture();
+ for(const [verify,evidence]of [[m.verifyProgramCommitmentEvidenceInput,artifact.input],[m.verifyProgramCommitmentEvidenceArtifact,artifact]]){
+  const plan=clone(f.plan),pending=verify(plan,evidence,registeredAt);plan.config.initialCapital++;plan.handoff.ledger.attempts.length=0;
+  assert.deepEqual(await pending,evidence);assert.deepEqual(artifact.input.plan,f.plan);
+  const hooked=clone(f.plan);let touched=0;Object.defineProperty(hooked,'config',{enumerable:true,get(){touched++;throw Error('Supplied accessor executed');}});
+  await assert.rejects(verify(hooked,evidence,registeredAt));assert.equal(touched,0);
+ }
+});
+
 test('evidence binding rejects late registration, changed complete plan/config/session, earlier admission and original pre-admission receipts',async()=>{
  const {f,e,artifact}=await evidenceFixture();
  for(const at of [f.plan.startsAt,new Date(Date.parse(f.plan.startsAt)+1).toISOString(),'not a timestamp'])await assert.rejects(m.verifyProgramCommitmentEvidenceInput(f.plan,artifact.input,at));

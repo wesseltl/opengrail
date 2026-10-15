@@ -63,7 +63,14 @@ function harness(props={signedIn:true}){
  for(const key of ['Admission','Evaluation','Plan'])delete globalThis['__experiment'+key+'Override'];
  const render=()=>{context.si=context.ri=context.ei=0;return Experiments(props);};
  const flush=async()=>{for(let i=0;i<10;i++){render();while(context.effects.length)context.effects.shift()();await new Promise(resolve=>setImmediate(resolve));}return render();};
- const until=async predicate=>{const end=Date.now()+5000;do{const tree=await flush();if(typeof predicate==='function'?predicate(tree):text(tree).includes(predicate))return tree;}while(Date.now()<end);assert.fail('Timed out: '+predicate+' '+text(render()));};
+ const until=async predicate=>{const end=Date.now()+5000;do{
+  let tree=render();
+  // Observe a fresh tree after effects and one async turn, without a flush burst.
+  do{while(context.effects.length)context.effects.shift()();await new Promise(resolve=>setImmediate(resolve));tree=render();}while(context.effects.length&&Date.now()<end);
+  if(context.effects.length)break;
+  if(typeof predicate==='function'?predicate(tree):text(tree).includes(predicate))return tree;
+  await new Promise(resolve=>setTimeout(resolve,Math.min(50,Math.max(0,end-Date.now()))));
+ }while(Date.now()<end);assert.fail('Timed out: '+predicate+' '+text(render()));};
  return {props,render,flush,until,click(name,tree){const found=button(tree??render(),name);assert(found,'missing '+name);assert(!found.props.disabled,name+' disabled');found.props.onClick();},field(name,value){const found=field(render(),name);assert(found,'missing '+name);found.props.onChange({target:{value,checked:value}});},submit(){const form=walk(render(),n=>n.type==='form')[0];assert(form,'missing form');form.props.onSubmit({preventDefault(){}});},unmount(){context.cleanup.forEach(cleanup=>cleanup?.());}};
 }
 function server(initial=[],sources=[],post,options={}){
