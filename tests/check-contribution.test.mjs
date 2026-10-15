@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runContributionChecks, contributionScriptPins, contributionCheckLimits } from '../scripts/check-contribution.mjs';
+import { localContributionReportSchema } from '../scripts/contribution-public-handoff-core.mjs';
 
 const project = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const digest = value => createHash('sha256').update(value).digest('hex');
@@ -37,6 +38,7 @@ async function checked(options) {
   const { reportDigest, ...body } = stored; assert.equal(reportDigest, digest(JSON.stringify(body)));
   assert.equal((await stat(options.reportPath)).mode & 0o777, 0o600);
   assert.ok(bytes.length <= contributionCheckLimits.reportBytes);
+  localContributionReportSchema.parse(stored);
   assert.equal(stored.kind, 'LOCAL_CHECK_REPORT'); assert.equal(stored.classification, 'AUTHOR_REPORTED'); assert.equal(stored.qualification, 'NONE');
   assert.equal(JSON.stringify(stored).includes('"VERIFIED"'), false);
   return stored;
@@ -53,6 +55,45 @@ test('actual failing npm test is retained and typecheck, build and range check s
   const report = await checked(await fixture(t, { test: "import test from 'node:test';test('invented negative',()=>{throw Error('retained fixture failure')});" }));
   assert.equal(report.status, 'FAILED'); assert.equal(report.checks[0].status, 'FAILED'); assert.notEqual(report.checks[0].exitCode, 0); assert.match(report.checks[0].stdout.text, /retained fixture failure/);
   assert.deepEqual(report.checks.slice(1).map(v => v.status), ['PASSED', 'PASSED', 'PASSED']);
+});
+test('synthetic middle TAP failure and final summary survive beyond the prefix with exact raw evidence', async t => {
+  const padding = 'synthetic passing noise '.repeat(8);
+  const raw = 'TAP version 13\n' + Array.from({ length: 300 }, (_, n) => `ok ${n + 1} - ${padding}\n`).join('') +
+    "not ok 301 - middle fixture rejection\n  ---\n  error: 'retained middle failure diagnostic'\n  code: 'ERR_ASSERTION'\n  ...\n" +
+    Array.from({ length: 300 }, (_, n) => `ok ${n + 302} - ${padding}\n`).join('') +
+    '1..601\n# tests 601\n# pass 600\n# fail 1\n# duration_ms 123\n';
+  const report = await checked(await fixture(t, { build: `process.stderr.write(${JSON.stringify(raw)});process.exitCode=1;` }));
+  const output = report.checks[2].stderr;
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[2].status, 'FAILED');
+  assert.equal(output.bytes, Buffer.byteLength(raw)); assert.equal(output.sha256, digest(raw));
+  assert.ok(output.bytes > contributionCheckLimits.retainedBytesPerStream * 2); assert.equal(output.truncated, true);
+  assert.match(output.text, /not ok 301 - middle fixture rejection/); assert.match(output.text, /retained middle failure diagnostic/);
+  assert.match(output.text, /\[\.\.\. output omitted \.\.\.\]/); assert.match(output.text, /# fail 1/); assert.match(output.text, /# duration_ms/);
+  assert.ok(Buffer.byteLength(JSON.stringify(output.text)) <= contributionCheckLimits.retainedBytesPerStream);
+  assert.deepEqual(report.checks.map(v => v.status), ['PASSED', 'PASSED', 'FAILED', 'PASSED']);
+});
+test('passing output keeps its tail, exact raw hash and split UTF-8 and percent-encoded redaction before clipping', async t => {
+  const secret = 'og_local_producer_' + 'd'.repeat(64), encoded = encodeURIComponent(secret).replace('og', '%6f%67');
+  const raw = 'synthetic prefix\n' + ('quoted \\" noise\n'.repeat(1800)) + ('og_local_owner_' + 'b'.repeat(64) + '\n').repeat(100) + 'tail 🚀 ' + encoded + '\nsynthetic final summary\n';
+  const split = Buffer.from(raw).indexOf(Buffer.from('🚀')) + 2;
+  const percentSplit = Buffer.from(raw).indexOf(Buffer.from('%6f')) + 2;
+  const build = `const raw=Buffer.from(${JSON.stringify(raw)});for(const [start,end] of [[0,${split}],[${split},${percentSplit}],[${percentSplit},raw.length]]){process.stderr.write(raw.subarray(start,end));await new Promise(r=>setTimeout(r,15));}`;
+  const report = await checked(await fixture(t, { build })), output = report.checks[2].stderr;
+  assert.equal(report.status, 'PASSED'); assert.equal(output.bytes, Buffer.byteLength(raw)); assert.equal(output.sha256, digest(raw)); assert.equal(output.truncated, true);
+  assert.match(output.text, /synthetic prefix/); assert.match(output.text, /tail 🚀 \[REDACTED_CREDENTIAL\]/); assert.match(output.text, /synthetic final summary/);
+  assert.equal(output.text.includes('�'), false); assert.equal(output.text.includes('d'.repeat(24)), false); assert.equal(output.text.includes('b'.repeat(24)), false); assert.equal(output.text.includes('%6f'), false);
+  assert.ok(Buffer.byteLength(JSON.stringify(output.text)) <= contributionCheckLimits.retainedBytesPerStream);
+});
+test('malformed-percent noise cannot disable encoded credential redaction in prefix or tail excerpts', async t => {
+  const prefix = '%6f%67_local_owner_' + 'p'.repeat(64);
+  const tail = encodeURIComponent(encodeURIComponent('%67ithub_pat_' + 'q'.repeat(64)));
+  const raw = 'prefix ' + prefix + '\n' + 'synthetic padding\n'.repeat(1500) + 'progress 50% and malformed %zz\ntail %ff' + tail + '\nfinal diagnostic summary\n';
+  const report = await checked(await fixture(t, { build: `process.stderr.write(${JSON.stringify(raw)});` })), output = report.checks[2].stderr;
+  assert.equal(report.status, 'PASSED'); assert.equal(output.bytes, Buffer.byteLength(raw)); assert.equal(output.sha256, digest(raw)); assert.equal(output.truncated, true);
+  assert.match(output.text, /prefix \[REDACTED_CREDENTIAL\]/); assert.match(output.text, /tail ÿ\[REDACTED_CREDENTIAL\]/);
+  assert.match(output.text, /progress 50% and malformed %zz/); assert.match(output.text, /final diagnostic summary/);
+  for (const fragment of [prefix, tail, 'p'.repeat(24), 'q'.repeat(24)]) assert.equal(output.text.includes(fragment), false);
+  assert.ok(Buffer.byteLength(JSON.stringify(output.text)) <= contributionCheckLimits.retainedBytesPerStream);
 });
 test('nonzero typecheck and build statuses survive a durable terminal failure receipt', async t => {
   const report = await checked(await fixture(t, { typecheck: "console.error('type fixture failure');process.exitCode=2;", build: "console.error('build fixture failure');process.exitCode=3;" }));
@@ -89,6 +130,15 @@ test('a hanging command is terminated at a lowered fixture timeout and the timeo
   const options = await fixture(t, { test: 'setInterval(()=>{},1000);' }); const started = Date.now();
   const report = await checked({ ...options, commandTimeoutMs: 700 }); assert.equal(report.checks[0].status, 'TIMED_OUT'); assert.equal(report.status, 'FAILED'); assert.ok(Date.now() - started < 10000);
 });
+test('termination drops an incomplete credential and UTF-8 boundary line but preserves observed raw bytes and digest', async t => {
+  const raw = Buffer.concat([Buffer.from('complete diagnostic before termination\nog_local_owner_' + 'x'.repeat(24)), Buffer.from('🚀').subarray(0, 2)]);
+  const typecheck = `process.stderr.write(Buffer.from(${JSON.stringify(raw.toString('base64'))},'base64'));setInterval(()=>{},1000);`;
+  const report = await checked({ ...await fixture(t, { typecheck }), commandTimeoutMs: 700 }), output = report.checks[1].stderr;
+  assert.equal(report.status, 'FAILED'); assert.equal(report.checks[1].status, 'TIMED_OUT');
+  assert.equal(output.bytes, raw.length); assert.equal(output.sha256, digest(raw)); assert.equal(output.truncated, true);
+  assert.match(output.text, /complete diagnostic before termination/); assert.match(output.text, /\[\.\.\. output omitted \.\.\.\]/);
+  assert.equal(output.text.includes('og_local_owner_'), false); assert.equal(output.text.includes('x'.repeat(24)), false); assert.equal(output.text.includes('�'), false);
+});
 test('abort retains an INTERRUPTED disposition and leaves the remaining fixed checks unrun', async t => {
   const options = await fixture(t, { test: 'setInterval(()=>{},1000);' }), controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 1000); t.after(() => clearTimeout(timer));
@@ -118,9 +168,14 @@ test('strict API rejects accessor, extra option, malformed identity and unsuppor
   await assert.rejects(runContributionChecks({ ...options, commandTimeoutMs: contributionCheckLimits.commandTimeoutMs + 1 }), /INVALID_OPTIONS/);
 });
 test('actual CLI returns nonzero while printing and retaining its exact bounded failure report', async t => {
-  const options = await fixture(t, { build: "console.error('invented CLI failure');process.exitCode=3;" });
+  const raw = 'invented CLI prefix\n' + 'invented omitted output\n'.repeat(1800) + 'invented CLI failure summary\n';
+  const options = await fixture(t, { build: `process.stderr.write(${JSON.stringify(raw)});process.exitCode=3;` });
   const result = await new Promise((resolveResult, reject) => { const child = spawn(process.execPath, ['scripts/check-contribution.mjs', options.baseSha, options.headSha, options.testedSha, options.reportPath], { cwd: options.root, stdio: ['ignore', 'pipe', 'pipe'] }); let stdout = '', stderr = ''; child.stdout.on('data', v => { stdout += v; }); child.stderr.on('data', v => { stderr += v; }); child.on('error', reject); child.on('close', code => resolveResult({ code, stdout, stderr })); });
   assert.equal(result.code, 1); assert.equal(result.stderr, ''); const report = JSON.parse(result.stdout); assert.equal(report.status, 'FAILED'); assert.equal(report.checks[2].exitCode, 3); assert.deepEqual(report, JSON.parse(await readFile(options.reportPath, 'utf8')));
+  localContributionReportSchema.parse(report);
+  const output = report.checks[2].stderr;
+  assert.equal(output.bytes, Buffer.byteLength(raw)); assert.equal(output.sha256, digest(raw)); assert.equal(output.truncated, true);
+  assert.match(output.text, /invented CLI failure summary/); assert.match(output.text, /\[\.\.\. output omitted \.\.\.\]/);
 });
 test('a named FIFO source cannot block the checker before its regular-file guard', async t => {
   const options = await fixture(t); const file = resolve(options.root, '.github/workflows/contribution.yml'); await rm(file); execFileSync('mkfifo', [file]);

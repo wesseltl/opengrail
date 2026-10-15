@@ -278,6 +278,7 @@ test('new inspector source mutation is rejected in a positively checked isolated
   mkdirSync(join(isolated, 'app')); mkdirSync(join(isolated, 'node_modules'));
   for (const name of readdirSync(resolve('app'))) if (name.endsWith('.ts'))
     copyFileSync(resolve('app', name), join(isolated, 'app', name));
+  cpSync(resolve('app/compat'), join(isolated, 'app/compat'), {recursive: true});
   cpSync(resolve('scripts'), join(isolated, 'scripts'), {recursive: true});
   for (const name of ['package.json', 'package-lock.json', 'tsconfig.json']) copyFileSync(resolve(name), join(isolated, name));
   cpSync(resolve('node_modules/zod'), join(isolated, 'node_modules/zod'), {recursive: true});

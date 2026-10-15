@@ -2,7 +2,7 @@ import {networkAgentSchema} from './network-model';
 import {StrategyRepository} from './strategy-store';
 import {boundedStrategyRecord,boundedStrategyCommand,strategyPublishCommandForRecord,strategyAuthorReference,type StrategyPublicItem} from './strategy-model';
 import {strategyEvidenceLimits,strategyEvidenceEntryForItem,validateStrategyEvidencePage} from './strategy-evidence-model';
-import {verifyProgramCommitmentEvidenceInput,verifyProgramCommitmentEvidenceArtifact,verifyProgramCommitmentEvidenceLink,boundedProgramCommitmentValue,type ProgramCommitmentInput} from './program-commitment-model';
+import {verifyProgramCommitmentEvidenceInput,verifyProgramCommitmentEvidenceArtifact,verifyProgramCommitmentEvidenceLink,boundedProgramCommitmentValue,ProgramCommitmentVerificationScope,type ProgramCommitmentInput} from './program-commitment-model';
 import {readCommitmentSourceClosure,confirmCommitmentSourceClosure,commitmentSourceFenceClause,commitmentSourceFenceJson,experimentCommitmentStoreLimits,type CommitmentSourceSnapshot} from './experiment-commitment-store';
 import {verifyProgramWindowDeclarationBinding,type ProgramWindowInput} from './program-window-model';
 import {verifyProgramWindowEvidenceBinding,verifyProgramWindowEvidenceReferences,ProgramWindowEvidenceVerificationScope} from './program-window-evidence-model';
@@ -71,7 +71,7 @@ export class ExperimentRepository{
   return ['experiment_records','experiment_moderation','experiment_reports','experiment_reviews','experiment_review_moderation','experiment_review_reports'].map(table=>`NOT EXISTS(SELECT 1 FROM ${table} WHERE author_key=${author} AND request_id=${request})`).join(' AND ');
  }
 
- private async checkPublication(row:PublicationRow):Promise<Checked>{
+ private async checkPublication(row:PublicationRow,verificationScope?:ProgramCommitmentVerificationScope):Promise<Checked>{
   try{
    if(!row.payload||!hash.test(row.digest)||!hash.test(row.command_digest))throw Error();
    const checked=boundedExperimentRecord(JSON.parse(row.payload)),record=checked.record;
@@ -79,20 +79,20 @@ export class ExperimentRepository{
    const command=boundedExperimentCommand({action:record.type==='MANIFEST'?'register':'outcome',requestId:record.requestId,id:record.id,...record.content,policyAccepted:record.policyAccepted});
    if(await experimentDigest(command.payload)!==row.command_digest)throw Error();
    if(record.type==='MANIFEST'){
-    const selected=experimentInputStrategy(record.content.input);await verifyExperimentManifestInput(record.content.input,record.content.evaluator);
+    const selected=experimentInputStrategy(record.content.input);await verifyExperimentManifestInput(record.content.input,record.content.evaluator,verificationScope);
     if(row.manifest_id!==null||row.manifest_digest!==null||row.strategy_id!==selected.record.id||row.strategy_digest!==selected.digest||await experimentDigest(JSON.stringify(selected.record))!==row.strategy_digest||JSON.stringify(record.flags)!==JSON.stringify(experimentManifestFlags(record.content.disclosures)))throw Error();
     if(record.version===5&&(record.content.input.preparedAt>record.createdAt||Date.parse(record.content.input.startsAt)-Date.parse(record.createdAt)<experimentCommitmentStoreLimits.minimumLeadMs))throw Error();
     if(record.version===6&&(record.content.input.protocol.preparedAt>record.createdAt||Date.parse(record.content.input.protocol.startsAt)-Date.parse(record.createdAt)<experimentCommitmentStoreLimits.minimumLeadMs))throw Error();
    }else{
     if(row.manifest_id!==record.content.manifest.id||row.manifest_digest!==record.content.manifest.digest)throw Error();
-    if(record.content.result.kind==='ARTIFACT')await verifyExperimentRecordArtifact(record);
+    if(record.content.result.kind==='ARTIFACT')await verifyExperimentRecordArtifact(record,verificationScope);
    }
    return {row,record};
   }catch{throw inconsistent();}
  }
- private async publication(recordId:string):Promise<Checked>{
+ private async publication(recordId:string,verificationScope?:ProgramCommitmentVerificationScope):Promise<Checked>{
   id(recordId);const row=await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE id=?`).bind(recordId).first<PublicationRow>();
-  if(!row)throw new ExperimentError('Experiment publication not found.',404);return this.checkPublication(row);
+  if(!row)throw new ExperimentError('Experiment publication not found.',404);return this.checkPublication(row,verificationScope);
  }
  private async events(publication:Checked,observedRows?:EventRow[]){
   const rows=observedRows??(await this.db.prepare(`SELECT ${eventColumns} FROM experiment_moderation WHERE record_id=? ORDER BY sequence LIMIT ${experimentLimits.eventsPerRecord+1}`).bind(publication.record.id).all<EventRow>()).results;
@@ -126,32 +126,32 @@ export class ExperimentRepository{
   const retained=experimentInputDependencies(input);if(retained.length<1||retained.length>4||new Set(retained.map(value=>value.id)).size!==retained.length)throw inconsistent();
   return Promise.all(retained.map(async dependency=>{const current=selected?.id===dependency.id?selected:await this.source(dependency.id,selection,dependency.record.version);if(current.digest!==dependency.digest||current.payload!==JSON.stringify(dependency.record)){if(selection)throw new ExperimentError('An exact retained Search source does not match its public publication.',400);throw inconsistent();}return current;}));
  }
- private async bindings(publication:Checked){
-  if(publication.record.version===5)return this.commitmentBindings(publication);
+ private async bindings(publication:Checked,verificationScope?:ProgramCommitmentVerificationScope){
+  if(publication.record.version===5)return this.commitmentBindings(publication,undefined,verificationScope);
   if(publication.record.version===6)return this.windowBindings(publication);
   const source=await this.source(publication.row.strategy_id,false,publication.record.version>=3?2:1);if(source.digest!==publication.row.strategy_digest)throw inconsistent();
   let parent:Checked|null=null;
   if(publication.record.type==='MANIFEST'){
    if(JSON.stringify(experimentInputStrategy(publication.record.content.input).record)!==source.payload)throw inconsistent();
   }else{
-   try{parent=await this.publication(publication.record.content.manifest.id);}catch{throw inconsistent();}
+   try{parent=await this.publication(publication.record.content.manifest.id,verificationScope);}catch{throw inconsistent();}
    if(parent.record.type!=='MANIFEST'||parent.record.version!==publication.record.version||parent.row.digest!==publication.record.content.manifest.digest||parent.row.strategy_id!==publication.row.strategy_id||parent.row.strategy_digest!==publication.row.strategy_digest)throw inconsistent();
    const input=parent.record.content.input,result=publication.record.content.result;
-   if(result.kind==='ARTIFACT'){try{await verifyExperimentArtifact(result.artifact,input);}catch{throw inconsistent();}}
+   if(result.kind==='ARTIFACT'){try{await verifyExperimentArtifact(result.artifact,input,verificationScope);}catch{throw inconsistent();}}
    if(JSON.stringify(publication.record.flags)!==JSON.stringify(experimentOutcomeFlags(experimentAuthorReference(publication.record.author),experimentAuthorReference(parent.record.author),publication.record.content.claim)))throw inconsistent();
    const relation=publication.record.content.claim.relation;
    if(relation){
-    let related:Checked;try{related=await this.publication(relation.id);}catch{throw inconsistent();}
+    let related:Checked;try{related=await this.publication(relation.id,verificationScope);}catch{throw inconsistent();}
     if(related.record.type!=='OUTCOME'||related.record.version!==parent.record.version||related.row.digest!==relation.digest||related.row.manifest_id!==parent.record.id||related.row.manifest_digest!==parent.row.digest||related.record.createdAt>publication.record.createdAt)throw inconsistent();
    }
   }
   const input=publication.record.type==='MANIFEST'?publication.record.content.input:parent!.record.type==='MANIFEST'?parent!.record.content.input:null;if(!input)throw inconsistent();
   return {source,parent,dependencies:await this.dependencies(input,false,source),closure:undefined as CommitmentSourceSnapshot[]|undefined,linked:[] as Checked[]};
  }
- private async commitmentLink(plan:Extract<ExperimentRecord,{version:5,type:'MANIFEST'}>,report:Extract<ExperimentRecord,{version:5,type:'OUTCOME'}>,load:(id:string)=>Promise<Checked>=id=>this.publication(id)){
-  const link=report.content.result,[manifest,outcome]=await Promise.all([load(link.manifest.id),load(link.outcome.id)]);
+ private async commitmentLink(plan:Extract<ExperimentRecord,{version:5,type:'MANIFEST'}>,report:Extract<ExperimentRecord,{version:5,type:'OUTCOME'}>,load?:((id:string)=>Promise<Checked>),verificationScope=new ProgramCommitmentVerificationScope()){
+  load??=id=>this.publication(id,verificationScope);const link=report.content.result,[manifest,outcome]=await Promise.all([load(link.manifest.id),load(link.outcome.id)]);
   if(manifest.record.version!==4||manifest.record.type!=='MANIFEST'||outcome.record.version!==4||outcome.record.type!=='OUTCOME')throw inconsistent();
-  try{verifyProgramCommitmentEvidenceLink(link,{id:manifest.record.id,digest:manifest.row.digest},{id:outcome.record.id,digest:outcome.row.digest},outcome.record.content.manifest);await verifyProgramCommitmentEvidenceInput(plan.content.input,manifest.record.content.input,plan.createdAt);if(outcome.record.content.result.kind==='ARTIFACT'){await verifyProgramCommitmentEvidenceArtifact(plan.content.input,outcome.record.content.result.artifact,plan.createdAt);await verifyExperimentArtifact(outcome.record.content.result.artifact,manifest.record.content.input);}}catch{throw inconsistent();}
+  try{verifyProgramCommitmentEvidenceLink(link,{id:manifest.record.id,digest:manifest.row.digest},{id:outcome.record.id,digest:outcome.row.digest},outcome.record.content.manifest);await verifyProgramCommitmentEvidenceInput(plan.content.input,manifest.record.content.input,plan.createdAt,verificationScope);if(outcome.record.content.result.kind==='ARTIFACT'){await verifyProgramCommitmentEvidenceArtifact(plan.content.input,outcome.record.content.result.artifact,plan.createdAt,verificationScope);await verifyExperimentArtifact(outcome.record.content.result.artifact,manifest.record.content.input,verificationScope);}}catch{throw inconsistent();}
   const input=manifest.record.content.input;if(input.startedAt>manifest.record.createdAt||input.events.some(event=>event.receivedAt>manifest.record.createdAt||event.completedAt>manifest.record.createdAt)||input.pending&&input.pending.receivedAt>manifest.record.createdAt)throw inconsistent();
   if(outcome.row.strategy_id!==publicationSource(plan)||manifest.row.strategy_id!==publicationSource(plan)||manifest.row.strategy_digest!==plan.content.input.config.strategy.digest||outcome.row.strategy_digest!==manifest.row.strategy_digest||manifest.record.createdAt<plan.createdAt||outcome.record.createdAt<manifest.record.createdAt||report.createdAt<outcome.record.createdAt||JSON.stringify(experimentAuthorReference(report.author))!==JSON.stringify(experimentAuthorReference(outcome.record.author))||report.content.claim.type!==outcome.record.content.claim.type)throw inconsistent();
   const relation=report.content.claim.relation,underlying=outcome.record.content.claim.relation;let relatedReport:Checked|null=null;
@@ -160,10 +160,10 @@ export class ExperimentRepository{
   const original=underlying?await load(underlying.id):null;if(original&&(original.record.version!==4||original.record.type!=='OUTCOME'||original.row.digest!==underlying!.digest||original.row.manifest_id!==manifest.record.id))throw inconsistent();
   return [manifest,outcome,...original?[original]:[],...relatedReport?[relatedReport]:[]];
  }
- private async commitmentBindings(publication:Checked,observedClosure?:CommitmentSourceSnapshot[]){
+ private async commitmentBindings(publication:Checked,observedClosure?:CommitmentSourceSnapshot[],verificationScope?:ProgramCommitmentVerificationScope){
   const record=publication.record;if(record.version!==5)throw inconsistent();let parent:Checked|null=null,plan:Extract<ExperimentRecord,{version:5,type:'MANIFEST'}>,linked:Checked[]=[];
   if(record.type==='MANIFEST')plan=record;
-  else{parent=await this.publication(record.content.manifest.id);if(parent.record.version!==5||parent.record.type!=='MANIFEST'||parent.row.digest!==record.content.manifest.digest||parent.row.strategy_id!==publication.row.strategy_id||parent.row.strategy_digest!==publication.row.strategy_digest)throw inconsistent();plan=parent.record;if(JSON.stringify(record.flags)!==JSON.stringify(experimentOutcomeFlags(experimentAuthorReference(record.author),experimentAuthorReference(plan.author),record.content.claim)))throw inconsistent();linked=await this.commitmentLink(plan,record);}
+  else{parent=await this.publication(record.content.manifest.id,verificationScope);if(parent.record.version!==5||parent.record.type!=='MANIFEST'||parent.row.digest!==record.content.manifest.digest||parent.row.strategy_id!==publication.row.strategy_id||parent.row.strategy_digest!==publication.row.strategy_digest)throw inconsistent();plan=parent.record;if(JSON.stringify(record.flags)!==JSON.stringify(experimentOutcomeFlags(experimentAuthorReference(record.author),experimentAuthorReference(plan.author),record.content.claim)))throw inconsistent();linked=await this.commitmentLink(plan,record,undefined,verificationScope);}
   const closure=observedClosure??await readCommitmentSourceClosure(this.db,plan.content.input),selected=closure.find(value=>value.id===publication.row.strategy_id);if(!selected||selected.digest!==publication.row.strategy_digest||selected.payload!==JSON.stringify(plan.content.input.config.strategy.record))throw inconsistent();
   return {source:selected,parent,dependencies:closure,closure,linked};
  }
@@ -224,8 +224,8 @@ export class ExperimentRepository{
   if(!selected||selected.digest!==publication.row.strategy_digest||selected.payload!==JSON.stringify(plan.content.input.plan.config.strategy.record))throw inconsistent();
   return {source:selected,parent,dependencies:closure,closure,linked};
  }
- private async project(publication:Checked,observation?:{events:EventRow[];outcomeCount:number},deferredFences?:CommitmentFence[]):Promise<ExperimentPublicItem>{
-  const ownHistory=await this.events(publication,observation?.events),{events,state:own,reason}=ownHistory,record=publication.record,{source,parent,dependencies,closure,linked}=await this.bindings(publication);
+ private async project(publication:Checked,observation?:{events:EventRow[];outcomeCount:number},deferredFences?:CommitmentFence[],verificationScope?:ProgramCommitmentVerificationScope):Promise<ExperimentPublicItem>{
+  const ownHistory=await this.events(publication,observation?.events),{events,state:own,reason}=ownHistory,record=publication.record,{source,parent,dependencies,closure,linked}=await this.bindings(publication,verificationScope);
   const parentHistory=parent?await this.events(parent):null,parentState=parentHistory?.state??'VISIBLE';
   const outcomeCount=observation?.outcomeCount??(record.type==='MANIFEST'?(await this.db.prepare("SELECT COUNT(*) AS n FROM experiment_records WHERE type='OUTCOME' AND manifest_id=?").bind(record.id).first<{n:number}>())?.n??0:0);
   let finalSources=true;if(record.version===4){const values:Values=[],clauses=dependencies.map(value=>this.sourceClause(value,values));const observed=await this.db.prepare(`SELECT CASE WHEN ${clauses.join(' AND ')} THEN 1 ELSE 0 END AS visible`).bind(...values).first<{visible:number}>();if(!observed||observed.visible!==0&&observed.visible!==1)throw inconsistent();finalSources=observed.visible===1;}
@@ -285,9 +285,9 @@ export class ExperimentRepository{
   return experimentListSchema.parse({version:1,items,nextCursor:rows.length>experimentLimits.page?page.at(-1)!.record.id:null,executionEnabled:false});
  }
  async get(recordId:string){
-  const publication=await this.publication(recordId);
-  if(![5,6].includes(publication.record.version))return experimentGetSchema.parse({version:1,item:await this.project(publication),executionEnabled:false});
-  const fences:CommitmentFence[]=[],item=await this.project(publication,undefined,fences);
+  const verificationScope=new ProgramCommitmentVerificationScope(),publication=await this.publication(recordId,verificationScope);
+  if(![5,6].includes(publication.record.version))return experimentGetSchema.parse({version:1,item:await this.project(publication,undefined,undefined,verificationScope),executionEnabled:false});
+  const fences:CommitmentFence[]=[],item=await this.project(publication,undefined,fences,verificationScope);
   if(fences.length!==1)throw inconsistent();await this.assertCommitmentContextFences(fences);
   const result=experimentGetSchema.parse({version:1,item,executionEnabled:false});boundedExperimentTransport(result);
   this.commitmentAgentReceipts.set(result,{payload:JSON.stringify(result),fence:fences[0]});return result;
@@ -397,8 +397,8 @@ export class ExperimentRepository{
   return {payload,clause};
  }
  async outcomes(manifestId:string,cursor?:string|null){
-  const manifest=await this.publication(manifestId);if(manifest.record.type!=='MANIFEST')throw new ExperimentError('Manifest not found.',404);
-  if(manifest.record.version===5)return this.commitmentOutcomePage(manifest,cursor??null);
+  const verificationScope=new ProgramCommitmentVerificationScope(),manifest=await this.publication(manifestId,verificationScope);if(manifest.record.type!=='MANIFEST')throw new ExperimentError('Manifest not found.',404);
+  if(manifest.record.version===5)return this.commitmentOutcomePage(manifest,cursor??null,verificationScope);
   if(manifest.record.version===6)return this.windowOutcomePage(manifest,cursor??null);
   await this.bindings(manifest);const anchor=cursor?await this.publication(cursor):null;if(anchor&&(anchor.record.type!=='OUTCOME'||anchor.row.manifest_id!==manifestId))throw new ExperimentError('Outcome cursor not found.',404);
   const rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE type='OUTCOME' AND manifest_id=? ${anchor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT ${experimentLimits.page+1}`).bind(manifestId,...anchor?[anchor.record.createdAt,anchor.record.createdAt,anchor.record.id]:[]).all<PublicationRow>()).results;
@@ -423,15 +423,15 @@ export class ExperimentRepository{
  }
  /** The complete link page shares one source closure and batches linked records.
   * It returns metadata only; a separate exact read is needed for authored bodies. */
- private async commitmentOutcomePage(parent:Checked,cursor:string|null){
+ private async commitmentOutcomePage(parent:Checked,cursor:string|null,verificationScope:ProgramCommitmentVerificationScope){
   if(parent.record.version!==5||parent.record.type!=='MANIFEST')throw inconsistent();const plan=parent.record,cache=new Map<string,Checked>([[plan.id,parent]]);
-  const anchor=cursor?await this.publication(cursor):null;if(anchor&&(anchor.record.type!=='OUTCOME'||anchor.record.version!==5||anchor.row.manifest_id!==plan.id))throw new ExperimentError('Outcome cursor not found.',404);if(anchor)cache.set(anchor.record.id,anchor);
-  const rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE type='OUTCOME' AND manifest_id=? ${anchor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT 21`).bind(plan.id,...anchor?[anchor.record.createdAt,anchor.record.createdAt,anchor.record.id]:[]).all<PublicationRow>()).results,checked=await Promise.all(rows.map(row=>this.checkPublication(row))),page=checked.slice(0,experimentLimits.page);
+  const anchor=cursor?await this.publication(cursor,verificationScope):null;if(anchor&&(anchor.record.type!=='OUTCOME'||anchor.record.version!==5||anchor.row.manifest_id!==plan.id))throw new ExperimentError('Outcome cursor not found.',404);if(anchor)cache.set(anchor.record.id,anchor);
+  const rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE type='OUTCOME' AND manifest_id=? ${anchor?'AND (created_at<? OR (created_at=? AND id<?))':''} ORDER BY created_at DESC,id DESC LIMIT 21`).bind(plan.id,...anchor?[anchor.record.createdAt,anchor.record.createdAt,anchor.record.id]:[]).all<PublicationRow>()).results,checked=await Promise.all(rows.map(row=>this.checkPublication(row,verificationScope))),page=checked.slice(0,experimentLimits.page);
   for(const value of checked){if(value.record.version!==5||value.record.type!=='OUTCOME'||value.row.manifest_digest!==parent.row.digest||value.row.strategy_id!==parent.row.strategy_id||value.row.strategy_digest!==parent.row.strategy_digest||value.record.createdAt<plan.createdAt||JSON.stringify(value.record.flags)!==JSON.stringify(experimentOutcomeFlags(experimentAuthorReference(value.record.author),experimentAuthorReference(plan.author),value.record.content.claim)))throw inconsistent();cache.set(value.record.id,value);}
-  const loadMany=async(rawIds:string[])=>{const ids=[...new Set(rawIds)].filter(value=>!cache.has(value));if(cache.size+ids.length>experimentCommitmentStoreLimits.fenceRecords)throw inconsistent();for(let index=0;index<ids.length;index+=experimentCommitmentStoreLimits.recordReadChunk){const chunk=ids.slice(index,index+experimentCommitmentStoreLimits.recordReadChunk),found=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE id IN (${chunk.map(()=>'?').join(',')}) LIMIT 5`).bind(...chunk).all<PublicationRow>()).results;if(found.length!==chunk.length||new Set(found.map(value=>value.id)).size!==found.length||found.some(value=>!chunk.includes(value.id)))throw inconsistent();for(const value of await Promise.all(found.map(value=>this.checkPublication(value))))cache.set(value.record.id,value);}};
+  const loadMany=async(rawIds:string[])=>{const ids=[...new Set(rawIds)].filter(value=>!cache.has(value));if(cache.size+ids.length>experimentCommitmentStoreLimits.fenceRecords)throw inconsistent();for(let index=0;index<ids.length;index+=experimentCommitmentStoreLimits.recordReadChunk){const chunk=ids.slice(index,index+experimentCommitmentStoreLimits.recordReadChunk),found=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE id IN (${chunk.map(()=>'?').join(',')}) LIMIT 5`).bind(...chunk).all<PublicationRow>()).results;if(found.length!==chunk.length||new Set(found.map(value=>value.id)).size!==found.length||found.some(value=>!chunk.includes(value.id)))throw inconsistent();for(const value of await Promise.all(found.map(value=>this.checkPublication(value,verificationScope))))cache.set(value.record.id,value);}};
   await loadMany(page.flatMap(value=>value.record.version===5&&value.record.type==='OUTCOME'?[value.record.content.result.manifest.id,value.record.content.result.outcome.id,...value.record.content.claim.relation?[value.record.content.claim.relation.id]:[]]:[]));
   await loadMany(page.flatMap(value=>{if(value.record.version!==5||value.record.type!=='OUTCOME')throw inconsistent();const outcome=cache.get(value.record.content.result.outcome.id);if(!outcome||outcome.record.version!==4||outcome.record.type!=='OUTCOME')throw inconsistent();return outcome.record.content.claim.relation?[outcome.record.content.claim.relation.id]:[];}));
-  const load=async(value:string)=>{const record=cache.get(value);if(!record)throw inconsistent();return record;},links=await Promise.all(page.map(value=>{if(value.record.version!==5||value.record.type!=='OUTCOME')throw inconsistent();return this.commitmentLink(plan,value.record,load);})),closure=await readCommitmentSourceClosure(this.db,plan.content.input),sourceVisible=await confirmCommitmentSourceClosure(this.db,closure),retained=new Map<string,Checked>([[parent.record.id,parent],...page.map(value=>[value.record.id,value] as [string,Checked]),...links.flatMap(values=>values.map(value=>[value.record.id,value] as [string,Checked]))]);
+  const load=async(value:string)=>{const record=cache.get(value);if(!record)throw inconsistent();return record;},links=await Promise.all(page.map(value=>{if(value.record.version!==5||value.record.type!=='OUTCOME')throw inconsistent();return this.commitmentLink(plan,value.record,load,verificationScope);})),closure=await readCommitmentSourceClosure(this.db,plan.content.input),sourceVisible=await confirmCommitmentSourceClosure(this.db,closure),retained=new Map<string,Checked>([[parent.record.id,parent],...page.map(value=>[value.record.id,value] as [string,Checked]),...links.flatMap(values=>values.map(value=>[value.record.id,value] as [string,Checked]))]);
   const ids=[...retained.keys()],eventRows=(await this.db.prepare(`SELECT ${eventColumns} FROM experiment_moderation WHERE record_id IN (${ids.map(()=>'?').join(',')}) ORDER BY record_id,sequence LIMIT ${ids.length*17+1}`).bind(...ids).all<EventRow>()).results;if(eventRows.length>ids.length*experimentLimits.eventsPerRecord||eventRows.some(row=>!retained.has(row.record_id)))throw inconsistent();const histories=new Map(await Promise.all([...retained.values()].map(async value=>[value.record.id,await this.events(value,eventRows.filter(row=>row.record_id===value.record.id))] as const))),parentHistory=histories.get(plan.id)!;
   const items=page.map((value,index)=>{const own=histories.get(value.record.id)!,suppression=!sourceVisible?'SOURCE_UNAVAILABLE':parentHistory.state!=='VISIBLE'||links[index].some(link=>histories.get(link.record.id)!.state!=='VISIBLE')?'PARENT_UNAVAILABLE':null,state=own.state==='WITHDRAWN'?'WITHDRAWN':own.state==='HIDDEN'||suppression?'HIDDEN':'VISIBLE';return this.summary({id:value.record.id,digest:value.row.digest,type:'OUTCOME',requestId:value.record.requestId,createdAt:value.record.createdAt,author:experimentAuthorReference(value.record.author),strategy:{id:parent.row.strategy_id,digest:parent.row.strategy_digest},manifest:{id:plan.id,digest:parent.row.digest},state,reason:own.reason,suppression,reporting:'AUTHOR_REPORTED',outcomeCount:0,record:state==='VISIBLE'?value.record:null,moderation:own.events});});
   await this.assertCommitmentContextFence({closure,publications:[...retained.values()].map(value=>value.row).sort((a,b)=>a.id.localeCompare(b.id)),events:eventRows});return experimentOutcomesSchema.parse({version:1,items,nextCursor:rows.length>experimentLimits.page?page.at(-1)!.record.id:null,executionEnabled:false});
@@ -439,13 +439,13 @@ export class ExperimentRepository{
  /** Batch V5 entries within the existing exact-strategy evidence page. Loaded
   * canonical parents are reused; no local cache survives this request. */
  private async commitmentEvidenceEntries(records:Checked[],known:Map<string,Checked>,counts:Map<string,number>,fences:CommitmentFence[]){
-  if(records.length>strategyEvidenceLimits.preferredPage)throw inconsistent();if(!records.length)return new Map<string,ReturnType<typeof strategyEvidenceEntryForItem>>();const cache=new Map(known),loadMany=async(rawIds:string[])=>{const ids=[...new Set(rawIds)].filter(value=>!cache.has(value));if(cache.size+ids.length>experimentCommitmentStoreLimits.fenceRecords)throw inconsistent();for(let index=0;index<ids.length;index+=4){const chunk=ids.slice(index,index+4),rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE id IN (${chunk.map(()=>'?').join(',')}) LIMIT 5`).bind(...chunk).all<PublicationRow>()).results;if(rows.length!==chunk.length||new Set(rows.map(value=>value.id)).size!==rows.length||rows.some(value=>!chunk.includes(value.id)))throw inconsistent();for(const value of await Promise.all(rows.map(row=>this.checkPublication(row))))cache.set(value.record.id,value);}};
+  if(records.length>strategyEvidenceLimits.preferredPage)throw inconsistent();if(!records.length)return new Map<string,ReturnType<typeof strategyEvidenceEntryForItem>>();const verificationScope=new ProgramCommitmentVerificationScope(),cache=new Map(known),loadMany=async(rawIds:string[])=>{const ids=[...new Set(rawIds)].filter(value=>!cache.has(value));if(cache.size+ids.length>experimentCommitmentStoreLimits.fenceRecords)throw inconsistent();for(let index=0;index<ids.length;index+=4){const chunk=ids.slice(index,index+4),rows=(await this.db.prepare(`SELECT ${publicationColumns} FROM experiment_records WHERE id IN (${chunk.map(()=>'?').join(',')}) LIMIT 5`).bind(...chunk).all<PublicationRow>()).results;if(rows.length!==chunk.length||new Set(rows.map(value=>value.id)).size!==rows.length||rows.some(value=>!chunk.includes(value.id)))throw inconsistent();for(const value of await Promise.all(rows.map(row=>this.checkPublication(row,verificationScope))))cache.set(value.record.id,value);}};
   await loadMany(records.flatMap(value=>value.record.type==='OUTCOME'?[value.record.content.manifest.id]:[]));
   const plans=new Map<string,Checked>();for(const value of records){if(value.record.version!==5)throw inconsistent();const parent=value.record.type==='MANIFEST'?value:cache.get(value.record.content.manifest.id);if(!parent||parent.record.version!==5||parent.record.type!=='MANIFEST'||value.record.type==='OUTCOME'&&(parent.row.digest!==value.record.content.manifest.digest||parent.row.strategy_id!==value.row.strategy_id||parent.row.strategy_digest!==value.row.strategy_digest||parent.record.createdAt>value.record.createdAt||JSON.stringify(value.record.flags)!==JSON.stringify(experimentOutcomeFlags(experimentAuthorReference(value.record.author),experimentAuthorReference(parent.record.author),value.record.content.claim))))throw inconsistent();plans.set(parent.record.id,parent);}
   await loadMany(records.flatMap(value=>value.record.version===5&&value.record.type==='OUTCOME'?[value.record.content.result.manifest.id,value.record.content.result.outcome.id,...value.record.content.claim.relation?[value.record.content.claim.relation.id]:[]]:[]));
   await loadMany(records.flatMap(value=>{if(value.record.version!==5||value.record.type!=='OUTCOME')return [];const outcome=cache.get(value.record.content.result.outcome.id);if(!outcome||outcome.record.version!==4||outcome.record.type!=='OUTCOME')throw inconsistent();return outcome.record.content.claim.relation?[outcome.record.content.claim.relation.id]:[];}));
   const load=async(id:string)=>{const value=cache.get(id);if(!value)throw inconsistent();return value;},links=new Map<string,Checked[]>();
-  for(const value of records)if(value.record.version===5&&value.record.type==='OUTCOME'){const parent=plans.get(value.record.content.manifest.id)!;if(parent.record.version!==5||parent.record.type!=='MANIFEST')throw inconsistent();links.set(value.record.id,await this.commitmentLink(parent.record,value.record,load));}
+  for(const value of records)if(value.record.version===5&&value.record.type==='OUTCOME'){const parent=plans.get(value.record.content.manifest.id)!;if(parent.record.version!==5||parent.record.type!=='MANIFEST')throw inconsistent();links.set(value.record.id,await this.commitmentLink(parent.record,value.record,load,verificationScope));}
   const closures=new Map(await Promise.all([...plans.values()].map(async value=>{if(value.record.version!==5||value.record.type!=='MANIFEST')throw inconsistent();return [value.record.id,await readCommitmentSourceClosure(this.db,value.record.content.input)] as const;}))),retained=new Map<string,Checked>([...plans.values(),...records,...[...links.values()].flat()].map(value=>[value.record.id,value]));
   if(retained.size>experimentCommitmentStoreLimits.fenceRecords)throw inconsistent();const ids=[...retained.keys()],eventRows=(await this.db.prepare(`SELECT ${eventColumns} FROM experiment_moderation WHERE record_id IN (${ids.map(()=>'?').join(',')}) ORDER BY record_id,sequence LIMIT ${ids.length*17+1}`).bind(...ids).all<EventRow>()).results;if(eventRows.length>ids.length*experimentLimits.eventsPerRecord||eventRows.some(row=>!retained.has(row.record_id)))throw inconsistent();
   const histories=new Map(await Promise.all([...retained.values()].map(async value=>[value.record.id,await this.events(value,eventRows.filter(row=>row.record_id===value.record.id))] as const))),items=new Map<string,ReturnType<typeof strategyEvidenceEntryForItem>>();

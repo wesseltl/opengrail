@@ -1,3 +1,4 @@
+import {sessionImplementationKind} from './session-implementation-registry';
 import {z} from 'zod';
 import {strategyDefinitionSchema,strategyPublicItemSchema,strategyDigest} from './strategy-model';
 import {searchLedgerSchema,verifySearchLedger,pendingSearchAttempt,type SearchLedger} from './search-protocol';
@@ -86,4 +87,4 @@ export async function createForwardDemoPlan(raw:ForwardDemoPlanInput):Promise<Fo
  const value=forwardDemoPlanSchema.parse({...body,planDigest:await strategyDigest(JSON.stringify(body))});boundedForwardDemoValue(value,forwardDemoLimits.planBytes);return value;
 }
 /** Historical consistency verification never grants fresh process admission. */
-export async function verifyForwardDemoPlan(raw:unknown):Promise<ForwardDemoPlan>{const value=parsed(raw,forwardDemoPlanSchema,forwardDemoLimits.planBytes),expected=await createForwardDemoPlan({handoff:value.handoff,config:value.config,preparedAt:value.preparedAt,startsAt:value.startsAt,endsAt:value.endsAt,pollMs:value.pollMs,cycles:value.cycles});assert(unchanged(value,expected),'Forward plan digest, implementation or retained bindings are inconsistent.');return expected;}
+export async function verifyForwardDemoPlan(raw:unknown):Promise<ForwardDemoPlan>{const value=parsed(raw,forwardDemoPlanSchema,forwardDemoLimits.planBytes),expected=await createForwardDemoPlan({handoff:value.handoff,config:value.config,preparedAt:value.preparedAt,startsAt:value.startsAt,endsAt:value.endsAt,pollMs:value.pollMs,cycles:value.cycles});assert(sessionImplementationKind(value.implementations.session)!==null&&unchanged(value.implementations.evaluators,expected.implementations.evaluators),'Forward implementation identity is unsupported.');const {planDigest:_,...body}=expected;void _;const original={...body,implementations:value.implementations},bound={...original,planDigest:await strategyDigest(JSON.stringify(original))};assert(unchanged(value,bound),'Forward plan digest, implementation or retained bindings are inconsistent.');return bound;}

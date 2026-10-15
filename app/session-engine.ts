@@ -146,5 +146,7 @@ export async function advanceSession(rawState:unknown,rawEvent:unknown,receivedA
   }
  }catch(error){if(!(error instanceof ArithmeticFailure))throw error;stopFailure('NUMERICAL_LIMIT');}
  const receipt={sequence:s.sequence,requestId:event.requestId,eventDigest,receivedAt:at,disposition,reason:receiptReason,previousDigest:s.headDigest,digest:blank};const {digest:_,...receiptBody}=receipt;receipt.digest=await sessionDigest(JSON.stringify(receiptBody));s.headDigest=receipt.digest;s.events.push(receipt);
- s.stateDigest=blank;const result=sessionStateSchema.parse(s);result.stateDigest=await sessionStateDigest(result);if(new TextEncoder().encode(JSON.stringify(result)).byteLength>sessionLimits.stateBytes)throw new SessionError('Session checkpoint exceeds its retained byte budget.',413);return result;
+ s.stateDigest=blank;const result=sessionStateSchema.parse(s);
+ // The full schema above already validated and ordered this detached snapshot.
+ const {stateDigest:priorStateDigest,...stateBody}=result;void priorStateDigest;result.stateDigest=await sessionDigest(JSON.stringify(stateBody));if(new TextEncoder().encode(JSON.stringify(result)).byteLength>sessionLimits.stateBytes)throw new SessionError('Session checkpoint exceeds its retained byte budget.',413);return result;
 }
