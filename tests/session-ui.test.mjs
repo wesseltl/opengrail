@@ -71,9 +71,9 @@ function replayContextFile(h,value){const payload=JSON.stringify(value),bytes=ne
 
 test('empty-catalog anonymous Demo export imports and explicitly prepares, starts and steps the exact synthetic journey',async()=>{
  const {requests}=server(),demo=harness({signedIn:false},'',Demo);await demo.until('No visible public definitions');
- demo.click('Prepare example');await demo.until('Synthetic inputs prepared');
+ demo.click('Prepare example');await demo.until('Example ready.');
  const original=JSON.parse(field(demo.render(),'Replay request JSON').props.value);original.initialCapital=4321.25;original.hypothesis='Original offline hypothesis must stay intact.';
- const replay=async request=>{demo.field('Replay request JSON',typeof request==='string'?request:JSON.stringify(request));await demo.flush();demo.field('Confirm input rights and provenance',true);await demo.flush();demo.click('Run test');await demo.until(tree=>!text(tree).includes('Running local replay…'));};
+ const replay=async request=>{demo.field('Replay request JSON',typeof request==='string'?request:JSON.stringify(request));await demo.flush();demo.field('I have permission to use this data and its source information is accurate.',true);await demo.flush();demo.click('Run test');await demo.until(tree=>!text(tree).includes('Running local replay…'));};
  await replay('invalid original attempt');const flat=structuredClone(original);flat.dataset.bars=flat.dataset.bars.map(bar=>({...bar,open:100,high:100,low:100,close:100}));await replay(flat);await replay(original);
  const selectedDemo=walk(demo.render(),node=>node.props?.['aria-label']?.startsWith('Local trial '))[2];demo.click('Export Demo context',selectedDemo);await demo.until(()=>exports.length===1&&!button(demo.render(),'Export Demo context')?.props.disabled);const exportedContext=exports[0],contextFile=JSON.parse(await exportedContext.blob.text()),verified=await syntheticJourney.verifySyntheticReplayContext(contextFile),captured=JSON.stringify(verified);
  assert.deepEqual(verified.trials.map(trial=>trial.status),['INPUT_REJECTED','NO_TRADES',verified.trials[2].artifact.status]);assert.equal(verified.trials[2].input.initialCapital,4321.25);

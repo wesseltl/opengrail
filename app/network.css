@@ -71,3 +71,15 @@
 @media(max-width:960px){.og-network .og-header:has(nav.og-main-nav){flex-wrap:wrap;padding-top:16px;padding-bottom:14px;gap:14px}.og-network .og-header nav.og-main-nav{order:3;flex-basis:100%}.og-network .og-header:has(nav.og-main-nav) .og-header-action{margin-left:auto}.og-network .og-header nav.og-main-nav .og-workspaces[open]{flex-basis:100%;width:100%}.og-network .og-header nav.og-main-nav .og-workspaces>div{position:static;width:100%;max-width:none;margin-top:8px}}
 @media(max-width:760px){.og-network-home .og-hero{gap:28px;padding:40px 0 32px}.og-network-home .og-home-how{padding:20px}.og-network-home .og-agents{padding:32px 0}.og-network-home .og-contribute{padding:28px 0 36px}}
 @media(max-width:480px){.og-network .og-header nav.og-main-nav .og-workspaces>div{grid-template-columns:1fr}.og-network-home .og-hero-actions{align-items:flex-start;gap:8px 16px}}
+
+/* Keep the first visit focused on one example; agent tooling stays optional. */
+.og-network-home .og-home-example-note{max-width:470px;margin-top:12px;font-size:12px;line-height:1.7;color:var(--og-muted)}
+.og-network-home .og-home-advanced{border-top:1px solid var(--og-line);margin-bottom:28px}
+.og-network-home .og-home-advanced>summary{cursor:pointer;min-height:68px;padding:18px 0;list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:13px;font-weight:600}
+.og-network-home .og-home-advanced>summary::-webkit-details-marker{display:none}
+.og-network-home .og-home-advanced>summary::after{content:'+';margin-left:auto;color:var(--og-accent);font-size:20px;font-weight:400}
+.og-network-home .og-home-advanced[open]>summary::after{content:'−'}
+.og-network-home .og-home-advanced-hint{font-size:11px;font-weight:400;color:var(--og-muted)}
+.og-network-home .og-home-advanced>summary:focus-visible{outline:2px solid var(--og-accent);outline-offset:4px}
+.og-network-home .og-home-advanced .og-agents{padding-top:24px}
+@media(max-width:760px){.og-network-home .og-home-advanced>summary{position:relative;padding-right:28px;display:grid;gap:5px}.og-network-home .og-home-advanced>summary::after{position:absolute;right:0;top:20px}.og-network-home .og-home-advanced-hint{line-height:1.6}}

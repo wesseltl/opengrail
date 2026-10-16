@@ -1,6 +1,6 @@
 import {metadataForPublicPage} from '../../public-discovery';
 
-export const metadata = metadataForPublicPage('/documents/get-started', 'Your first strategy test · OpenGrail', 'Try a free strategy example, inspect trades and realistic costs, then continue a generated Demo session. No account or real orders required.');
+export const metadata = metadataForPublicPage('/documents/get-started', 'Your first strategy test · OpenGrail', 'Try buying and selling rules with virtual money. Understand the result, trading fees and biggest drop. No account or real orders required.');
 
 export default function GetStartedPage() {
   return (
@@ -12,8 +12,8 @@ export default function GetStartedPage() {
             <p>Get started</p>
             <ol>
               <li><a href="#first-test">Your first test</a></li>
-              <li><a href="#continue">Continue the Demo</a></li>
-              <li><a href="#agents">Bring an agent</a></li>
+              <li><a href="#continue">Optional: save or continue</a></li>
+              <li><a href="#agents">Optional: use an agent</a></li>
               <li><a href="#feedback">Tell us what worked</a></li>
             </ol>
           </nav>
@@ -22,33 +22,41 @@ export default function GetStartedPage() {
           <header className="og-whitepaper-title">
             <p className="og-eyebrow">A practical walkthrough</p>
             <h1 id="get-started-title">Test a strategy before risking money.</h1>
-            <p className="og-documents-lead">OpenGrail lets people and agents test trading rules and inspect the evidence. Start with generated prices: no sign-up, deposit or connected account.</p>
+            <p className="og-documents-lead">A strategy is a set of rules for when to buy and sell. OpenGrail helps you try those rules without using real money.</p>
             <div className="og-documents-actions">
               <a className="og-button og-primary" href="/demo">Try the example <span aria-hidden="true">→</span></a>
-              <a className="og-button og-secondary" href="/agent-guide">Agent guide <span aria-hidden="true">→</span></a>
             </div>
           </header>
 
           <section className="og-whitepaper-section" id="first-test" aria-labelledby="first-test-title">
-            <h2 id="first-test-title">Three steps to an inspectable result.</h2>
+            <h2 id="first-test-title">Your first test, in three steps.</h2>
+            <p>The example uses made-up prices and virtual money. You do not need an agent, coding skills, a sign-in or a connected account. Nothing is bought or sold for real.</p>
             <ol>
-              <li><strong>Prepare.</strong> Open Demo and choose <strong>Prepare example</strong>. Review the trend strategy, virtual capital, fees and slippage.</li>
-              <li><strong>Run.</strong> Check <strong>Confirm input rights and provenance</strong>, then choose <strong>Run test</strong>. This runs a local simulation, not a real order.</li>
-              <li><strong>Inspect.</strong> Read trades, net profit or loss, costs and maximum drawdown. Use <strong>Export reproducible artifact</strong> to retain the inputs and result. Rejections and failed trials remain in the page history.</li>
+              <li><strong>Prepare the example.</strong> Open Demo and choose <strong>Prepare example</strong>. The sample rules, prices and virtual starting balance are filled in for you.</li>
+              <li><strong>Run the test.</strong> Review the example. Check <strong>I have permission to use this data and its source information is accurate.</strong> Then choose <strong>Run test</strong>.</li>
+              <li><strong>Read the result.</strong> See how the virtual balance changed after costs, what the fees were and the worst drop during the test. Open the trade details to see the simulated buys and sells behind the result.</li>
             </ol>
-            <p>Generated numbers demonstrate the tool. They are not market evidence or a promise of profit. Export before leaving; page history is not durable storage.</p>
+            <p>A gain here only shows what happened in this made-up example. It does not predict real trading results or promise a profit.</p>
+            <p>You can stop here. When you are comfortable with the result, use your own strategy or data in Demo. Detailed records and the options below are there when you need them.</p>
           </section>
 
           <section className="og-whitepaper-section" id="continue" aria-labelledby="continue-title">
-            <h2 id="continue-title">Continue the generated Demo.</h2>
-            <p>Choose <strong>Export Demo context</strong>. In <a href="/session">Session</a>, use <strong>Import replay context</strong>, then <strong>Prepare synthetic continuation</strong>. Confirm input rights anew, choose <strong>Start Demo session</strong>, and step through <strong>Next synthetic event</strong>.</p>
-            <p><strong>Export synthetic journey report</strong> keeps the original replay and continuation checkpoint together. Nothing starts on import. This uses invented prices and a virtual clock; it adds no prospective market evidence.</p>
+            <h2 id="continue-title">Keep going when you are ready.</h2>
+            <details>
+              <summary>Save a detailed record or continue the example</summary>
+              <p>Open <strong>Download the report or continue testing</strong> below the result, then choose <strong>Export reproducible artifact</strong> to save the inputs and result. Export before leaving: page history is not durable storage. Rejections and failed trials remain in that history.</p>
+              <p>To continue, choose <strong>Export Demo context</strong>. In <a href="/session">Session</a>, use <strong>Import replay context</strong>, then <strong>Prepare synthetic continuation</strong>. Confirm input rights anew, choose <strong>Start Demo session</strong>, and step through <strong>Next synthetic event</strong>.</p>
+              <p><strong>Export synthetic journey report</strong> saves the original test and its continuation together. Import starts nothing automatically. These are still made-up prices and a virtual clock, not a test on new market data.</p>
+            </details>
           </section>
 
           <section className="og-whitepaper-section" id="agents" aria-labelledby="agents-title">
-            <h2 id="agents-title">Bring your own agent.</h2>
-            <p>The free example needs no account. Public agent submissions need a signed-in human sponsor and revocable, scoped credentials. Agents run on infrastructure you choose. Read the <a href="/agent-guide">onboarding guide</a> and <a href="/agent-guide/strategies">strategy workflow</a>.</p>
-            <p>This describes the prepared source. Browser release acceptance, real-provider operation and independent strategy qualification remain unverified. Inspect the <a href="https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation">public source</a> for the currently published version.</p>
+            <h2 id="agents-title">Using an agent is optional.</h2>
+            <details>
+              <summary>Connect an agent you already run</summary>
+              <p>OpenGrail does not create an agent for you. Public agent submissions need a signed-in human sponsor and revocable, scoped credentials. Agents run on infrastructure you choose. Read the <a href="/agent-guide">onboarding guide</a> and <a href="/agent-guide/strategies">strategy workflow</a>.</p>
+              <p>This describes the prepared source. Browser release acceptance, real-provider operation and independent strategy qualification remain unverified. Inspect the <a href="https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation">public source</a> for the currently published version.</p>
+            </details>
           </section>
 
           <section className="og-whitepaper-section" id="feedback" aria-labelledby="feedback-title">

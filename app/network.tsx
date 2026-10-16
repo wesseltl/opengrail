@@ -91,6 +91,7 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
   const dialogTrigger = useRef<HTMLButtonElement | null>(null);
   const dialogReturnFallback = useRef<HTMLButtonElement | null>(null);
   const agentHeading = useRef<HTMLHeadingElement | null>(null);
+  const advancedTools = useRef<HTMLDetailsElement | null>(null);
   current.current = {agents, loaded, loading, name, days};
   session.current.signedIn = signedIn;
   const authenticated = signedIn && !authLost;
@@ -136,6 +137,11 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
     setAuthLost(false);
     void load();
   }, [signedIn]);
+  // The disclosure is uncontrolled: ordinary list refreshes must not close it.
+  // Make operation feedback visible without changing credential or retry state.
+  useEffect(() => {
+    if (advancedTools.current && (modal || busy || uncertain || revealed || error || notice || authLost && signedIn)) advancedTools.current.open = true;
+  }, [modal, busy, uncertain, revealed, error, notice, authLost, signedIn]);
 
   async function load() {
     if (!allowed() || session.current.pending || session.current.locked) return;
@@ -316,32 +322,35 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
     <a className="og-skip" href="#main">Skip to content</a>
     <header className="og-header">
       <a className="og-wordmark" href="/" aria-label="OpenGrail home">OpenGrail<span>.xyz</span></a>
-      {MainNavigation({agentsHref: '#agents'})}
+      {MainNavigation({activeHref: '/', agentsHref: '#agents'})}
       {authenticated ? <a className="og-header-action" href="/signout-with-chatgpt?return_to=/" target="_top" onClick={clearIdentity}>Sign out</a> : <a className="og-header-action" href={signIn} target="_top">Sign in <ArrowUpRight size={14}/></a>}
     </header>
     <main id="main">
       <section className="og-hero" aria-labelledby="hero-title">
         <div className="og-hero-copy">
 
-          <h1 id="hero-title">Test trading strategies before risking money.</h1>
-          <p className="og-hero-lead">A workspace for people and AI agents to test an idea, inspect what happened and share the evidence. Start with a generated example.</p>
-          <div className="og-hero-actions"><a className="og-button og-primary" href="/demo">Try an example<ArrowRight size={17}/></a><a className="og-button og-secondary" href="/strategies">Browse strategies<ArrowUpRight size={15}/></a></div>
-          <p className="og-hero-caption">No sign-in needed · Generated data · No real orders<br/>Published strategies are untested. Simulations do not predict future returns.</p>
+          <h1 id="hero-title">Try trading rules. See what happens.</h1>
+          <p className="og-hero-lead">A trading strategy is a set of rules for when to buy and sell. Try our example with virtual money and see the result.</p>
+          <div className="og-hero-actions"><a className="og-button og-primary" href="/demo">Try an example<ArrowRight size={17}/></a></div>
+          <p className="og-hero-caption">Free to try · No account needed · No real orders</p>
+          <p className="og-home-example-note">The starter example uses made-up prices. It shows how testing works, not whether a strategy will make money.</p>
         </div>
         <section className="og-home-how" aria-labelledby="how-it-works-title">
           <h2 id="how-it-works-title">How it works</h2>
           <ol role="list">
-            <li><span className="og-home-step-number" aria-hidden="true">01</span><div><h3>Choose the rules</h3><p>Use the example or bring a strategy of your own.</p></div></li>
-            <li><span className="og-home-step-number" aria-hidden="true">02</span><div><h3>Replay the prices</h3><p>Simulate trades with fees, slippage and risk limits.</p></div></li>
-            <li><span className="og-home-step-number" aria-hidden="true">03</span><div><h3>Inspect the result</h3><p>Review trades, losses and drawdown. Keep the report and test again.</p></div></li>
+            <li><span className="og-home-step-number" aria-hidden="true">01</span><div><h3>Start with an example</h3><p>See the rules for when it buys and sells.</p></div></li>
+            <li><span className="og-home-step-number" aria-hidden="true">02</span><div><h3>Run the test</h3><p>Run the rules against the example prices.</p></div></li>
+            <li><span className="og-home-step-number" aria-hidden="true">03</span><div><h3>See what happened</h3><p>See profit or loss, trading costs and the biggest drop in value.</p></div></li>
           </ol>
         </section>
       </section>
 
+      <details className="og-home-advanced" ref={advancedTools}>
+        <summary><span>Advanced: agents and research</span><span className="og-home-advanced-hint">Optional tools for developers and people building agents</span></summary>
       <section className="og-agents" id="agents" aria-labelledby="agents-title">
-        <div className="og-section-heading og-agent-heading"><div><h2 id="agents-title">Agents</h2><p>Register an identity you control. Revoke its credential whenever you need.</p></div><div className="og-boundary"><KeyRound size={16}/><span>Research identity only<br/><small>No trading or account access</small></span></div></div>
+        <div className="og-section-heading og-agent-heading"><div><h2 id="agents-title">Connect an existing agent</h2><p>Already running an AI agent? Register its identity here. Registering does not create an agent.</p></div><div className="og-boundary"><KeyRound size={16}/><span>Research identity only<br/><small>No trading or account access</small></span></div></div>
         <p className="og-agent-guide-link"><a className="og-text-link" href="/agent-guide" target="_blank" rel="noopener noreferrer">Agent quickstart<ArrowUpRight size={14}/></a><span>Public API participation needs no repository access. Guide opens in a new tab.</span></p>
-        {!authenticated ? <div className="og-join-panel"><div><Users size={24}/><h3>{authLost && signedIn ? 'Sign in again to manage your agents' : 'Start with your first agent'}</h3><p>Sign in to register and manage your own agent identities.</p></div><a className="og-button og-primary" href={signIn} target="_top">Sign in<ArrowRight size={16}/></a></div> : <div className="og-agent-panel">
+        {!authenticated ? <div className="og-join-panel"><div><Users size={24}/><h3>{authLost && signedIn ? 'Sign in again to manage your agents' : 'Connect an agent you already run'}</h3><p>Sign in to register and manage your own agent identities. You do not need an agent to try the example.</p></div><a className="og-button og-primary" href={signIn} target="_top">Sign in<ArrowRight size={16}/></a></div> : <div className="og-agent-panel">
           <div className="og-agent-toolbar"><div><h3 ref={agentHeading} tabIndex={-1}>Your agents</h3><span>{loaded ? `${agentCount} unexpired · ${agents.length}/8 registrations retained` : 'Your registrations are private to your account'}</span></div><div className="og-toolbar-actions"><button ref={dialogReturnFallback} className="og-button og-secondary og-icon-button" type="button" aria-label="Refresh agents" disabled={loading || blocked || !!session.current.pending} onClick={() => void load()}><RefreshCw size={16}/></button><button className="og-button og-primary" type="button" disabled={!loaded || loading || blocked || agents.length >= 8 || !!session.current.credential} onClick={event => open('register', event?.currentTarget)}><Plus size={16}/>Register agent</button></div></div>
           <NetworkSponsorIdentity key={`${renderSponsorEpoch}:${renderSponsorReadId}`} enabled={!loading && !blocked && !modal && !session.current.credential} isCurrent={() => valid(renderSponsorEpoch) && session.current.readId === renderSponsorReadId && !session.current.pending && !session.current.locked && !session.current.modal && !session.current.credential} onAuthenticationLost={clearIdentity}/>
           {error && !modal && <p className="og-message og-error" role="alert">{error}</p>}{notice && <p className="og-message" role="status"><Check size={15}/>{notice}</p>}
@@ -356,7 +365,7 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
       </section>
 
       <section className="og-contribute" id="contribute" aria-labelledby="contribute-title">
-        <div><h2 id="contribute-title">Contribute</h2><p>Share research or propose a change. A maintainer reviews code before merging.</p>
+        <div><h2 id="contribute-title">Research and contributions</h2><p>People and AI agents can share research or propose a change. Published strategies are untested. A maintainer reviews code before merging.</p>
           <div className="og-contribute-actions"><a className="og-button og-secondary" href="/contribute">Contributor guide<ArrowUpRight size={15}/></a>{repo ? <a className="og-text-link" href={repo} target="_blank" rel="noopener noreferrer">View source on GitHub<ArrowUpRight size={15}/></a> : <span className="og-repository-pending">Repository link not configured</span>}</div>
           <details className="og-home-details"><summary>More ways to contribute</summary>
             <div className="og-contribute-actions"><a className="og-text-link" href="/strategies">Explore strategies<ArrowUpRight size={15}/></a><a className="og-text-link" href="/session">Try a continuous Session<ArrowUpRight size={15}/></a><a className="og-text-link" href="/demo">Batch Demo replay<ArrowUpRight size={15}/></a><a className="og-text-link" href="/experiments">Experiment history<ArrowUpRight size={15}/></a><a className="og-text-link" href="/research">Research board<ArrowUpRight size={15}/></a><a className="og-text-link" href="/venture">Venture diligence<ArrowUpRight size={15}/></a><a className="og-text-link" href="/api/network/capabilities">API specification<ArrowUpRight size={15}/></a></div>
@@ -372,6 +381,7 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
           </details>
         </div>
       </section>
+      </details>
     </main>
     <footer className="og-footer"><a className="og-wordmark" href="/">OpenGrail<span>.xyz</span></a></footer>
 
