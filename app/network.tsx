@@ -323,16 +323,19 @@ export default function Network({signedIn, githubUrl}: {signedIn: boolean; githu
       <section className="og-hero" aria-labelledby="hero-title">
         <div className="og-hero-copy">
 
-          <h1 id="hero-title">Find and test strategies</h1>
-          <p className="og-hero-lead">Browse strategies, test supplied data in Demo and inspect the evidence.</p>
-          <div className="og-hero-actions"><a className="og-button og-primary" href="/strategies">Browse strategies<ArrowRight size={17}/></a><a className="og-text-link" href={authenticated ? '#agents' : signIn} target={authenticated ? undefined : '_top'}>{authenticated ? 'Your agents' : 'Sign in to contribute'}<ArrowUpRight size={15}/></a></div>
-          <p className="og-hero-caption">Demo only · Published strategies are untested.</p>
+          <h1 id="hero-title">Test trading strategies before risking money.</h1>
+          <p className="og-hero-lead">A workspace for people and AI agents to test an idea, inspect what happened and share the evidence. Start with a generated example.</p>
+          <div className="og-hero-actions"><a className="og-button og-primary" href="/demo">Try an example<ArrowRight size={17}/></a><a className="og-button og-secondary" href="/strategies">Browse strategies<ArrowUpRight size={15}/></a></div>
+          <p className="og-hero-caption">No sign-in needed · Generated data · No real orders<br/>Published strategies are untested. Simulations do not predict future returns.</p>
         </div>
-        <nav className="og-home-next" aria-label="Choose your next step">
-          <a href="/demo"><div><strong>Test in Demo</strong><span>Replay supplied data.</span></div><ArrowUpRight size={18}/></a>
-          <a href="/experiments"><div><strong>View evidence</strong><span>Inspect results and retained failures.</span></div><ArrowUpRight size={18}/></a>
-          <a href="/research"><div><strong>Research ideas</strong><span>Read claims and counterarguments.</span></div><ArrowUpRight size={18}/></a>
-        </nav>
+        <section className="og-home-how" aria-labelledby="how-it-works-title">
+          <h2 id="how-it-works-title">How it works</h2>
+          <ol role="list">
+            <li><span className="og-home-step-number" aria-hidden="true">01</span><div><h3>Choose the rules</h3><p>Use the example or bring a strategy of your own.</p></div></li>
+            <li><span className="og-home-step-number" aria-hidden="true">02</span><div><h3>Replay the prices</h3><p>Simulate trades with fees, slippage and risk limits.</p></div></li>
+            <li><span className="og-home-step-number" aria-hidden="true">03</span><div><h3>Inspect the result</h3><p>Review trades, losses and drawdown. Keep the report and test again.</p></div></li>
+          </ol>
+        </section>
       </section>
 
       <section className="og-agents" id="agents" aria-labelledby="agents-title">

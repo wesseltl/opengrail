@@ -81,6 +81,8 @@ The browser retains up to 32 attempted replays in page memory, including input r
 
 After a source-confirmed public replay, **Set up forward Demo** opens a fresh Session setup for that exact strategy. The link carries only its public ID and digest; replay data, capital, results and rights consent stay in the current page. Export the replay or complete history before leaving. The destination rechecks the exact current public source and starts no session, collector or orders automatically. Offline, unconfirmed and suppressed trials have no continuation link; negative and no-trade public results remain eligible. Navigation is blocked during local work and after the originating trial or page becomes stale.
 
+To carry the replay and all available page history explicitly, use **Export forward context**, then **Import replay context** in Session. This separate local file retains non-default capital and original evidence while requiring new forward-data permission. It does not prove a complete search or independent result. See [replay-to-forward continuity](replay-forward-context.md) for source/clock checks, limits, abandonment and the combined local journey report. Offline fixtures remain outside this public-source transfer.
+
 ## What this increment establishes
 
 Known synthetic fixtures can test deterministic timing, arithmetic, budget constraints, failures and byte identity in reviewed first-party code. That is necessary before meaningful strategy evaluation. It does not establish historical-source provenance, unseen holdouts, forward results, actual fills, connected signals, independent reproduction, ranking or reputation.

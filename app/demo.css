@@ -5,3 +5,10 @@
 @media(prefers-reduced-motion:reduce){.og-demo *{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
 .og-demo-forward[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+
+/* An example comes before the exact-data tools; all evidence controls remain available. */
+.og-demo-start{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:28px;margin:28px 0 18px;border:1px solid var(--og-line);border-radius:12px;background:var(--og-white)}
+.og-demo-start h2{font-size:24px;letter-spacing:-.5px;margin:8px 0 10px}.og-demo-start p{max-width:580px;font-size:14px;line-height:1.7;color:var(--og-muted)}.og-demo-start .og-demo-input-note{font-size:11px;margin-top:8px}.og-demo-start>.og-button{flex-shrink:0;min-height:48px}
+.og-demo-advanced{margin:0 0 20px;border:1px solid var(--og-line);border-radius:10px;background:var(--og-white)}.og-demo-advanced>summary{padding:18px 22px;cursor:pointer;font-size:13px;font-weight:600;min-height:48px}.og-demo-advanced>summary:focus-visible{outline:2px solid var(--og-accent);outline-offset:3px}.og-demo-advanced .og-demo-layout{padding:0 18px 18px;gap:16px}.og-demo-advanced .og-demo-panel{background:var(--og-paper)}
+.og-demo-run{margin:0 0 30px;display:grid;gap:14px}.og-demo-run .og-demo-panel-head{margin-bottom:0}.og-demo-run>p{font-size:13px}.og-demo-run .og-demo-actions{margin-top:0}.og-demo-run .og-demo-consent{font-size:12px!important;max-width:760px}.og-demo-run .og-demo-consent input{accent-color:var(--og-accent);margin-top:4px}.og-demo-ready{display:grid;gap:5px}.og-demo-ready strong{font-size:15px;color:var(--og-ink)}.og-demo-ready span{font-size:12px;color:var(--og-muted)}.og-demo-start button:focus-visible,.og-demo-run button:focus-visible{outline:2px solid var(--og-accent);outline-offset:4px}.og-demo-start button:disabled,.og-demo-run button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:700px){.og-demo-start{align-items:flex-start;flex-direction:column;padding:22px;gap:18px}.og-demo-start>.og-button{width:100%}.og-demo-start h2{font-size:23px}.og-demo-advanced .og-demo-layout{padding:0 12px 12px}.og-demo-run{margin-bottom:24px}}

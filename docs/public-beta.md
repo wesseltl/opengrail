@@ -1,8 +1,14 @@
 # OpenGrail public beta
 
-Open the [native beta](https://opengrail-network.wesseltl.chatgpt.site). Anonymous agent discovery and public reads work with the unchanged SDK at that address. This is a reference deployment; self-hosted installations choose their own approved origin.
+Open [OpenGrail](https://opengrail.xyz) or [try the Demo](https://opengrail.xyz/demo). The generated example needs no sign-in. The [native beta](https://opengrail-network.wesseltl.chatgpt.site) remains available as a fallback. Self-hosted installations choose their own approved origin.
 
-`opengrail.xyz` remains pending as of 14 October 2026, Amsterdam time. Its DNS and SSL are not confirmed by this check. Use the native address until a separate verified update establishes the custom domain.
+## Current public release — 15 October 2026
+
+The public website is saved **version47**, source `b5e8810f039c03db01d4d8f2ed606d87bb71f878`. At **21:34 UTC**, maintainer checks reached `/`, `/demo` and `/api/network/capabilities` on `https://opengrail.xyz` with normal DNS resolution, verified TLS, no authentication, no redirect and HTTP200. The homepage offered **Try Demo**, the Demo served its synthetic-example control, and capabilities reported `executionEnabled:false`. Seven critical JavaScript/CSS assets also returned HTTP200 with their expected content types. These HTTP checks do not establish browser interaction, hosted sign-in, authenticated writes or independent use.
+
+The preceding engine/workflow source passed [hosted CI](https://github.com/wesseltl/opengrail/actions/runs/38787365744): 3,021 tests, typecheck, build and diff check. Version47 adds a small first-use link change in `app/network.tsx` and `app/strategies.tsx`, checked separately with typecheck and build; the full CI result is for its preceding source, not the whole version47 tree. The public [foundation branch](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation) has that preceding source; the two link changes are additional website source.
+
+The dated SDK checks below remain separate evidence. Full backtest-to-forward browser use, genuine hosted contributions and outside adoption remain unverified. Live orders, investments and transfers stay disabled.
 
 ## Start with public reads
 
@@ -28,7 +34,7 @@ Keep the controller and any later credentials outside the model's context and to
 
 Version-one machine contracts retain `SOURCE_ONLY`, `hostedAvailability: UNKNOWN`, `trustedOrigin: null` and quickstart `deployedOrigin: null`. These legacy source-protocol fields are not a dynamic deployment check or authority to select an origin. The dated evidence below records observed reads separately, preserving compatibility with the shipped client.
 
-## What was observed
+## Earlier SDK observation — 14 October 2026
 
 At **14 October 2026, 00:47 Amsterdam** (**13 October 2026, 22:47 UTC**), a maintainer-run check used `DEFAULT_NODE_FETCH`, the unchanged SDK and boundary, and the approved native origin. All nine GETs returned HTTP200 and passed the client's bounded read/discovery checks:
 
@@ -42,7 +48,7 @@ At **14 October 2026, 00:47 Amsterdam** (**13 October 2026, 22:47 UTC**), a main
 
 These are page contents at that observation, not a claim about future data. No Authorization header, cookie, model, market provider or response-supplied code was used. The original process exited zero and was collected; its recorded owned processes were absent. Full local source continuity checks passed before and after the check. The evidence is first-party maintainer acceptance; independently verified outside operators remain **zero** and independence is **NOT_ESTABLISHED**. Earlier synthetic local checks do not count as outside users or real market evidence.
 
-The deployed website remains saved version45, based on Source056. The [public review branch](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation) also includes later Source057 operator tooling. The checked SDK implementation is available in the [pinned public source snapshot](https://github.com/wesseltl/opengrail/tree/b04eeaf3a3011a787f11ac6178aa347b9ffe4ef2). This documentation increment does not establish a new website version.
+At that observation the deployed website was saved version45, based on Source056, and the public foundation branch also included later Source057 operator tooling. The checked SDK implementation is available in the [pinned public source snapshot](https://github.com/wesseltl/opengrail/tree/b04eeaf3a3011a787f11ac6178aa347b9ffe4ef2). The current release is recorded above; these historical results do not qualify a later release automatically.
 
 Maintainer evidence:
 
@@ -61,7 +67,7 @@ This is a prepared trial, not a completed user test or an invitation. An outside
 
 The source checkout has a local workflow check: `node --test tests/strategy-demo-journey.test.mjs`. It uses invented prices to carry positive TRAIN and a sole losing TEST into a fresh forward Demo, a causal entry, a losing exit and reconstructed evidence. This checks the engine path; it does not supply a hosted strategy, test the browser or complete the participant trial below.
 
-Before starting, provide one approved entry address, its exact release/source commit, and one exact strategy ID/digest with fitting labeled synthetic test and forward-Demo inputs. Confirm that the participant can access that version and its existing guides. The public beta above remains version45; a newer source checkout or draft PR is a separate target. If the exact strategy, inputs, sign-in or required controls are unavailable, record that blocker rather than substituting an older release or creating a publication to make the trial pass.
+Before starting, provide one approved entry address, its exact release/source commit, and one exact strategy ID/digest with fitting labeled synthetic test and forward-Demo inputs. Confirm that the participant can access that version and its existing guides. A newer source checkout or draft PR is a separate target from the public release recorded above. If the exact strategy, inputs, sign-in or required controls are unavailable, record that blocker rather than substituting an older release or creating a publication to make the trial pass.
 
 Give a first-time outside participant this task and the existing [source setup](agent-contributor-start.md#operator-first), [Demo method](demo-methodology.md) and [forward-Demo guide](forward-demo.md). Let them use their own chosen tools; an agent is optional. Do not coach the first attempt. Record any help before a separate assisted attempt.
 

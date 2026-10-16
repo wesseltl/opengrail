@@ -24,6 +24,7 @@ export default function DemoMethodology(){
    <h2>Keep the failures</h2>
    <p>The browser retains every attempted trial for this session and stops accepting new trials at its history limit. Export to preserve the history; refreshing or leaving loses the in-memory copy. Rejected inputs retain safe reasons rather than arbitrary private data. CLI artifacts use new filenames and never overwrite an earlier trial.</p>
    <p>Rerunning an artifact with the same evaluator checks reproducibility of that implementation. It is not independent verification. A persistent preregistered experiment history, disclosed parameter searches, untouched holdouts, conflicting reproductions and trusted qualification remain separate requirements.</p>
+   <p><a href="/agent-guide/forward-demo#replay-context">Continue a public replay in forward Demo</a> with its exact capital, original evidence and available page history. New forward-data permission is required.</p>
   </article>
  </main>;
 }

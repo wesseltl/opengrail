@@ -10,6 +10,7 @@ const primaryLinks: readonly NavigationLink[] = [
   {href: '/strategies', label: 'Strategies'},
   {href: '/demo', label: 'Demo'},
   {href: '/research', label: 'Research'},
+  {href: '/agent-guide', label: 'For agents'},
 ];
 
 // Call directly so the native links and disclosure remain visible to static tree harnesses.
