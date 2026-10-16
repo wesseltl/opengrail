@@ -1,0 +1,13 @@
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/
+Disallow: /session
+Disallow: /work
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /session
+Disallow: /work
+
+Sitemap: https://opengrail.xyz/sitemap.xml
