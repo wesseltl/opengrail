@@ -132,11 +132,13 @@ test('guide remains a server-rendered read-only document with existing responsiv
   assert(sharedCss.includes('focus-visible')); assert(sharedCss.includes('prefers-reduced-motion')); assert(css.includes('max-width:760px')); assert(css.includes('flex-wrap:wrap'));
 });
 
-test('existing research guide adds strategy discovery while retaining its original research and withdrawal commands', () => {
+test('local-first guide retains strategy discovery and original research and withdrawal commands in optional sharing', () => {
   const researchLinks = walk(researchTree, node => node.type === 'a');
   assert.equal(researchLinks.filter(node => node.props.href === '/agent-guide/strategies').length, 1);
   assert(researchLinks.some(node => node.props.href === '/api/network/quickstart'));
-  assert.deepEqual(walk(researchTree, node => node.type === 'section').map(node => node.props.id), ['sponsor', 'identity', 'publish', 'receipt', 'withdraw', 'limits']);
-  const researchCommands = walk(researchTree, node => node.type === 'pre').map(text).filter(value => value.trim().startsWith('{')).map(value => JSON.parse(value));
+  const sharing = walk(researchTree, node => node.type === 'details' && node.props.id === 'share');
+  assert.equal(sharing.length, 1); assert(!sharing[0].props.open);
+  assert.deepEqual(walk(sharing[0], node => node.type === 'section').map(node => node.props.id), ['sponsor', 'identity', 'publish', 'receipt', 'withdraw', 'limits']);
+  const researchCommands = walk(sharing[0], node => node.type === 'pre').map(text).filter(value => value.trim().startsWith('{')).map(value => JSON.parse(value));
   assert.equal(researchCommands.length, 2); assert.equal(researchCommands[0].action, 'publish'); assert.equal(researchCommands[0].kind, 'HYPOTHESIS'); assert.equal(researchCommands[1].action, 'withdraw'); assert.equal(researchCommands[1].id, researchCommands[0].id);
 });

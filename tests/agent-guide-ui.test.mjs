@@ -14,17 +14,18 @@ function walk(node, predicate) {
 }
 function text(node) { return node == null || typeof node === 'boolean' ? '' : Array.isArray(node) ? node.map(text).join(' ') : typeof node === 'object' ? text(node.props?.children) : String(node); }
 
-test('guide renders anonymous self-contained steps, policy and machine specification links without source-access assumptions', () => {
+test('guide retains complete sharing instructions and real source links after the local first test', () => {
   const content = text(tree), links = walk(tree, node => node.type === 'a');
-  for (const phrase of ['human sponsors', 'external', 'secret manager', 'contains no sponsorId', 'server derives sponsorship', 'exact ID and digest', 'same-cost', 'UNVERIFIED', 'record: null', 'identical serialized body', 'original agent/credential principal', 'no automatic reset', 'Public source available', 'hosted acceptance pending', 'source/opengrail-foundation', 'contains a README directory', 'Hosted CI and API availability remain unverified']) assert(content.includes(phrase), phrase);
+  for (const phrase of ['human sponsors', 'external', 'secret manager', 'contains no sponsorId', 'server derives sponsorship', 'exact ID and digest', 'same-cost', 'UNVERIFIED', 'record: null', 'identical serialized body', 'original agent/credential principal', 'no automatic reset', 'Public source available', 'Hosted sharing acceptance pending', 'source/opengrail-foundation', 'contains a README directory', 'Hosted sign-in and API writes still require separate verification']) assert(content.includes(phrase), phrase);
   assert(links.some(node => node.props.href === '/research-policy')); assert(links.some(node => node.props.href === '/api/network/quickstart'));
   assert(links.some(node => node.props.href === '/#agents'));
-  assert.deepEqual(links.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href), ['https://github.com/wesseltl/opengrail/tree/16f141c3f2822a5c42e53b1017622a257e6210e2', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md']);
+  const external = [...new Set(links.filter(node => node.props.href.startsWith('https:')).map(node => node.props.href))];
+  assert.deepEqual(external, ['https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/first-agent-test.md', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/experiment-runner.md', 'https://github.com/wesseltl/opengrail/blob/source/opengrail-foundation/docs/agent-contributor-start.md']);
   assert(!links.some(node => /og_agent_|token=|authorization/i.test(node.props.href)));
   assert(links.some(node => node.props.href === '/agent-guide/task-discussions'));
   assert.equal(walk(tree, node => ['form', 'input', 'textarea', 'button'].includes(node.type)).length, 0);
   assert.equal(walk(tree, node => node.type === 'h1').length, 1);
-  const sections = walk(tree, node => node.type === 'section').map(node => node.props.id); assert.deepEqual(sections, ['sponsor', 'identity', 'publish', 'receipt', 'withdraw', 'limits']);
+  const sections = walk(tree, node => node.type === 'section').map(node => node.props.id); assert.deepEqual(sections, ['first-test', 'read-result', 'reproduce', 'sponsor', 'identity', 'publish', 'receipt', 'withdraw', 'limits']);
   assert.equal(walk(tree, node => node.type === 'table').length, 1); assert.equal(walk(tree, node => node.type === 'caption').length, 1);
 });
 
@@ -41,8 +42,22 @@ test('guide code examples are display-only complete current commands, and disclo
 });
 
 
-test('guide offers compact three-step discovery and identifies the SDK as source without invented hosted downloads or write authority',()=>{
+test('optional sharing retains compact discovery and identifies the SDK as source without invented hosted downloads or write authority',()=>{
  const content=text(tree),links=walk(tree,node=>node.type==='a');
- for(const phrase of ['Start in three steps','Discover one focus','fixed original IDs','matching receipt','scripts/opengrail-agent-client.mjs','docs/agent-start.md','Source only','hosted availability is UNKNOWN','no hosted SDK download','automatic retry','required paid AI API','financial permission','400, 401, 409, 429 or 503 can follow a stored write','cannot prove NOT_APPLIED'])assert(content.includes(phrase),phrase);
+ for(const phrase of ['Share in three steps','Discover one focus','fixed original IDs','matching receipt','scripts/opengrail-agent-client.mjs','docs/agent-start.md','Source only','hosted availability is UNKNOWN','no hosted SDK download','automatic retry','required paid AI API','financial permission','400, 401, 409, 429 or 503 can follow a stored write','cannot prove NOT_APPLIED'])assert(content.includes(phrase),phrase);
  assert(links.some(node=>node.props.href==='/api/network/agent-start'));assert(links.some(node=>node.props.href==='/api/network/quickstart'));assert(!links.some(node=>/\/scripts\/opengrail-agent-client\.mjs|\/docs\/agent-start\.md/.test(node.props.href)),'Unserved source paths cannot be presented as hosted downloads.');
+});
+
+test('the first task computes and reproduces locally before closed optional registration and publication steps',()=>{
+ const sections=walk(tree,node=>node.type==='section'), first=sections[0], replay=sections[2];
+ assert.equal(first.props.id,'first-test');assert.equal(replay.props.id,'reproduce');
+ const code=walk(first,node=>node.type==='pre').map(text), replayCode=walk(replay,node=>node.type==='pre').map(text);
+ assert(code.some(value=>value.trim()==='node scripts/agent-first-test.mjs /absolute/NEW/output-directory'));
+ assert(replayCode.some(value=>value.trim()==='node scripts/replay-demo.mjs verify /absolute/NEW/output-directory/artifact.json'));
+ assert(!code.some(value=>/Authorization:|POST \/api\//.test(value)));
+ const sharing=walk(tree,node=>node.type==='details'&&node.props.id==='share');assert.equal(sharing.length,1);assert(!sharing[0].props.open);
+ assert.deepEqual(walk(sharing[0],node=>node.type==='section').map(node=>node.props.id),['sponsor','identity','publish','receipt','withdraw','limits']);
+ assert(!walk(sharing[0],node=>node.props?.id==='first-test'||node.props?.id==='reproduce').length);
+ const content=text(first);assert.match(content,/no account, credential/);assert(content.includes('dependencies installed'));assert(content.includes('parent must already exist'));assert(content.includes('refused without changing'));
+ assert(text(sections[1]).includes('retains a loss'));assert(text(replay).includes('only checks ledger identities'));
 });

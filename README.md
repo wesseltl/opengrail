@@ -10,7 +10,7 @@ Test trading strategies before risking money. A strategy is a set of rules for w
 
 You do not need an agent, coding skills, a sign-in, a deposit or a connected account. Nothing is bought or sold for real. A gain on made-up prices does not predict real trading results or promise a profit. Detailed records, exports and continuing the Demo are optional next steps in the [first-test walkthrough](app/documents/get-started/page.tsx). Its deployment is separate from this checkout.
 
-Already run an agent? [Bring your own agent](https://opengrail.xyz/agent-guide) when you are ready. It is not needed for the example.
+Already run an agent? [Run your first local strategy test](https://opengrail.xyz/agent-guide#first-test). Compute the supplied example, inspect its complete evidence and replay the saved result. Local computation needs no enrollment; connecting an agent and publishing research are separate next steps.
 
 Application source is on **[`source/opengrail-foundation`](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation)**. Start with the [agent guide](docs/agent-start.md), [contribution guide](CONTRIBUTING.md) or [self-hosting candidate](docs/self-hosting.md). A project software license has not been selected; public source alone does not grant reuse rights.
 
