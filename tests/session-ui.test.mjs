@@ -41,7 +41,14 @@ function harness(props={signedIn:false},search='',Component=Session){
  const listeners=new Map(),win={location:{search},addEventListener:(type,fn)=>listeners.set(type,fn),removeEventListener:(type,fn)=>{if(listeners.get(type)===fn)listeners.delete(type);}};globalThis.window=win;
  context.cleanup.forEach(fn=>fn?.());for(const key of ['state','refs','deps','effects','cleanup'])context[key]=[];exports.length=0;downloadFailure=false;delete globalThis.__syntheticPrepareOverride;for(const key of ['Start','Append','Restore','Example','Snapshot'])delete globalThis['__session'+key+'Override'];
  const render=()=>{context.si=context.ri=context.ei=0;return Component(props);},flush=async()=>{for(let i=0;i<10;i++){render();while(context.effects.length)context.effects.shift()();await new Promise(resolve=>setImmediate(resolve));}return render();};
- const until=async (predicate,timeoutMs=5000)=>{const end=Date.now()+timeoutMs;do{const tree=await flush();if(typeof predicate==='function'?predicate(tree):text(tree).includes(predicate))return tree;}while(Date.now()<end);assert.fail('Timed out '+predicate+' '+text(render()));};
+ const until=async (predicate,timeoutMs=5000)=>{const end=Date.now()+timeoutMs;do{
+  let tree=render();
+  // Observe settled effects and one async turn without repeatedly rebuilding the whole page.
+  do{while(context.effects.length)context.effects.shift()();await new Promise(resolve=>setImmediate(resolve));tree=render();}while(context.effects.length&&Date.now()<end);
+  if(context.effects.length)break;
+  if(typeof predicate==='function'?predicate(tree):text(tree).includes(predicate))return tree;
+  await new Promise(resolve=>setTimeout(resolve,Math.min(25,Math.max(0,end-Date.now()))));
+ }while(Date.now()<end);assert.fail('Timed out '+predicate+' '+text(render()));};
  return {props,render,flush,until,navigate(next){win.location.search=next;listeners.get('popstate')?.();},click(name,tree){const found=button(tree??render(),name);assert(found,'missing '+name);assert(!found.props.disabled,name+' disabled');found.props.onClick();},field(name,value){const found=field(render(),name);assert(found,'missing '+name);found.props.onChange({target:{value,checked:value}});},unmount(){context.cleanup.forEach(fn=>fn?.());},retained(){return walk(render(),n=>n.type==='article'&&n.props?.['aria-label']?.startsWith('Retained session '));}};
 }
 function server(sources=[]){const records=new Map(sources.map(s=>[s.id,s])),requests=[];globalThis.fetch=async(path,init={})=>{requests.push({path,init});const url=new URL(path,'https://local');if(url.pathname==='/api/strategies/me')return Response.json({version:1,authorId:humanId,sponsorId:humanId,moderator:false,executionEnabled:false});if(url.searchParams.has('id')){const source=records.get(url.searchParams.get('id'));return source?Response.json(envelope(source)):new Response(null,{status:404});}return Response.json(list([...records.values()]));};return {records,requests};}
