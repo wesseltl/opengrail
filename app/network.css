@@ -43,15 +43,16 @@
 .og-network-home .og-hero-caption{max-width:none;font-size:12px}
 .og-network-home .og-button,.og-network-home .og-text-link{min-height:44px}
 .og-network-home .og-icon-button{min-width:44px}
-.og-network-home .og-home-next{display:grid;min-width:0;border:1px solid var(--og-line);border-radius:14px;background:var(--og-white);overflow:hidden}
-.og-network-home .og-home-next a{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:84px;padding:20px 24px}
-.og-network-home .og-home-next a+a{border-top:1px solid var(--og-line)}
-.og-network-home .og-home-next a:hover{background:var(--og-soft)}
-.og-network-home .og-home-next a:focus-visible{outline-offset:-4px}
-.og-network-home .og-home-next a>div{min-width:0}
-.og-network-home .og-home-next strong{display:block;font-size:14px;font-weight:600}
-.og-network-home .og-home-next span{display:block;font-size:12px;line-height:1.6;color:var(--og-muted);margin-top:4px}
-.og-network-home .og-home-next svg{color:var(--og-accent)}
+.og-network-home .og-home-how{min-width:0;border:1px solid var(--og-line);border-radius:14px;background:var(--og-white);padding:24px}
+.og-network-home .og-home-how h2{font-size:12px;color:var(--og-muted);font-weight:500;margin:0 0 20px}
+.og-network-home .og-home-how ol{list-style:none;padding:0;margin:0;display:grid;gap:0}
+.og-network-home .og-home-how li{display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:18px 0}
+.og-network-home .og-home-how li:first-child{padding-top:0}
+.og-network-home .og-home-how li:last-child{padding-bottom:0}
+.og-network-home .og-home-how li+li{border-top:1px solid var(--og-line)}
+.og-network-home .og-home-step-number{font-size:12px;line-height:1.6;color:var(--og-accent);font-variant-numeric:tabular-nums}
+.og-network-home .og-home-how h3{font-size:14px;font-weight:600;line-height:1.6;margin:0}
+.og-network-home .og-home-how p{font-size:12px;line-height:1.6;color:var(--og-muted);margin:4px 0 0}
 .og-network-home .og-agents{padding:40px 0 48px}
 .og-network-home .og-agent-details summary,.og-network-home .og-sponsor-identity summary{min-height:44px;line-height:44px;display:list-item}
 .og-network-home .og-contribute{display:block;padding:36px 0 48px}
@@ -68,5 +69,5 @@
 .og-home-dialog .og-dialog-close{min-width:44px}
 .og-home-dialog [data-slot=dialog-title]{padding-right:44px}
 @media(max-width:960px){.og-network .og-header:has(nav.og-main-nav){flex-wrap:wrap;padding-top:16px;padding-bottom:14px;gap:14px}.og-network .og-header nav.og-main-nav{order:3;flex-basis:100%}.og-network .og-header:has(nav.og-main-nav) .og-header-action{margin-left:auto}.og-network .og-header nav.og-main-nav .og-workspaces[open]{flex-basis:100%;width:100%}.og-network .og-header nav.og-main-nav .og-workspaces>div{position:static;width:100%;max-width:none;margin-top:8px}}
-@media(max-width:760px){.og-network-home .og-hero{gap:28px;padding:40px 0 32px}.og-network-home .og-home-next a{min-height:76px;padding:18px 20px}.og-network-home .og-agents{padding:32px 0}.og-network-home .og-contribute{padding:28px 0 36px}}
+@media(max-width:760px){.og-network-home .og-hero{gap:28px;padding:40px 0 32px}.og-network-home .og-home-how{padding:20px}.og-network-home .og-agents{padding:32px 0}.og-network-home .og-contribute{padding:28px 0 36px}}
 @media(max-width:480px){.og-network .og-header nav.og-main-nav .og-workspaces>div{grid-template-columns:1fr}.og-network-home .og-hero-actions{align-items:flex-start;gap:8px 16px}}

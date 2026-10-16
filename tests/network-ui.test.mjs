@@ -108,17 +108,29 @@ test('public portal uses a plain wordmark, honest planned states and ordinary SI
   const tree = await h.flush();
   assert.equal(requests.length, 0); assert(text(tree).includes('OpenGrail')); assert(text(tree).includes('Planned'));
   assert(walk(tree, node => node.type === 'a').some(node => node.props.href === '/research'));
-  assert(text(tree).includes('Browse strategies, test supplied data in Demo and inspect the evidence'));
   const hero = walk(tree, node => node.type === 'section' && node.props.className === 'og-hero')[0];
+  const primary = walk(hero, node => node.type === 'a' && node.props.className === 'og-button og-primary');
+  assert.equal(primary.length, 1); assert.equal(label(primary[0]), 'Try an example');
+  assert.equal(primary[0].props.href, '/demo');
+  assert.equal(primary[0].props.onClick, undefined); assert.equal(primary[0].props.target, undefined);
   const browse = walk(hero, node => node.type === 'a' && label(node).includes('Browse strategies'))[0];
-  assert.equal(browse.props.href, '/strategies'); assert.equal(browse.props.className, 'og-button og-primary');
-  assert(text(hero).includes('Demo only')); assert(text(hero).includes('Published strategies are untested'));
+  assert.equal(browse.props.href, '/strategies'); assert.equal(browse.props.className, 'og-button og-secondary');
+  assert(text(hero).includes('Published strategies are untested'));
+  assert(text(walk(hero, node => node.type === 'h1')[0]).includes('Test trading strategies before risking money'));
+  assert(text(hero).includes('people and AI agents'));
+  assert(text(hero).includes('No sign-in needed'));
+  const how = walk(hero, node => node.type === 'section' && node.props['aria-labelledby'] === 'how-it-works-title')[0];
+  assert(how); assert.equal(walk(how, node => node.type === 'ol').length, 1);
+  assert.equal(walk(how, node => node.type === 'li').length, 3);
+  assert.equal(walk(how, node => node.type === 'a').length, 0, 'the explanation must not compete with the example action');
+  assert(text(how).includes('fees, slippage and risk limits')); assert(text(how).includes('losses and drawdown'));
   const navigation = walk(tree, node => node.type === 'nav' && node.props['aria-label'] === 'Main navigation')[0];
   const directLinks = [navigation.props.children].flat(Infinity).filter(node => node?.type === 'a');
-  assert.deepEqual(directLinks.map(node => node.props.href), ['/strategies', '/demo', '/research']);
+  assert.deepEqual(directLinks.map(node => node.props.href), ['/strategies', '/demo', '/research', '/agent-guide']);
+  assert.equal(label(directLinks.find(node => node.props.href === '/agent-guide')), 'For agents');
   const more = walk(navigation, node => node.type === 'details' && node.props.className === 'og-workspaces')[0];
   assert.equal(label(walk(more, node => node.type === 'summary')[0]), 'More'); assert(!more.props.open);
-  assert.deepEqual(walk(navigation, node => node.type === 'a').map(node => node.props.href).sort(), ['#agents', '/arena', '/assistance', '/assistance/research', '/contribute', '/demo', '/documents', '/experiments', '/program', '/research', '/search', '/session', '/strategies', '/validation', '/venture'].sort());
+  assert.deepEqual(walk(navigation, node => node.type === 'a').map(node => node.props.href).sort(), ['#agents', '/agent-guide', '/arena', '/assistance', '/assistance/research', '/contribute', '/demo', '/documents', '/experiments', '/program', '/research', '/search', '/session', '/strategies', '/validation', '/venture'].sort());
   const contributorDetails = walk(tree, node => node.type === 'details' && node.props.className === 'og-home-details')[0];
   assert(contributorDetails); assert(!contributorDetails.props.open);
   assert(walk(contributorDetails, node => node.type === 'a' && node.props.href === '/api/network/capabilities').length === 1);
@@ -130,7 +142,7 @@ test('public portal uses a plain wordmark, honest planned states and ordinary SI
   assert(walk(tree, node => node.type === 'details' && node.props.className === 'og-workspaces').length === 1);
   assert(walk(tree, node => node.type === 'a' && node.props.href === '/assistance/research').length === 1);
   assert(!text(tree).includes('BUILD IN THE OPEN'));
-  const guide = walk(tree, node => node.type === 'a' && node.props.href === '/agent-guide');
+  const guide = walk(tree, node => node.type === 'a' && node.props.href === '/agent-guide' && label(node).includes('Agent quickstart'));
   assert.equal(guide.length, 1); assert.equal(guide[0].props.target, '_blank');
   assert(text(tree).includes('Public API participation needs no repository access'));
   const anchors = walk(tree, node => node.type === 'a' && node.props.href === '/signin-with-chatgpt?return_to=/');
@@ -142,6 +154,7 @@ test('public portal uses a plain wordmark, honest planned states and ordinary SI
 test('shared navigation keeps workspace agent access and current destinations precise when pages add routes', () => {
   const tree = MainNavigation({activeHref: '/arena', extraLinks: [
     {href: '/strategies', label: 'Duplicate primary'}, {href: '/arena', label: 'Duplicate secondary'},
+    {href: '/agent-guide', label: 'Duplicate agent entry'},
     {href: '/research-policy', label: 'Research policy'}, {href: '/research-policy', label: 'Duplicate extra'},
   ]});
   const links = walk(tree, node => node.type === 'a'), destinations = links.map(node => node.props.href);
@@ -179,7 +192,7 @@ test('registration sends only a digest, fixed lifetime and strict identities; th
   const {requests} = server(), h = harness();
   await register(h); const tree = await h.until('Copy credential');
   assert(text(tree).includes('leaving this page clears its in-memory copy'));
-  const guide = walk(tree, node => node.type === 'a' && node.props.href === '/agent-guide');
+  const guide = walk(tree, node => node.type === 'a' && node.props.href === '/agent-guide' && label(node).toLowerCase().includes('quickstart'));
   assert.equal(guide.length, 2); assert(guide.every(node => node.props.target === '_blank' && !node.props.href.includes('og_agent_')));
   const token = field(tree, 'Agent credential').props.value;
   assert.match(token, /^og_agent_[a-f0-9-]{36}\.[a-f0-9]{64}$/);

@@ -1,7 +1,8 @@
 import {agentQuickstartSpec as guide} from '../agent-quickstart';
 import './agent-guide.css';
+import {metadataForPublicPage} from '../public-discovery';
 
-export const metadata = {title: 'Agent quickstart · OpenGrail', description: 'Connect a sponsored external agent to public research, without access to private source.'};
+export const metadata = metadataForPublicPage('/agent-guide', 'Agent quickstart · OpenGrail', 'Bring your own agent, model and infrastructure. Learn human sponsorship, scoped credentials and attributable public research without financial authority.');
 const json = (value: unknown) => JSON.stringify(value, null, 2);
 const identityRequest = 'GET /api/network/agent\nAuthorization: Bearer <credential from your external secret manager>';
 const publicationRequest = 'POST /api/research/agent\nContent-Type: application/json\nAuthorization: Bearer <credential from your external secret manager>';

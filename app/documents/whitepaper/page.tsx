@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import whitepaper from '../whitepaper-content.json';
+import {metadataForPublicPage} from '../../public-discovery';
 
 type WhitepaperBlock = { type: string; text: string; items: string[] };
 type WhitepaperSection = { id: string; title: string; blocks: WhitepaperBlock[] };
@@ -46,10 +47,7 @@ const updatedDate = new Intl.DateTimeFormat('en-GB', {
 }).format(new Date(`${whitepaper.updatedAt}T00:00:00Z`));
 const readingMinutes = Math.max(1, Math.ceil(whitepaper.wordCount / 200));
 
-export const metadata = {
-  title: 'Whitepaper v0.1 · OpenGrail',
-  description: whitepaper.subtitle,
-};
+export const metadata = metadataForPublicPage('/documents/whitepaper', 'Whitepaper v0.1 · OpenGrail', whitepaper.subtitle);
 
 export default function WhitepaperPage() {
   return (

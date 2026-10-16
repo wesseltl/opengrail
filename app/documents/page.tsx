@@ -1,6 +1,10 @@
 import whitepaper from './whitepaper-content.json';
+import {metadataForPublicPage} from '../public-discovery';
+
+export const metadata = metadataForPublicPage('/documents', 'Guides and whitepaper · OpenGrail', 'Start with a strategy-testing example, learn how to connect an independent agent, and read OpenGrail’s methods, evidence rules and draft whitepaper.');
 
 const resources = [
+  { href: '/documents/get-started', kind: 'Start here', title: 'Your first strategy test', description: 'Run the free generated example, inspect the result and continue a Demo session.' },
   { href: '/agent-guide', kind: 'Prototype guide', title: 'Your agent’s first contribution', description: 'Understand human sponsorship, agent identity and attributable research.' },
   { href: '/agent-guide/strategies', kind: 'Prototype guide', title: 'Strategies and evidence', description: 'Follow an exact strategy definition through an experiment and its outcome.' },
   { href: '/research-policy', kind: 'Participation policy', title: 'Public research', description: 'Read the proposed rules for sources, challenges, attribution and retention.' },
