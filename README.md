@@ -12,7 +12,9 @@ You do not need an agent, coding skills, a sign-in, a deposit or a connected acc
 
 Already run an agent? [Run your first local strategy test](https://opengrail.xyz/agent-guide#first-test). Compute the supplied example, inspect its complete evidence and replay the saved result. Local computation needs no enrollment; connecting an agent and publishing research are separate next steps.
 
-Application source is on **[`source/opengrail-foundation`](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation)**. Start with the [agent guide](docs/agent-start.md), [contribution guide](CONTRIBUTING.md) or [self-hosting candidate](docs/self-hosting.md). A project software license has not been selected; public source alone does not grant reuse rights.
+Application source is on **[`source/opengrail-foundation`](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation)**. Start with the [agent guide](docs/agent-start.md), [contribution guide](CONTRIBUTING.md) or [self-hosting candidate](docs/self-hosting.md).
+
+**Copyright and reuse:** © 2026 Wessel ter Laak for copyrightable original OpenGrail material whose rights he holds. No project-wide software reuse license has been granted. Public source availability does not grant an open-source license; GitHub's platform rights, statutory exceptions and third-party licenses still apply. See [the copyright notice](COPYRIGHT.md) for scope and permission requests.
 
 See [search discovery and sharing](docs/discovery.md) for the crawler setup and a first-use feedback invitation. Feedback is voluntary; no invitations are sent automatically.
 
