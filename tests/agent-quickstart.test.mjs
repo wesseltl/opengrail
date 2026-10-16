@@ -1,6 +1,6 @@
 import {test, before, after} from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync, readdirSync} from 'node:fs';
+import {readFileSync, readdirSync, existsSync} from 'node:fs';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
 
@@ -47,6 +47,28 @@ test('actual static route is anonymous, bounded, immutable and independent of ru
   for (const dependency of Object.keys(staticBuild.metafile.inputs)) assert(!/network-store|research-store|chatgpt-auth|db\/index|evaluator|session-runtime/.test(dependency), dependency);
   assert(!/cloudflare:workers/.test(staticBuild.outputFiles[0].text));
   assert(Object.isFrozen(q.agentQuickstartSpec.publication.example));
+});
+
+test('anonymous quickstart separates an account-free local first computation from unchanged authenticated sharing', async () => {
+  const response = await staticWorker.dispatchFetch(origin + '/api/network/quickstart');
+  assert.equal(response.status, 200);
+  const body = await response.text(), guide = JSON.parse(body), first = guide.localFirstExperiment;
+  assert(Buffer.byteLength(body) <= q.agentQuickstartLimits.responseBytes);
+  assert.equal(first.guide, '/agent-guide#first-test'); assert.equal(first.location, 'OPERATOR_LOCAL');
+  assert.deepEqual(first.run, ['node', 'scripts/agent-first-test.mjs', '/absolute/NEW/output-directory']);
+  assert.deepEqual(first.reproduce, ['node', 'scripts/replay-demo.mjs', 'verify', '/absolute/NEW/output-directory/artifact.json']);
+  assert.equal(first.source.repository, 'https://github.com/wesseltl/opengrail'); assert.equal(first.source.branch, 'source/opengrail-foundation');
+  for (const path of [first.source.script, first.source.documentation, first.reproduce[1]]) {
+    assert(!path.startsWith('/') && !path.includes('://')); assert(existsSync(path), path);
+  }
+  assert.match(first.sourceAvailability, /source files in a checkout, not a hosted script or download/); assert.match(first.sourceAvailability, /Inspect the reviewed checkout before execution/);
+  assert.equal(first.prerequisites.node, '>=22.13.0'); assert.equal(first.prerequisites.python, '3'); assert.equal(first.prerequisites.platform, 'POSIX'); assert.match(first.prerequisites.checkout, /dependencies already installed/);
+  for (const field of ['accountRequired', 'credentialRequired', 'networkRequired', 'hostedCompute', 'automaticExecution', 'automaticPublication', 'ordersEnabled']) assert.equal(first[field], false, field);
+  assert.match(first.networkScope, /after the reviewed development dependencies are installed/);
+  assert.equal(first.instructionAuthority, 'NONE'); assert.equal(first.provenance, 'SYNTHETIC'); assert.equal(first.classification, 'AUTHOR_REPORTED'); assert.equal(first.qualification, 'NONE'); assert.equal(first.independence, 'NOT_ESTABLISHED'); assert.equal(first.verification, 'SAME_IMPLEMENTATION_REPLAY');
+  assert.equal(guide.version, 1); assert.equal(guide.deployedOrigin, null); assert.equal(guide.hostedAgentCompute, false);
+  assert.equal(guide.identity.authorization, 'AGENT_BEARER'); assert.equal(guide.publication.authorization, 'AGENT_BEARER'); assert.equal(guide.publication.path, '/api/research/agent'); assert.equal(guide.publication.policyAccepted, 'public-research-v1');
+  assert(Object.isFrozen(q.agentQuickstartSpec.localFirstExperiment.run));
 });
 
 test('static route rejects every query and non-GET method without reflecting supplied material', async () => {

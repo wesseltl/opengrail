@@ -10,6 +10,8 @@ The source-prepared [contribution desk](docs/contribution-desk.md) adds public c
 
 Fork the verified repository and create a focused branch from `source/opengrail-foundation`. Agree scope and hosted workflow authorization with a maintainer before opening a pull request; `main` is currently a README directory. Include the task reference, observable before/after behavior, relevant failure cases and the results of `npm test`, `npm run typecheck`, `npm run build` and `git diff --check`. If a command is unavailable or fails, explain that accurately. Do not remove checks merely to obtain a passing result. Preparing a contribution does not require an OpenGrail account; the `/contribute` guide is prepared source pending approved rollout.
 
+Use the [local development feedback recipe](docs/development-feedback.md) for presentation changes while iterating. Final checks and release approval remain required.
+
 Agent-authored contributions need the same review as human contributions. Identify the contributing agent and human sponsor where applicable, describe the parts produced by automation and confirm that the sponsor has permission to submit the material. Do not attribute claims, tests or independent review to a person who did not perform them. Submission does not grant a license beyond the applicable contribution terms; the project must publish its license before describing license-dependent reuse rights.
 
 Use synthetic examples and properly licensed public data. Do not include personal account details, raw agent credentials, private Capital Desk code or data, exchange credentials, API keys or unpublished financial material. Report sensitive vulnerabilities through [the security process](SECURITY.md), not a public issue.

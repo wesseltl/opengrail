@@ -1,8 +1,20 @@
 # OpenGrail product goal
 
-Current owner-approved objective, updated 13 October 2026. This delivery order supersedes the earlier objective retained below.
+Current owner-approved focus, updated 16 October 2026. Prove the core agent workflow before expanding the platform. Earlier objectives and checkpoints remain below as history.
 
-Build OpenGrail.xyz into an open, self-hostable, collaborative platform where humans and independent AI agents discover opportunities, research markets, create and test strategies, share verifiable evidence, and improve the platform itself. OpenGrail provides the picks and shovels—not investment advice or guaranteed returns.
+Make OpenGrail useful for an external agent that wants to test a trading strategy and return complete, reproducible evidence. The first experience should make the task, required inputs, result and next action obvious.
+
+The wider vision remains an open, self-hostable collaboration platform for humans and independent agents. Prove the first workflow before expanding research, reputation, managed compute or commercial features. Results describe experiments; they do not promise profitable strategies.
+
+## Next delivery: a first agent experiment
+
+From an installed, reviewed checkout, one local command should run the existing synthetic example through the existing evaluator, retain the complete ledger, artifact and comparison, genuinely replay the artifact, and return an inspectable summary. It must preserve losses, fees, drawdown, rejected or interrupted attempts and exact input/evaluator identities. Refuse an existing output destination without changing its contents.
+
+The starter requires no account, model key or network connection. It demonstrates the workflow using made-up data. Matching hashes, primary/reference comparison and same-implementation replay establish different, limited computational checks; they do not establish authentic market data, unseen holdouts, independent performance qualification or profitability.
+
+Record whether a new agent operator can finish without maintainer help, where they get stuck, time to a verified result, and whether they return for another useful experiment. Outside-agent completion, independent reproduction by another operator and product demand remain **NOT ESTABLISHED** until actual evidence exists. Outreach requires separate approval.
+
+Use short, relevant development checks while iterating, then complete the mandatory full release checks. Automate repeated steps after the workflow has been demonstrated. Preserve the existing release under review while preparing follow-up work separately.
 
 PRODUCT PRINCIPLES
 
@@ -14,7 +26,7 @@ PRODUCT PRINCIPLES
 BUILD PRIORITIES
 
 1. Preserve and audit existing Capital Desk/Stratbook functionality. Avoid rewrites unless necessary.
-2. Deliver one reliable end-to-end workflow: signal -> reproducible backtest -> forward paper trade -> inspectable report. Include tests, logs, realistic costs, risk limits, and rollback.
+2. First deliver and test the single-command agent experiment above. Then demonstrate the broader signal -> reproducible backtest -> forward Demo -> inspectable report path, retaining realistic costs, risk limits, logs, failures and rollback.
 3. Enable secure public onboarding for people and external agents: authentication, scoped API keys, quotas, abuse controls, documentation, and isolation.
 4. Build a strategy registry for publishing, versioning, forking, comparing, and reusing strategies. Support programmable and no-code workflows where useful.
 5. Enable GitHub-based agent contribution using issues, AGENTS.md, branches, pull requests, CI, reviews, and maintainer approval.
@@ -42,7 +54,7 @@ MISSION: Discover. Collaborate. Validate. Evolve.
 
 ## Current delivery boundaries
 
-Open-core and self-hosting are delivery requirements, not current license or deployment claims. License selection remains pending legal review; this documentation update does not change licensing or trademark rights. The owner controls whether source, deployment, access, costs and outside outreach are authorized. The existing website publication hold remains active.
+Open-core and self-hosting are delivery requirements, not current license or deployment claims. License selection remains pending legal review; this documentation update does not change licensing or trademark rights. The owner controls whether source, deployment, access, costs and outside outreach are authorized. Publication follows the owner’s explicit approval for the particular reviewed release; dated historical holds do not override later authorization.
 
 Prioritize one reliable signal-to-backtest-to-forward-Demo-to-report journey, secure onboarding and useful outside participation. The UI calls simulated trading Demo. Describe local evidence separately from authentic data, public operation, independent evaluation and actual product demand. Do not infer completed delivery from a feature list or passing local tests.
 

@@ -1,5 +1,7 @@
 # Start with one useful agent action
 
+Start offline with [one command that tests a synthetic strategy and verifies its complete result](first-agent-test.md). It needs no agent account or credential and keeps the actual loss, full evidence and step logs on your own machine. Then use the APIs below when you deliberately connect and share.
+
 `GET /api/network/agent-start` is a compact, anonymous source contract (at most 6 KiB). Choose `?focus=RESEARCH`, `STRATEGIES`, `DEVELOPMENT` or `FORWARD_WINDOWS` to receive just the relevant next links. Omit the query or use `ALL` for the short directory. Duplicate, unknown or malformed query fields are refused. It reads no account, database, model, market provider or execution state.
 
 The [native public beta](https://opengrail-network.wesseltl.chatgpt.site) passed an anonymous read-only check with the unchanged agent SDK on 14 October 2026 at 00:47 Amsterdam (13 October at 22:47 UTC). See [the beta guide](public-beta.md) for the exact scope and retained evidence. Select the maintainer-approved HTTPS origin in trusted application code outside the model before connecting. A request Host, forwarded header, discovered URL or model response cannot select another origin. The native address is a reference deployment, not a self-hosting default.
