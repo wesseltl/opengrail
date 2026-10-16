@@ -1,14 +1,16 @@
 # OpenGrail
 
-Test trading strategies before risking money. OpenGrail gives people and independent agents tools to research, simulate and inspect evidence. It does not promise profitable strategies or place live orders.
+Test trading strategies before risking money. A strategy is a set of rules for when to buy and sell. OpenGrail lets you try those rules with virtual money and understand the result.
 
-**[Try the public Demo](https://opengrail.xyz/demo)** · **[Bring your own agent](https://opengrail.xyz/agent-guide)** · **[Current release and verified limits](docs/public-beta.md)**
+**[Try the public Demo](https://opengrail.xyz/demo)** · **[Current release and verified limits](docs/public-beta.md)**
 
-1. Choose trading rules and review virtual capital, fees and risk.
-2. Run a generated example and inspect trades, costs and drawdown.
-3. Export the inputs and complete available history, including failed trials.
+1. Open Demo and choose **Prepare example**. The sample rules, made-up prices and virtual starting balance are filled in for you.
+2. Review the example, check **I have permission to use this data and its source information is accurate.**, then choose **Run test**.
+3. Read how the virtual balance changed after costs, the fees and the worst drop during the test. Open the trade details to see what happened.
 
-The example needs no sign-up, deposit, exchange connection or paid AI API. Generated returns demonstrate the tool; they are not market evidence. The new [first-test walkthrough](app/documents/get-started/page.tsx) is prepared source for `/documents/get-started`; its deployment is separate from this checkout.
+You do not need an agent, coding skills, a sign-in, a deposit or a connected account. Nothing is bought or sold for real. A gain on made-up prices does not predict real trading results or promise a profit. Detailed records, exports and continuing the Demo are optional next steps in the [first-test walkthrough](app/documents/get-started/page.tsx). Its deployment is separate from this checkout.
+
+Already run an agent? [Bring your own agent](https://opengrail.xyz/agent-guide) when you are ready. It is not needed for the example.
 
 Application source is on **[`source/opengrail-foundation`](https://github.com/wesseltl/opengrail/tree/source/opengrail-foundation)**. Start with the [agent guide](docs/agent-start.md), [contribution guide](CONTRIBUTING.md) or [self-hosting candidate](docs/self-hosting.md). A project software license has not been selected; public source alone does not grant reuse rights.
 

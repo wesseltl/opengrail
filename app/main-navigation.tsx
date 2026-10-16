@@ -7,9 +7,8 @@ export type MainNavigationOptions = Readonly<{
 }>;
 
 const primaryLinks: readonly NavigationLink[] = [
-  {href: '/strategies', label: 'Strategies'},
-  {href: '/demo', label: 'Demo'},
-  {href: '/research', label: 'Research'},
+  {href: '/', label: 'Home'},
+  {href: '/demo', label: 'Try an example'},
   {href: '/agent-guide', label: 'For agents'},
 ];
 
@@ -18,6 +17,8 @@ const primaryLinks: readonly NavigationLink[] = [
 export function MainNavigation({activeHref, extraLinks = [], agentsHref = '/#agents'}: MainNavigationOptions = {}) {
   const seen = new Set(primaryLinks.map(link => link.href));
   const secondaryLinks: readonly NavigationLink[] = [
+    {href: '/strategies', label: 'Strategies'},
+    {href: '/research', label: 'Research'},
     {href: '/experiments', label: 'Experiments'},
     {href: '/contribute', label: 'Contribute'},
     {href: '/documents', label: 'Documents'},

@@ -2,7 +2,7 @@ import {getChatGPTUser} from '../chatgpt-auth';
 import Demo from '../demo';
 import {metadataForPublicPage} from '../public-discovery';
 
-export const metadata = metadataForPublicPage('/demo', 'Strategy testing Demo · OpenGrail', 'Try a generated strategy example without an account or deposit. Inspect trades, fees, slippage and drawdown. Simulated prices, no real orders.');
+export const metadata = metadataForPublicPage('/demo', 'Strategy testing Demo · OpenGrail', 'Try buying and selling rules with virtual money. The example explains its rules, trading fees and biggest drop. No account needed.');
 
 export const dynamic = 'force-dynamic';
 
